@@ -16,6 +16,5 @@ public class ApplicantDto {
     private String phoneNumber;
     private String email;
     private String address;
-    private Boolean isActive;
     private Integer applicationsCount;
 }

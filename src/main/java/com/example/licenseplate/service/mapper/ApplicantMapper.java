@@ -22,7 +22,6 @@ public class ApplicantMapper {
         dto.setPhoneNumber(applicant.getPhoneNumber());
         dto.setEmail(applicant.getEmail());
         dto.setAddress(applicant.getAddress());
-        dto.setIsActive(applicant.getIsActive());
 
         if (applicant.getApplications() != null) {
             dto.setApplicationsCount(applicant.getApplications().size());
@@ -44,7 +43,6 @@ public class ApplicantMapper {
         applicant.setPhoneNumber(dto.getPhoneNumber());
         applicant.setEmail(dto.getEmail());
         applicant.setAddress(dto.getAddress());
-        applicant.setIsActive(true);
 
         return applicant;
     }
