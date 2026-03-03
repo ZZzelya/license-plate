@@ -14,10 +14,8 @@ import lombok.Data;
 import lombok.EqualsAndHashCode;
 import lombok.NoArgsConstructor;
 import lombok.ToString;
-import org.hibernate.annotations.CreationTimestamp;
 
 import java.math.BigDecimal;
-import java.time.LocalDateTime;
 import java.util.ArrayList;
 import java.util.List;
 
@@ -46,10 +44,6 @@ public class AdditionalService {
     @Column(name = "is_available")
     @Builder.Default
     private Boolean isAvailable = true;
-
-    @CreationTimestamp
-    @Column(name = "created_at", updatable = false)
-    private LocalDateTime createdAt;
 
     @ManyToMany(mappedBy = "additionalServices", fetch = FetchType.LAZY)
     @Builder.Default

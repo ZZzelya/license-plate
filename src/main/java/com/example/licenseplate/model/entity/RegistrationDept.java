@@ -15,10 +15,7 @@ import lombok.Data;
 import lombok.EqualsAndHashCode;
 import lombok.NoArgsConstructor;
 import lombok.ToString;
-import org.hibernate.annotations.CreationTimestamp;
-import org.hibernate.annotations.UpdateTimestamp;
 
-import java.time.LocalDateTime;
 import java.util.ArrayList;
 import java.util.List;
 
@@ -47,20 +44,8 @@ public class RegistrationDept {
     @Column(length = 50)
     private String region;
 
-    @Column(name = "is_active")
-    @Builder.Default
-    private Boolean isActive = true;
-
-    @CreationTimestamp
-    @Column(name = "created_at", updatable = false)
-    private LocalDateTime createdAt;
-
-    @UpdateTimestamp
-    @Column(name = "updated_at")
-    private LocalDateTime updatedAt;
-
     @OneToMany(mappedBy = "department", cascade = CascadeType.ALL,
-        fetch = FetchType.LAZY, orphanRemoval = true)
+        fetch = FetchType.LAZY)
     @Builder.Default
     private List<LicensePlate> licensePlates = new ArrayList<>();
 

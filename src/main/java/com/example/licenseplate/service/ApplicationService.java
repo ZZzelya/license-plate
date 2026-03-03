@@ -14,7 +14,6 @@ import com.example.licenseplate.repository.ApplicantRepository;
 import com.example.licenseplate.repository.ApplicationRepository;
 import com.example.licenseplate.repository.LicensePlateRepository;
 import com.example.licenseplate.repository.ServiceRepository;
-import com.example.licenseplate.repository.DepartmentRepository;
 import com.example.licenseplate.service.mapper.ApplicationMapper;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
@@ -34,12 +33,7 @@ public class ApplicationService {
     private final ApplicantRepository applicantRepository;
     private final LicensePlateRepository licensePlateRepository;
     private final ServiceRepository serviceRepository;
-    private final DepartmentRepository departmentRepository;
     private final ApplicationMapper applicationMapper;
-
-    private static final String APPLICANT_NOT_FOUND = "Applicant not found with passport: ";
-    private static final String PLATE_NOT_FOUND = "License plate not found: ";
-    private static final String APPLICATION_NOT_FOUND = "Application not found with id: ";
 
     @Transactional(readOnly = true)
     public List<ApplicationDto> getAllApplications() {
@@ -55,7 +49,7 @@ public class ApplicationService {
     @Transactional(readOnly = true)
     public ApplicationDto getApplicationWithDetails(final Long id) {
         Application application = applicationRepository.findByIdWithDetails(id)
-            .orElseThrow(() -> new ResourceNotFoundException(APPLICATION_NOT_FOUND + id));
+            .orElseThrow(() -> new ResourceNotFoundException("Заявление не найдено с id: " + id));
         return applicationMapper.toDto(application);
     }
 
@@ -67,46 +61,17 @@ public class ApplicationService {
 
     @Transactional
     public ApplicationDto createApplication(final ApplicationCreateDto createDto) {
-        Applicant applicant = applicantRepository.findByPassportNumber(
-                createDto.getPassportNumber())
-            .orElseThrow(() -> new ResourceNotFoundException(
-                APPLICANT_NOT_FOUND + createDto.getPassportNumber()));
+        Applicant applicant = findApplicantByPassport(createDto.getPassportNumber());
+        LicensePlate plate = findPlateByNumber(createDto.getPlateNumber());
 
-        LicensePlate plate = licensePlateRepository.findByPlateNumber(
-                createDto.getPlateNumber())
-            .orElseThrow(() -> new ResourceNotFoundException(
-                PLATE_NOT_FOUND + createDto.getPlateNumber()));
+        validatePlateAvailability(plate);
 
-        if (plate.getStatus() != PlateStatus.AVAILABLE) {
-            throw new BusinessException(
-                "License plate " + createDto.getPlateNumber() + " is not available");
-        }
-
-        List<Application> activeApplications = applicationRepository
-            .findActiveApplicationsByPlateId(plate.getId());
-        if (!activeApplications.isEmpty()) {
-            throw new BusinessException(
-                "There is already an active application for this plate");
-        }
-
-        Application application = applicationMapper.toEntity(createDto);
-        application.setApplicant(applicant);
-        application.setLicensePlate(plate);
-        application.setDepartment(plate.getDepartment());
-        application.setStatus(ApplicationStatus.PENDING);
-        application.setApplicationDate(LocalDateTime.now());
-        application.setReservedUntil(LocalDateTime.now().plusHours(1));
-        application.setPaymentAmount(plate.getPrice());
+        Application application = createBaseApplication(applicant, plate, createDto);
+        application.setPaymentAmount(calculateTotalAmount(plate, createDto.getServiceIds()));
 
         if (createDto.getServiceIds() != null && !createDto.getServiceIds().isEmpty()) {
-            List<AdditionalService> services = serviceRepository.findAllById(
-                createDto.getServiceIds());
+            List<AdditionalService> services = serviceRepository.findAllById(createDto.getServiceIds());
             application.setAdditionalServices(services);
-
-            BigDecimal servicesTotal = services.stream()
-                .map(AdditionalService::getPrice)
-                .reduce(BigDecimal.ZERO, BigDecimal::add);
-            application.setPaymentAmount(plate.getPrice().add(servicesTotal));
         }
 
         plate.setStatus(PlateStatus.RESERVED);
@@ -129,13 +94,7 @@ public class ApplicationService {
         }
 
         if (application.getReservedUntil().isBefore(LocalDateTime.now())) {
-            application.setStatus(ApplicationStatus.EXPIRED);
-            applicationRepository.save(application);
-
-            LicensePlate plate = application.getLicensePlate();
-            plate.setStatus(PlateStatus.AVAILABLE);
-            licensePlateRepository.save(plate);
-
+            expireApplication(application);
             throw new BusinessException("Reservation time expired");
         }
 
@@ -214,28 +173,10 @@ public class ApplicationService {
         final ApplicationCreateDto createDto) {
         log.info("=== Demonstrating WITHOUT @Transactional ===");
 
-        Applicant applicant = applicantRepository.findByPassportNumber(
-                createDto.getPassportNumber())
-            .orElseGet(() -> {
-                Applicant newApplicant = new Applicant();
-                newApplicant.setFullName("UNKNOWN");
-                newApplicant.setPassportNumber(createDto.getPassportNumber());
-                newApplicant.setIsActive(true);
-                return applicantRepository.save(newApplicant);
-            });
+        Applicant applicant = findOrCreateApplicant(createDto.getPassportNumber());
+        LicensePlate plate = findPlateByNumber(createDto.getPlateNumber());
 
-        LicensePlate plate = licensePlateRepository.findByPlateNumber(
-                createDto.getPlateNumber())
-            .orElseThrow(() -> new ResourceNotFoundException(
-                PLATE_NOT_FOUND + createDto.getPlateNumber()));
-
-        Application application = applicationMapper.toEntity(createDto);
-        application.setApplicant(applicant);
-        application.setLicensePlate(plate);
-        application.setDepartment(plate.getDepartment());
-        application.setStatus(ApplicationStatus.PENDING);
-        application.setApplicationDate(LocalDateTime.now());
-
+        Application application = createBaseApplication(applicant, plate, createDto);
         Application saved = applicationRepository.save(application);
         log.info("Application saved with id: {}", saved.getId());
 
@@ -260,32 +201,14 @@ public class ApplicationService {
         final ApplicationCreateDto createDto) {
         log.info("=== Demonstrating WITH @Transactional ===");
 
-        Applicant applicant = applicantRepository.findByPassportNumber(
-                createDto.getPassportNumber())
-            .orElseGet(() -> {
-                Applicant newApplicant = new Applicant();
-                newApplicant.setFullName("UNKNOWN");
-                newApplicant.setPassportNumber(createDto.getPassportNumber());
-                newApplicant.setIsActive(true);
-                return applicantRepository.save(newApplicant);
-            });
-
-        LicensePlate plate = licensePlateRepository.findByPlateNumber(
-                createDto.getPlateNumber())
-            .orElseThrow(() -> new ResourceNotFoundException(
-                PLATE_NOT_FOUND + createDto.getPlateNumber()));
+        Applicant applicant = findOrCreateApplicant(createDto.getPassportNumber());
+        LicensePlate plate = findPlateByNumber(createDto.getPlateNumber());
 
         if (plate.getStatus() != PlateStatus.AVAILABLE) {
             throw new IllegalStateException("Table not available");
         }
 
-        Application application = applicationMapper.toEntity(createDto);
-        application.setApplicant(applicant);
-        application.setLicensePlate(plate);
-        application.setDepartment(plate.getDepartment());
-        application.setStatus(ApplicationStatus.PENDING);
-        application.setApplicationDate(LocalDateTime.now());
-
+        Application application = createBaseApplication(applicant, plate, createDto);
         Application saved = applicationRepository.save(application);
         log.info("Application saved with id: {}", saved.getId());
 
@@ -307,8 +230,86 @@ public class ApplicationService {
         return applicationMapper.toDto(saved);
     }
 
+    // ==================== ПРИВАТНЫЕ МЕТОДЫ ====================
+
+    private Applicant findApplicantByPassport(String passportNumber) {
+        return applicantRepository.findByPassportNumber(passportNumber)
+            .orElseThrow(() -> new ResourceNotFoundException(
+                "Заявитель не найден: " + passportNumber));
+    }
+
+    private Applicant findOrCreateApplicant(String passportNumber) {
+        return applicantRepository.findByPassportNumber(passportNumber)
+            .orElseGet(() -> {
+                Applicant newApplicant = new Applicant();
+                newApplicant.setFullName("UNKNOWN");
+                newApplicant.setPassportNumber(passportNumber);
+                return applicantRepository.save(newApplicant);
+            });
+    }
+
+    private LicensePlate findPlateByNumber(String plateNumber) {
+        return licensePlateRepository.findByPlateNumber(plateNumber)
+            .orElseThrow(() -> new ResourceNotFoundException(
+                "Номер не найден: " + plateNumber));
+    }
+
+    private void validatePlateAvailability(LicensePlate plate) {
+        if (plate.getStatus() != PlateStatus.AVAILABLE) {
+            throw new BusinessException(
+                "Номер " + plate.getPlateNumber() + " недоступен");
+        }
+
+        if (!applicationRepository.findActiveApplicationsByPlateId(plate.getId()).isEmpty()) {
+            throw new BusinessException(
+                "На номер " + plate.getPlateNumber() + " уже есть активное заявление");
+        }
+    }
+
+    private BigDecimal calculateTotalAmount(LicensePlate plate, List<Long> serviceIds) {
+        BigDecimal total = plate.getPrice();
+
+        if (serviceIds != null && !serviceIds.isEmpty()) {
+            List<AdditionalService> services = serviceRepository.findAllById(serviceIds);
+            BigDecimal servicesTotal = services.stream()
+                .map(AdditionalService::getPrice)
+                .reduce(BigDecimal.ZERO, BigDecimal::add);
+            total = total.add(servicesTotal);
+        }
+
+        return total;
+    }
+
+    private Application createBaseApplication(Applicant applicant, LicensePlate plate,
+                                              ApplicationCreateDto dto) {
+        Application application = new Application();
+        application.setApplicant(applicant);
+        application.setLicensePlate(plate);
+        application.setDepartment(plate.getDepartment());
+        application.setStatus(ApplicationStatus.PENDING);
+        application.setApplicationDate(LocalDateTime.now());
+        application.setReservedUntil(LocalDateTime.now().plusHours(1));
+        application.setVehicleVin(dto.getVehicleVin());
+        application.setVehicleModel(dto.getVehicleModel());
+        application.setVehicleYear(dto.getVehicleYear());
+        application.setNotes(dto.getNotes());
+        return application;
+    }
+
+    private void expireApplication(Application application) {
+        application.setStatus(ApplicationStatus.EXPIRED);
+        applicationRepository.save(application);
+
+        LicensePlate plate = application.getLicensePlate();
+        if (plate != null && plate.getStatus() == PlateStatus.RESERVED) {
+            plate.setStatus(PlateStatus.AVAILABLE);
+            licensePlateRepository.save(plate);
+        }
+    }
+
     private Application findApplicationOrThrow(final Long id) {
         return applicationRepository.findById(id)
-            .orElseThrow(() -> new ResourceNotFoundException(APPLICATION_NOT_FOUND + id));
+            .orElseThrow(() -> new ResourceNotFoundException(
+                "Заявление не найдено с id: " + id));
     }
 }
