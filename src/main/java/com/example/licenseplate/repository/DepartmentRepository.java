@@ -16,8 +16,6 @@ public interface DepartmentRepository extends JpaRepository<RegistrationDept, Lo
 
     List<RegistrationDept> findByNameContainingIgnoreCase(String name);
 
-    List<RegistrationDept> findByIsActiveTrue();
-
     Optional<RegistrationDept> findByPhoneNumber(String phoneNumber);
 
     boolean existsByPhoneNumber(String phoneNumber);

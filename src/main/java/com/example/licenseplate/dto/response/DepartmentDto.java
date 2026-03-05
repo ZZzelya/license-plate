@@ -15,6 +15,5 @@ public class DepartmentDto {
     private String address;
     private String phoneNumber;
     private String region;
-    private Boolean isActive;
     private Integer licensePlatesCount;
 }

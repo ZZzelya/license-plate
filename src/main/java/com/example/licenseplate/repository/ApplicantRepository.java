@@ -26,6 +26,4 @@ public interface ApplicantRepository extends JpaRepository<Applicant, Long> {
     @Query("SELECT a FROM Applicant a WHERE a.id = :id")
     Optional<Applicant> findByIdWithApplications(@Param("id") Long id);
 
-    @Query("SELECT a FROM Applicant a WHERE a.isActive = true")
-    List<Applicant> findAllActive();
 }

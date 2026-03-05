@@ -26,7 +26,9 @@ public class DepartmentMapper {
         dto.setAddress(department.getAddress());
         dto.setPhoneNumber(department.getPhoneNumber());
         dto.setRegion(department.getRegion());
-        dto.setIsActive(department.getIsActive());
+
+        // Этих полей больше нет в RegistrationDept, убираем!
+        // dto.setIsActive(department.getIsActive());
 
         if (department.getLicensePlates() != null) {
             dto.setLicensePlatesCount(department.getLicensePlates().size());
@@ -48,7 +50,9 @@ public class DepartmentMapper {
         dto.setAddress(department.getAddress());
         dto.setPhoneNumber(department.getPhoneNumber());
         dto.setRegion(department.getRegion());
-        dto.setIsActive(department.getIsActive());
+
+        // Этих полей больше нет в RegistrationDept, убираем!
+        // dto.setIsActive(department.getIsActive());
 
         if (department.getLicensePlates() != null) {
             dto.setLicensePlates(licensePlateMapper.toDtoList(
@@ -68,7 +72,6 @@ public class DepartmentMapper {
         department.setAddress(dto.getAddress());
         department.setPhoneNumber(dto.getPhoneNumber());
         department.setRegion(dto.getRegion());
-        department.setIsActive(true);
 
         return department;
     }

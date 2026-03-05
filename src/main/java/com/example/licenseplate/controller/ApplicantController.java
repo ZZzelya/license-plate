@@ -38,11 +38,6 @@ public class ApplicantController {
         return ResponseEntity.ok(applicantService.getAllApplicants());
     }
 
-    @GetMapping("/active")
-    public ResponseEntity<List<ApplicantDto>> getActiveApplicants() {
-        return ResponseEntity.ok(applicantService.getActiveApplicants());
-    }
-
     @GetMapping("/{id}")
     public ResponseEntity<ApplicantDto> getApplicantById(@PathVariable final Long id) {
         return ResponseEntity.ok(applicantService.getApplicantById(id));

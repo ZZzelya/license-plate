@@ -41,11 +41,6 @@ public class ApplicantService {
         return applicantMapper.toDto(applicant);
     }
 
-    @Transactional(readOnly = true)
-    public List<ApplicantDto> getActiveApplicants() {
-        return applicantMapper.toDtoList(applicantRepository.findAllActive());
-    }
-
     @Transactional
     public ApplicantDto createApplicant(ApplicantCreateDto createDto) {
         if (applicantRepository.existsByPassportNumber(createDto.getPassportNumber())) {
