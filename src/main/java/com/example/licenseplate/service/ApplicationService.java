@@ -168,7 +168,6 @@ public class ApplicationService {
         log.info("Deleted application with id: {}", id);
     }
 
-    @Transactional
     public ApplicationDto createApplicationWithoutTransaction(
         final ApplicationCreateDto createDto) {
         log.info("=== Demonstrating WITHOUT @Transactional ===");
