@@ -5,6 +5,7 @@ import com.example.licenseplate.dto.response.ApplicantDto;
 import com.example.licenseplate.exception.ResourceNotFoundException;
 import com.example.licenseplate.exception.BusinessException;
 import com.example.licenseplate.model.entity.Applicant;
+import com.example.licenseplate.model.enums.ApplicationStatus;
 import com.example.licenseplate.repository.ApplicantRepository;
 import com.example.licenseplate.service.mapper.ApplicantMapper;
 import lombok.RequiredArgsConstructor;
@@ -65,6 +66,34 @@ public class ApplicantService {
         log.info("Updated applicant with id: {}", id);
 
         return applicantMapper.toDto(updatedApplicant);
+    }
+
+    @Transactional
+    public ApplicantDto changePassport(Long id, String newPassportNumber) {
+        Applicant applicant = findApplicantOrThrow(id);
+
+        // Проверяем, что новый паспорт не занят
+        if (applicantRepository.existsByPassportNumber(newPassportNumber)) {
+            throw new BusinessException("Паспорт " + newPassportNumber + " уже используется");
+        }
+
+        // Проверяем, нет ли активных заявлений
+        if (applicant.getApplications() != null && !applicant.getApplications().isEmpty()) {
+            boolean hasActiveApplications = applicant.getApplications().stream()
+                .anyMatch(app -> app.getStatus() == ApplicationStatus.PENDING ||
+                    app.getStatus() == ApplicationStatus.CONFIRMED);
+
+            if (hasActiveApplications) {
+                throw new BusinessException("Нельзя сменить паспорт при активных заявлениях");
+            }
+        }
+
+        applicant.setPassportNumber(newPassportNumber);
+        Applicant updated = applicantRepository.save(applicant);
+        log.info("Changed passport for applicant {}: {} -> {}",
+            id, applicant.getPassportNumber(), newPassportNumber);
+
+        return applicantMapper.toDto(updated);
     }
 
     @Transactional
