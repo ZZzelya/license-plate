@@ -34,6 +34,8 @@ public class ApplicationService {
     private final ServiceRepository serviceRepository;
     private final ApplicationMapper applicationMapper;
 
+    // ==================== READ OPERATIONS ====================
+
     @Transactional(readOnly = true)
     public List<ApplicationDto> getAllApplications() {
         return applicationMapper.toDtoList(applicationRepository.findAll());
@@ -41,8 +43,7 @@ public class ApplicationService {
 
     @Transactional(readOnly = true)
     public ApplicationDto getApplicationById(final Long id) {
-        Application application = findApplicationOrThrow(id);
-        return applicationMapper.toDto(application);
+        return applicationMapper.toDto(findApplicationOrThrow(id));
     }
 
     @Transactional(readOnly = true)
@@ -58,29 +59,11 @@ public class ApplicationService {
             applicationRepository.findByApplicantPassport(passportNumber));
     }
 
-
     @Transactional
     public ApplicationDto createApplication(final ApplicationCreateDto createDto) {
-        Applicant applicant = findApplicantByPassport(createDto.getPassportNumber());
-        LicensePlate plate = findPlateByNumber(createDto.getPlateNumber());
-
-        validatePlateAvailability(plate);
-
-        Application application = createBaseApplication(applicant, plate, createDto);
-        application.setPaymentAmount(calculateTotalAmount(plate, createDto.getServiceIds()));
-
-        if (createDto.getServiceIds() != null && !createDto.getServiceIds().isEmpty()) {
-            List<AdditionalService> services = serviceRepository.findAllById(createDto.getServiceIds());
-            application.setAdditionalServices(services);
-        }
-
-        Application savedApplication = applicationRepository.save(application);
-        log.info("Created application {} for plate {}",
-            savedApplication.getId(), plate.getPlateNumber());
-
-        return applicationMapper.toDto(savedApplication);
+        log.info("Creating application with transaction");
+        return createApplicationInternal(createDto, true, true);
     }
-
 
     @Transactional
     public ApplicationDto confirmApplication(final Long id) {
@@ -99,10 +82,8 @@ public class ApplicationService {
         application.setStatus(ApplicationStatus.CONFIRMED);
         application.setConfirmationDate(LocalDateTime.now());
 
-        Application confirmed = applicationRepository.save(application);
         log.info("Confirmed application with id: {}", id);
-
-        return applicationMapper.toDto(confirmed);
+        return applicationMapper.toDto(applicationRepository.save(application));
     }
 
     @Transactional
@@ -121,10 +102,8 @@ public class ApplicationService {
         plate.setExpiryDate(LocalDateTime.now().plusYears(10));
         licensePlateRepository.save(plate);
 
-        Application completed = applicationRepository.save(application);
         log.info("Completed application with id: {}", id);
-
-        return applicationMapper.toDto(completed);
+        return applicationMapper.toDto(applicationRepository.save(application));
     }
 
     @Transactional
@@ -139,12 +118,9 @@ public class ApplicationService {
 
         application.setStatus(ApplicationStatus.CANCELLED);
 
-        Application cancelled = applicationRepository.save(application);
         log.info("Cancelled application with id: {}", id);
-
-        return applicationMapper.toDto(cancelled);
+        return applicationMapper.toDto(applicationRepository.save(application));
     }
-
 
     @Transactional
     public void deleteApplication(final Long id) {
@@ -153,66 +129,62 @@ public class ApplicationService {
         log.info("Deleted application with id: {}", id);
     }
 
-
     public ApplicationDto createApplicationWithoutTransaction(
         final ApplicationCreateDto createDto) {
         log.info("=== Demonstrating WITHOUT @Transactional ===");
-
-        LicensePlate plate = findPlateByNumber(createDto.getPlateNumber());
-        Applicant applicant = findOrCreateApplicant(createDto.getPassportNumber());
-
-        if (!plate.isAvailable()) {
-            throw new IllegalStateException("Plate not available");
-        }
-
-        Application application = createBaseApplication(applicant, plate, createDto);
-        Application saved = applicationRepository.save(application);
-        log.info("Application saved with id: {}", saved.getId());
-
-        if (createDto.getServiceIds() != null && !createDto.getServiceIds().isEmpty()) {
-            List<AdditionalService> services = serviceRepository.findAllById(
-                createDto.getServiceIds());
-
-            if (services.size() != createDto.getServiceIds().size()) {
-                throw new BusinessException(
-                    "Some services not found - but application is already saved! " +
-                        "Data is now inconsistent!");
-            }
-
-            saved.setAdditionalServices(services);
-            applicationRepository.save(saved);
-        }
-
-        return applicationMapper.toDto(saved);
+        return createApplicationInternal(createDto, false, false);
     }
 
     @Transactional
     public ApplicationDto createApplicationWithTransaction(
         final ApplicationCreateDto createDto) {
         log.info("=== Demonstrating WITH @Transactional ===");
+        return createApplicationInternal(createDto, true, false);
+    }
 
-        Applicant applicant = findOrCreateApplicant(createDto.getPassportNumber());
+    // ==================== PRIVATE METHODS ====================
+
+    private ApplicationDto createApplicationInternal(
+        ApplicationCreateDto createDto,
+        boolean useTransactionalCheck,
+        boolean useExistingApplicant) {
+
+        Applicant applicant = useExistingApplicant
+            ? findApplicantByPassport(createDto.getPassportNumber())
+            : findOrCreateApplicant(createDto.getPassportNumber());
+
         LicensePlate plate = findPlateByNumber(createDto.getPlateNumber());
 
-        if (!plate.isAvailable()) {
-            throw new IllegalStateException("Plate not available");
+        if (useTransactionalCheck) {
+            if (!plate.isAvailable()) {
+                throw new IllegalStateException("Plate not available");
+            }
+        } else {
+            if (!licensePlateRepository.isPlateAvailable(plate.getId())) {
+                throw new IllegalStateException("Plate not available");
+            }
         }
 
-        Application application = createBaseApplication(applicant, plate, createDto);
+        // 4. Создаём заявление
+        Application application = buildApplication(applicant, plate, createDto);
         Application saved = applicationRepository.save(application);
         log.info("Application saved with id: {}", saved.getId());
 
+        // 5. Добавляем услуги
         if (createDto.getServiceIds() != null && !createDto.getServiceIds().isEmpty()) {
             List<AdditionalService> services = serviceRepository.findAllById(
                 createDto.getServiceIds());
 
+            // Проверяем, все ли услуги найдены
             if (services.size() != createDto.getServiceIds().size()) {
-                throw new BusinessException(
-                    "Some services not found - transaction will rollback! " +
-                        "Application will not be saved.");
+                String errorMsg = useTransactionalCheck
+                    ? "Some services not found - transaction will rollback! Application will not be saved."
+                    : "Some services not found - but application is already saved! Data is now inconsistent!";
+                throw new BusinessException(errorMsg);
             }
 
             saved.setAdditionalServices(services);
+            applicationRepository.save(saved);
         }
 
         return applicationMapper.toDto(saved);
@@ -240,11 +212,21 @@ public class ApplicationService {
                 "Номер не найден: " + plateNumber));
     }
 
-    private void validatePlateAvailability(LicensePlate plate) {
-        if (!plate.isAvailable()) {
-            throw new BusinessException(
-                "Номер " + plate.getPlateNumber() + " недоступен");
-        }
+    private Application buildApplication(Applicant applicant, LicensePlate plate,
+                                         ApplicationCreateDto dto) {
+        Application application = new Application();
+        application.setApplicant(applicant);
+        application.setLicensePlate(plate);
+        application.setDepartment(plate.getDepartment());
+        application.setStatus(ApplicationStatus.PENDING);
+        application.setSubmissionDate(LocalDateTime.now());
+        application.setReservedUntil(LocalDateTime.now().plusHours(1));
+        application.setVehicleVin(dto.getVehicleVin());
+        application.setVehicleModel(dto.getVehicleModel());
+        application.setVehicleYear(dto.getVehicleYear());
+        application.setNotes(dto.getNotes());
+        application.setPaymentAmount(calculateTotalAmount(plate, dto.getServiceIds()));
+        return application;
     }
 
     private BigDecimal calculateTotalAmount(LicensePlate plate, List<Long> serviceIds) {
@@ -259,22 +241,6 @@ public class ApplicationService {
         }
 
         return total;
-    }
-
-    private Application createBaseApplication(Applicant applicant, LicensePlate plate,
-                                              ApplicationCreateDto dto) {
-        Application application = new Application();
-        application.setApplicant(applicant);
-        application.setLicensePlate(plate);
-        application.setDepartment(plate.getDepartment());
-        application.setStatus(ApplicationStatus.PENDING);
-        application.setSubmissionDate(LocalDateTime.now());
-        application.setReservedUntil(LocalDateTime.now().plusHours(1));
-        application.setVehicleVin(dto.getVehicleVin());
-        application.setVehicleModel(dto.getVehicleModel());
-        application.setVehicleYear(dto.getVehicleYear());
-        application.setNotes(dto.getNotes());
-        return application;
     }
 
     private void expireApplication(Application application) {
