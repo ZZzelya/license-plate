@@ -15,7 +15,6 @@ import java.time.LocalDateTime;
 public class LicensePlateDto {
     private Long id;
     private String plateNumber;
-    private String status; // доступен, зарезервирован, выдан
     private BigDecimal price;
     private String series;
     private LocalDateTime issueDate;

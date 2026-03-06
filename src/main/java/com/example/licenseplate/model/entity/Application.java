@@ -45,14 +45,14 @@ public class Application {
     @Column(nullable = false, length = 20)
     private ApplicationStatus status;
 
-    @Column(name = "application_date", nullable = false)
-    private LocalDateTime applicationDate;
+    @Column(name = "submission_date", nullable = false)
+    private LocalDateTime submissionDate;
 
     @Column(name = "reserved_until")
     private LocalDateTime reservedUntil;
 
-    @Column(name = "payment_date")
-    private LocalDateTime paymentDate;
+    @Column(name = "confirmation_date")
+    private LocalDateTime confirmationDate;
 
     @Column(name = "payment_amount", precision = 10, scale = 2)
     private BigDecimal paymentAmount;
@@ -70,7 +70,7 @@ public class Application {
     private Integer vehicleYear;
 
     @CreationTimestamp
-    @Column(name = "created_at", updatable = false)
+    @Column(name = "confirmed_date", updatable = false)
     private LocalDateTime createdAt;
 
     @UpdateTimestamp

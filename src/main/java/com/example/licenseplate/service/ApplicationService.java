@@ -9,7 +9,6 @@ import com.example.licenseplate.model.entity.Application;
 import com.example.licenseplate.model.entity.LicensePlate;
 import com.example.licenseplate.model.entity.AdditionalService;
 import com.example.licenseplate.model.enums.ApplicationStatus;
-import com.example.licenseplate.model.enums.PlateStatus;
 import com.example.licenseplate.repository.ApplicantRepository;
 import com.example.licenseplate.repository.ApplicationRepository;
 import com.example.licenseplate.repository.LicensePlateRepository;
@@ -35,6 +34,8 @@ public class ApplicationService {
     private final ServiceRepository serviceRepository;
     private final ApplicationMapper applicationMapper;
 
+    // ==================== READ OPERATIONS ====================
+
     @Transactional(readOnly = true)
     public List<ApplicationDto> getAllApplications() {
         return applicationMapper.toDtoList(applicationRepository.findAll());
@@ -59,6 +60,7 @@ public class ApplicationService {
             applicationRepository.findByApplicantPassport(passportNumber));
     }
 
+
     @Transactional
     public ApplicationDto createApplication(final ApplicationCreateDto createDto) {
         Applicant applicant = findApplicantByPassport(createDto.getPassportNumber());
@@ -74,15 +76,13 @@ public class ApplicationService {
             application.setAdditionalServices(services);
         }
 
-        plate.setStatus(PlateStatus.RESERVED);
-        licensePlateRepository.save(plate);
-
         Application savedApplication = applicationRepository.save(application);
         log.info("Created application {} for plate {}",
             savedApplication.getId(), plate.getPlateNumber());
 
         return applicationMapper.toDto(savedApplication);
     }
+
 
     @Transactional
     public ApplicationDto confirmApplication(final Long id) {
@@ -99,7 +99,7 @@ public class ApplicationService {
         }
 
         application.setStatus(ApplicationStatus.CONFIRMED);
-        application.setPaymentDate(LocalDateTime.now());
+        application.setConfirmationDate(LocalDateTime.now());
 
         Application confirmed = applicationRepository.save(application);
         log.info("Confirmed application with id: {}", id);
@@ -112,13 +112,13 @@ public class ApplicationService {
         Application application = findApplicationOrThrow(id);
 
         if (application.getStatus() != ApplicationStatus.CONFIRMED) {
-            throw new BusinessException("Application is not in CONFIRMED status: " + application.getStatus());
+            throw new BusinessException(
+                "Application is not in CONFIRMED status: " + application.getStatus());
         }
 
         application.setStatus(ApplicationStatus.COMPLETED);
 
         LicensePlate plate = application.getLicensePlate();
-        plate.setStatus(PlateStatus.ISSUED);
         plate.setIssueDate(LocalDateTime.now());
         plate.setExpiryDate(LocalDateTime.now().plusYears(10));
         licensePlateRepository.save(plate);
@@ -141,31 +141,20 @@ public class ApplicationService {
 
         application.setStatus(ApplicationStatus.CANCELLED);
 
-        if (application.getLicensePlate() != null) {
-            LicensePlate plate = application.getLicensePlate();
-            plate.setStatus(PlateStatus.AVAILABLE);
-            licensePlateRepository.save(plate);
-        }
-
         Application cancelled = applicationRepository.save(application);
         log.info("Cancelled application with id: {}", id);
 
         return applicationMapper.toDto(cancelled);
     }
 
+
     @Transactional
     public void deleteApplication(final Long id) {
         Application application = findApplicationOrThrow(id);
-
-        if (application.getStatus() == ApplicationStatus.PENDING) {
-            LicensePlate plate = application.getLicensePlate();
-            plate.setStatus(PlateStatus.AVAILABLE);
-            licensePlateRepository.save(plate);
-        }
-
         applicationRepository.delete(application);
         log.info("Deleted application with id: {}", id);
     }
+
 
     public ApplicationDto createApplicationWithoutTransaction(
         final ApplicationCreateDto createDto) {
@@ -173,6 +162,11 @@ public class ApplicationService {
 
         Applicant applicant = findOrCreateApplicant(createDto.getPassportNumber());
         LicensePlate plate = findPlateByNumber(createDto.getPlateNumber());
+
+        // Валидация доступности (но без транзакции могут быть проблемы)
+        if (!plate.isAvailable()) {
+            throw new IllegalStateException("Plate not available");
+        }
 
         Application application = createBaseApplication(applicant, plate, createDto);
         Application saved = applicationRepository.save(application);
@@ -184,7 +178,8 @@ public class ApplicationService {
 
             if (services.size() != createDto.getServiceIds().size()) {
                 throw new BusinessException(
-                    "Some services not found - but application is already saved!");
+                    "Some services not found - but application is already saved! " +
+                        "Data is now inconsistent!");
             }
 
             saved.setAdditionalServices(services);
@@ -202,8 +197,8 @@ public class ApplicationService {
         Applicant applicant = findOrCreateApplicant(createDto.getPassportNumber());
         LicensePlate plate = findPlateByNumber(createDto.getPlateNumber());
 
-        if (plate.getStatus() != PlateStatus.AVAILABLE) {
-            throw new IllegalStateException("Table not available");
+        if (!plate.isAvailable()) {
+            throw new IllegalStateException("Plate not available");
         }
 
         Application application = createBaseApplication(applicant, plate, createDto);
@@ -216,19 +211,15 @@ public class ApplicationService {
 
             if (services.size() != createDto.getServiceIds().size()) {
                 throw new BusinessException(
-                    "Some services not found - transaction will rollback!");
+                    "Some services not found - transaction will rollback! " +
+                        "Application will not be saved.");
             }
 
             saved.setAdditionalServices(services);
         }
 
-        plate.setStatus(PlateStatus.RESERVED);
-        licensePlateRepository.save(plate);
-
         return applicationMapper.toDto(saved);
     }
-
-    // ==================== ПРИВАТНЫЕ МЕТОДЫ ====================
 
     private Applicant findApplicantByPassport(String passportNumber) {
         return applicantRepository.findByPassportNumber(passportNumber)
@@ -253,14 +244,9 @@ public class ApplicationService {
     }
 
     private void validatePlateAvailability(LicensePlate plate) {
-        if (plate.getStatus() != PlateStatus.AVAILABLE) {
+        if (!plate.isAvailable()) {
             throw new BusinessException(
                 "Номер " + plate.getPlateNumber() + " недоступен");
-        }
-
-        if (!applicationRepository.findActiveApplicationsByPlateId(plate.getId()).isEmpty()) {
-            throw new BusinessException(
-                "На номер " + plate.getPlateNumber() + " уже есть активное заявление");
         }
     }
 
@@ -285,7 +271,7 @@ public class ApplicationService {
         application.setLicensePlate(plate);
         application.setDepartment(plate.getDepartment());
         application.setStatus(ApplicationStatus.PENDING);
-        application.setApplicationDate(LocalDateTime.now());
+        application.setSubmissionDate(LocalDateTime.now());
         application.setReservedUntil(LocalDateTime.now().plusHours(1));
         application.setVehicleVin(dto.getVehicleVin());
         application.setVehicleModel(dto.getVehicleModel());
@@ -297,12 +283,7 @@ public class ApplicationService {
     private void expireApplication(Application application) {
         application.setStatus(ApplicationStatus.EXPIRED);
         applicationRepository.save(application);
-
-        LicensePlate plate = application.getLicensePlate();
-        if (plate != null && plate.getStatus() == PlateStatus.RESERVED) {
-            plate.setStatus(PlateStatus.AVAILABLE);
-            licensePlateRepository.save(plate);
-        }
+        log.info("Application {} expired", application.getId());
     }
 
     private Application findApplicationOrThrow(final Long id) {

@@ -1,11 +1,10 @@
 package com.example.licenseplate.model.entity;
 
+import com.example.licenseplate.model.enums.ApplicationStatus;
 import com.example.licenseplate.model.enums.PlateStatus;
 import jakarta.persistence.CascadeType;
 import jakarta.persistence.Column;
 import jakarta.persistence.Entity;
-import jakarta.persistence.EnumType;
-import jakarta.persistence.Enumerated;
 import jakarta.persistence.FetchType;
 import jakarta.persistence.GeneratedValue;
 import jakarta.persistence.GenerationType;
@@ -42,9 +41,7 @@ public class LicensePlate {
     @Column(name = "plate_number", unique = true, nullable = false, length = 20)
     private String plateNumber;
 
-    @Enumerated(EnumType.STRING)
-    @Column(nullable = false, length = 20)
-    private PlateStatus status;
+    // ПОЛЕ status УДАЛЕНО - статус определяется через заявления
 
     @Column(nullable = false, precision = 10, scale = 2)
     private BigDecimal price;
@@ -66,4 +63,34 @@ public class LicensePlate {
         fetch = FetchType.LAZY)
     @Builder.Default
     private List<Application> applications = new ArrayList<>();
+
+    public PlateStatus getCurrentStatus() {
+        if (applications == null || applications.isEmpty()) {
+            return PlateStatus.AVAILABLE;
+        }
+
+        // Ищем самое свежее активное заявление
+        return applications.stream()
+            .filter(app -> app.getStatus() == ApplicationStatus.PENDING ||
+                app.getStatus() == ApplicationStatus.CONFIRMED ||
+                app.getStatus() == ApplicationStatus.COMPLETED)
+            .max((a1, a2) -> a2.getSubmissionDate().compareTo(a1.getSubmissionDate()))
+            .map(app -> {
+                switch (app.getStatus()) {
+                    case PENDING:
+                        return PlateStatus.RESERVED;
+                    case CONFIRMED:
+                        return PlateStatus.RESERVED;
+                    case COMPLETED:
+                        return PlateStatus.ISSUED;
+                    default:
+                        return PlateStatus.AVAILABLE;
+                }
+            })
+            .orElse(PlateStatus.AVAILABLE);
+    }
+
+    public boolean isAvailable() {
+        return getCurrentStatus() == PlateStatus.AVAILABLE;
+    }
 }

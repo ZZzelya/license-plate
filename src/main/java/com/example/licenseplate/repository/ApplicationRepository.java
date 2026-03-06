@@ -14,6 +14,7 @@ import java.util.Optional;
 
 @Repository
 public interface ApplicationRepository extends JpaRepository<Application, Long> {
+
     List<Application> findByApplicantId(Long applicantId);
 
     List<Application> findByDepartmentId(Long departmentId);
@@ -29,16 +30,25 @@ public interface ApplicationRepository extends JpaRepository<Application, Long> 
     List<Application> findExpiredByStatus(@Param("status") ApplicationStatus status,
                                           @Param("now") LocalDateTime now);
 
-    @EntityGraph(attributePaths = {"applicant", "licensePlate", "department",
-        "additionalServices"})
+    @EntityGraph(attributePaths = {"applicant", "licensePlate", "department", "additionalServices"})
     @Query("SELECT a FROM Application a WHERE a.id = :id")
     Optional<Application> findByIdWithDetails(@Param("id") Long id);
 
     @Query("SELECT a FROM Application a WHERE a.applicant.passportNumber = :passport")
     List<Application> findByApplicantPassport(@Param("passport") String passport);
 
-    boolean existsByLicensePlateIdAndStatusIn(Long plateId,
-                                              List<ApplicationStatus> statuses);
+    boolean existsByLicensePlateIdAndStatusIn(Long plateId, List<ApplicationStatus> statuses);
 
     long countByStatus(ApplicationStatus status);
+
+    // Новые методы для проверки статуса номеров
+    @Query("SELECT CASE WHEN COUNT(a) > 0 THEN true ELSE false END " +
+        "FROM Application a WHERE a.licensePlate.id = :plateId " +
+        "AND a.status IN ('PENDING', 'CONFIRMED', 'COMPLETED')")
+    boolean hasActiveApplicationsByPlateId(@Param("plateId") Long plateId);
+
+    @Query("SELECT a FROM Application a WHERE a.licensePlate.id = :plateId " +
+        "AND a.status IN ('PENDING', 'CONFIRMED', 'COMPLETED') " +
+        "ORDER BY a.submissionDate DESC")  // ИЗМЕНЕНО
+    List<Application> findActiveApplicationsByPlateIdOrdered(@Param("plateId") Long plateId);
 }

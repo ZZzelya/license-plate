@@ -3,7 +3,6 @@ package com.example.licenseplate.service.mapper;
 import com.example.licenseplate.dto.request.LicensePlateCreateDto;
 import com.example.licenseplate.dto.response.LicensePlateDto;
 import com.example.licenseplate.model.entity.LicensePlate;
-import com.example.licenseplate.model.enums.PlateStatus;
 import org.springframework.stereotype.Component;
 
 import java.util.List;
@@ -19,7 +18,6 @@ public class LicensePlateMapper {
         LicensePlateDto dto = new LicensePlateDto();
         dto.setId(plate.getId());
         dto.setPlateNumber(plate.getPlateNumber());
-        dto.setStatus(plate.getStatus() != null ? plate.getStatus().name() : null);
         dto.setPrice(plate.getPrice());
         dto.setSeries(plate.getSeries());
         dto.setIssueDate(plate.getIssueDate());
@@ -42,7 +40,6 @@ public class LicensePlateMapper {
         plate.setPlateNumber(dto.getPlateNumber());
         plate.setPrice(dto.getPrice());
         plate.setSeries(dto.getSeries());
-        plate.setStatus(PlateStatus.AVAILABLE);
 
         return plate;
     }

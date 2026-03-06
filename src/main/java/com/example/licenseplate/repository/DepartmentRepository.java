@@ -16,8 +16,6 @@ public interface DepartmentRepository extends JpaRepository<RegistrationDept, Lo
 
     List<RegistrationDept> findByNameContainingIgnoreCase(String name);
 
-    Optional<RegistrationDept> findByPhoneNumber(String phoneNumber);
-
     boolean existsByPhoneNumber(String phoneNumber);
 
     @EntityGraph(attributePaths = {"licensePlates"})
@@ -31,4 +29,5 @@ public interface DepartmentRepository extends JpaRepository<RegistrationDept, Lo
     @Query("SELECT DISTINCT d FROM RegistrationDept d LEFT JOIN FETCH d.licensePlates " +
         "WHERE d.region = :region")
     List<RegistrationDept> findByRegionWithPlatesFetch(@Param("region") String region);
+
 }

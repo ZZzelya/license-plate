@@ -23,9 +23,9 @@ public class ApplicationMapper {
         dto.setId(application.getId());
         dto.setStatus(application.getStatus() != null ?
             application.getStatus().name() : null);
-        dto.setApplicationDate(application.getApplicationDate());
+        dto.setSubmissionDate(application.getSubmissionDate());
         dto.setReservedUntil(application.getReservedUntil());
-        dto.setPaymentDate(application.getPaymentDate());
+        dto.setConfirmationDate(application.getConfirmationDate());
         dto.setPaymentAmount(application.getPaymentAmount());
         dto.setNotes(application.getNotes());
         dto.setVehicleVin(application.getVehicleVin());
@@ -68,6 +68,17 @@ public class ApplicationMapper {
         application.setNotes(dto.getNotes());
 
         return application;
+    }
+
+    public void updateEntity(Application application, ApplicationCreateDto dto) {
+        if (dto == null || application == null) {
+            return;
+        }
+
+        application.setVehicleVin(dto.getVehicleVin());
+        application.setVehicleModel(dto.getVehicleModel());
+        application.setVehicleYear(dto.getVehicleYear());
+        application.setNotes(dto.getNotes());
     }
 
     public List<ApplicationDto> toDtoList(List<Application> applications) {

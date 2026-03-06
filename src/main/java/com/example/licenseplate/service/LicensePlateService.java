@@ -6,7 +6,6 @@ import com.example.licenseplate.exception.ResourceNotFoundException;
 import com.example.licenseplate.exception.BusinessException;
 import com.example.licenseplate.model.entity.LicensePlate;
 import com.example.licenseplate.model.entity.RegistrationDept;
-import com.example.licenseplate.model.enums.PlateStatus;
 import com.example.licenseplate.repository.LicensePlateRepository;
 import com.example.licenseplate.repository.DepartmentRepository;
 import com.example.licenseplate.service.mapper.LicensePlateMapper;
@@ -65,7 +64,6 @@ public class LicensePlateService {
 
         LicensePlate plate = licensePlateMapper.toEntity(createDto);
         plate.setDepartment(department);
-        plate.setStatus(PlateStatus.AVAILABLE);
 
         LicensePlate savedPlate = licensePlateRepository.save(plate);
         log.info("Created license plate: {} in department: {}",

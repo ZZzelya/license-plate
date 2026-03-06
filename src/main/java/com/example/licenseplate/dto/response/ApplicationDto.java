@@ -16,9 +16,9 @@ import java.util.List;
 public class ApplicationDto {
     private Long id;
     private String status;
-    private LocalDateTime applicationDate;
+    private LocalDateTime submissionDate;
     private LocalDateTime reservedUntil;
-    private LocalDateTime paymentDate;
+    private LocalDateTime confirmationDate;
     private BigDecimal paymentAmount;
     private String notes;
     private String vehicleVin;
