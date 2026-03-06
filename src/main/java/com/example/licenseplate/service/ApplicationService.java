@@ -34,8 +34,6 @@ public class ApplicationService {
     private final ServiceRepository serviceRepository;
     private final ApplicationMapper applicationMapper;
 
-    // ==================== READ OPERATIONS ====================
-
     @Transactional(readOnly = true)
     public List<ApplicationDto> getAllApplications() {
         return applicationMapper.toDtoList(applicationRepository.findAll());
@@ -160,10 +158,9 @@ public class ApplicationService {
         final ApplicationCreateDto createDto) {
         log.info("=== Demonstrating WITHOUT @Transactional ===");
 
-        Applicant applicant = findOrCreateApplicant(createDto.getPassportNumber());
         LicensePlate plate = findPlateByNumber(createDto.getPlateNumber());
+        Applicant applicant = findOrCreateApplicant(createDto.getPassportNumber());
 
-        // Валидация доступности (но без транзакции могут быть проблемы)
         if (!plate.isAvailable()) {
             throw new IllegalStateException("Plate not available");
         }
