@@ -112,8 +112,7 @@ public class ApplicationService {
         Application application = findApplicationOrThrow(id);
 
         if (application.getStatus() != ApplicationStatus.CONFIRMED) {
-            throw new BusinessException(
-                "Application is not in CONFIRMED status: " + application.getStatus());
+            throw new BusinessException("Application is not in CONFIRMED status: " + application.getStatus());
         }
 
         application.setStatus(ApplicationStatus.COMPLETED);
