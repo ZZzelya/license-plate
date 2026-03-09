@@ -142,8 +142,6 @@ public class ApplicationService {
         return createApplicationInternal(createDto, true, false);
     }
 
-    // ==================== PRIVATE METHODS ====================
-
     private ApplicationDto createApplicationInternal(
         ApplicationCreateDto createDto,
         boolean useTransactionalCheck,
@@ -165,17 +163,16 @@ public class ApplicationService {
             }
         }
 
-        // 4. Создаём заявление
         Application application = buildApplication(applicant, plate, createDto);
         Application saved = applicationRepository.save(application);
         log.info("Application saved with id: {}", saved.getId());
 
-        // 5. Добавляем услуги
+
         if (createDto.getServiceIds() != null && !createDto.getServiceIds().isEmpty()) {
             List<AdditionalService> services = serviceRepository.findAllById(
                 createDto.getServiceIds());
 
-            // Проверяем, все ли услуги найдены
+
             if (services.size() != createDto.getServiceIds().size()) {
                 String errorMsg = useTransactionalCheck
                     ? "Some services not found - transaction will rollback! Application will not be saved."

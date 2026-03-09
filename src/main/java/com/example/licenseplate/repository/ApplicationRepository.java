@@ -41,7 +41,6 @@ public interface ApplicationRepository extends JpaRepository<Application, Long> 
 
     long countByStatus(ApplicationStatus status);
 
-    // Новые методы для проверки статуса номеров
     @Query("SELECT CASE WHEN COUNT(a) > 0 THEN true ELSE false END " +
         "FROM Application a WHERE a.licensePlate.id = :plateId " +
         "AND a.status IN ('PENDING', 'CONFIRMED', 'COMPLETED')")
