@@ -41,8 +41,6 @@ public class LicensePlate {
     @Column(name = "plate_number", unique = true, nullable = false, length = 20)
     private String plateNumber;
 
-    // ПОЛЕ status УДАЛЕНО - статус определяется через заявления
-
     @Column(nullable = false, precision = 10, scale = 2)
     private BigDecimal price;
 
@@ -69,7 +67,6 @@ public class LicensePlate {
             return PlateStatus.AVAILABLE;
         }
 
-        // Ищем самое свежее активное заявление
         return applications.stream()
             .filter(app -> app.getStatus() == ApplicationStatus.PENDING ||
                 app.getStatus() == ApplicationStatus.CONFIRMED ||
