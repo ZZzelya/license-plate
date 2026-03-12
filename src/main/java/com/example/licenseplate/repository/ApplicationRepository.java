@@ -2,6 +2,8 @@ package com.example.licenseplate.repository;
 
 import com.example.licenseplate.model.entity.Application;
 import com.example.licenseplate.model.enums.ApplicationStatus;
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.Pageable;
 import org.springframework.data.jpa.repository.EntityGraph;
 import org.springframework.data.jpa.repository.JpaRepository;
 import org.springframework.data.jpa.repository.Query;
@@ -15,15 +17,8 @@ import java.util.Optional;
 @Repository
 public interface ApplicationRepository extends JpaRepository<Application, Long> {
 
-    List<Application> findByApplicantId(Long applicantId);
-
-    List<Application> findByDepartmentId(Long departmentId);
 
     List<Application> findByStatus(ApplicationStatus status);
-
-    @Query("SELECT a FROM Application a WHERE a.licensePlate.id = :plateId " +
-        "AND a.status IN ('PENDING', 'CONFIRMED')")
-    List<Application> findActiveApplicationsByPlateId(@Param("plateId") Long plateId);
 
     @Query("SELECT a FROM Application a WHERE a.status = :status " +
         "AND a.reservedUntil < :now")
@@ -37,17 +32,24 @@ public interface ApplicationRepository extends JpaRepository<Application, Long> 
     @Query("SELECT a FROM Application a WHERE a.applicant.passportNumber = :passport")
     List<Application> findByApplicantPassport(@Param("passport") String passport);
 
-    boolean existsByLicensePlateIdAndStatusIn(Long plateId, List<ApplicationStatus> statuses);
+    @Query("SELECT a FROM Application a " +
+        "WHERE a.status = :status " +
+        "AND a.department.region = :region")
+    List<Application> findByStatusAndDepartmentRegion(
+        @Param("status") ApplicationStatus status,
+        @Param("region") String region);
 
-    long countByStatus(ApplicationStatus status);
+    @Query(value = "SELECT a.* FROM applications a " +
+        "JOIN registration_depts d ON a.dept_id = d.id " +
+        "WHERE a.status = :status " +
+        "AND d.region = :region",
+        nativeQuery = true)
+    List<Application> findByStatusAndDepartmentRegionNative(
+        @Param("status") String status,
+        @Param("region") String region);
 
-    @Query("SELECT CASE WHEN COUNT(a) > 0 THEN true ELSE false END " +
-        "FROM Application a WHERE a.licensePlate.id = :plateId " +
-        "AND a.status IN ('PENDING', 'CONFIRMED', 'COMPLETED')")
-    boolean hasActiveApplicationsByPlateId(@Param("plateId") Long plateId);
-
-    @Query("SELECT a FROM Application a WHERE a.licensePlate.id = :plateId " +
-        "AND a.status IN ('PENDING', 'CONFIRMED', 'COMPLETED') " +
-        "ORDER BY a.submissionDate DESC")  // ИЗМЕНЕНО
-    List<Application> findActiveApplicationsByPlateIdOrdered(@Param("plateId") Long plateId);
+    @Query("SELECT a FROM Application a WHERE a.applicant.passportNumber = :passport")
+    Page<Application> findByApplicantPassport(
+        @Param("passport") String passport,
+        Pageable pageable);
 }

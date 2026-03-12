@@ -11,17 +11,22 @@ import com.example.licenseplate.model.entity.AdditionalService;
 import com.example.licenseplate.model.enums.ApplicationStatus;
 import com.example.licenseplate.repository.ApplicantRepository;
 import com.example.licenseplate.repository.ApplicationRepository;
+import com.example.licenseplate.repository.DepartmentRepository;
 import com.example.licenseplate.repository.LicensePlateRepository;
 import com.example.licenseplate.repository.ServiceRepository;
+import com.example.licenseplate.service.cache.ApplicationCacheService;
 import com.example.licenseplate.service.mapper.ApplicationMapper;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.Pageable;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
 import java.math.BigDecimal;
 import java.time.LocalDateTime;
 import java.util.List;
+import java.util.Optional;
 
 @Slf4j
 @Service
@@ -33,8 +38,8 @@ public class ApplicationService {
     private final LicensePlateRepository licensePlateRepository;
     private final ServiceRepository serviceRepository;
     private final ApplicationMapper applicationMapper;
-
-    // ==================== READ OPERATIONS ====================
+    private final ApplicationCacheService cacheService;
+    private final DepartmentRepository departmentRepository;
 
     @Transactional(readOnly = true)
     public List<ApplicationDto> getAllApplications() {
@@ -59,10 +64,148 @@ public class ApplicationService {
             applicationRepository.findByApplicantPassport(passportNumber));
     }
 
+
+    @Transactional(readOnly = true)
+    public List<ApplicationDto> getApplicationsByStatusAndRegion(
+        ApplicationStatus status, String region) {
+
+        log.info("Fetching applications by status: {} and region: {} (JPQL)",
+            status, region);
+
+        if (!departmentRepository.existsByRegion(region)) {
+            log.warn("Region '{}' not found", region);
+            throw new ResourceNotFoundException(
+                String.format("Регион '%s' не найден", region)
+            );
+        }
+
+        return applicationMapper.toDtoList(
+            applicationRepository.findByStatusAndDepartmentRegion(status, region));
+    }
+
+    @Transactional(readOnly = true)
+    public List<ApplicationDto> getApplicationsByStatusAndRegionNative(
+        ApplicationStatus status, String region) {
+
+        log.info("Fetching applications by status: {} and region: {} (NATIVE)", status, region);
+
+        if (!departmentRepository.existsByRegion(region)) {
+            throw new ResourceNotFoundException(
+                String.format("Регион '%s' не найден", region));
+        }
+
+        return applicationMapper.toDtoList(
+            applicationRepository.findByStatusAndDepartmentRegionNative(
+                status.name(), region));
+    }
+
+    @Transactional(readOnly = true)
+    public List<ApplicationDto> getApplicationsByStatusAndRegionCached(
+        ApplicationStatus status, String region) {
+
+        log.info("Fetching applications by status: {} and region: {} (CACHED)",
+            status, region);
+
+        boolean regionExists = departmentRepository.existsByRegion(region);
+
+        if (!regionExists) {
+            log.warn("Region '{}' not found", region);
+            throw new ResourceNotFoundException(
+                String.format("Регион '%s' не найден", region)
+            );
+        }
+
+        List<ApplicationDto> cached = cacheService.get(status.name(), region);
+        if (cached != null) {
+            log.info("Returning cached result for region: {}, status: {}",
+                region, status);
+            return cached;
+        }
+
+        List<ApplicationDto> result = applicationMapper.toDtoList(
+            applicationRepository.findByStatusAndDepartmentRegion(status, region));
+
+        cacheService.put(status.name(), region, result);
+
+        if (result.isEmpty()) {
+            log.info("Cached empty result for region: {}, status: {}",
+                region, status);
+        } else {
+            log.info("Cached {} results for region: {}, status: {}",
+                result.size(), region, status);
+        }
+
+        return result;
+    }
+
+    @Transactional(readOnly = true)
+    public Page<ApplicationDto> getApplicationsByPassportPaginated(
+        String passportNumber, Pageable pageable) {
+
+        log.info("Сервис: пагинация для паспорта: {}, page: {}, size: {}",
+            passportNumber, pageable.getPageNumber(), pageable.getPageSize());
+
+        Optional<Applicant> applicant = applicantRepository.findByPassportNumber(passportNumber);
+
+        if (applicant.isEmpty()) {
+            log.warn("Заявитель с паспортом {} не найден", passportNumber);
+            throw new ResourceNotFoundException(
+                String.format("Заявитель с паспортом '%s' не найден", passportNumber));
+        }
+
+        Page<Application> applicationPage = applicationRepository
+            .findByApplicantPassport(passportNumber, pageable);
+
+        log.info("Найдено {} заявок из {}",
+            applicationPage.getNumberOfElements(),
+            applicationPage.getTotalElements());
+
+        return applicationPage.map(applicationMapper::toDto);
+    }
+
+    public void invalidateCache() {
+        cacheService.invalidate();
+    }
+
+    public void invalidateCacheByRegion(String region) {
+        cacheService.invalidateByRegion(region);
+    }
+
+    public void invalidateCacheByStatus(String status) {
+        cacheService.invalidateByStatus(status);
+    }
+
     @Transactional
     public ApplicationDto createApplication(final ApplicationCreateDto createDto) {
         log.info("Creating application with transaction");
-        return createApplicationInternal(createDto, true, true);
+        ApplicationDto result = createApplicationInternal(createDto, true, true);
+
+        cacheService.invalidate();
+        log.info("Cache invalidated after creation");
+
+        return result;
+    }
+
+    @Transactional
+    public ApplicationDto createApplicationWithoutTransaction(
+        final ApplicationCreateDto createDto) {
+        log.info("=== Demonstrating WITHOUT @Transactional ===");
+        ApplicationDto result = createApplicationInternal(createDto, false, false);
+
+        cacheService.invalidate();
+
+        return result;
+    }
+
+    @Transactional
+    public ApplicationDto createApplicationWithTransaction(
+        final ApplicationCreateDto createDto) {
+        log.info("=== Demonstrating WITH @Transactional ===");
+        ApplicationDto result = createApplicationInternal(createDto, true, false);
+
+        cacheService.invalidate();
+
+        return result;
     }
 
     @Transactional
@@ -83,6 +226,9 @@ public class ApplicationService {
         application.setConfirmationDate(LocalDateTime.now());
 
         log.info("Confirmed application with id: {}", id);
+
+        cacheService.invalidate();
+
         return applicationMapper.toDto(applicationRepository.save(application));
     }
 
@@ -103,6 +249,9 @@ public class ApplicationService {
         licensePlateRepository.save(plate);
 
         log.info("Completed application with id: {}", id);
+
+        cacheService.invalidate();
+
         return applicationMapper.toDto(applicationRepository.save(application));
     }
 
@@ -119,6 +268,9 @@ public class ApplicationService {
         application.setStatus(ApplicationStatus.CANCELLED);
 
         log.info("Cancelled application with id: {}", id);
+
+        cacheService.invalidate();
+
         return applicationMapper.toDto(applicationRepository.save(application));
     }
 
@@ -127,19 +279,8 @@ public class ApplicationService {
         Application application = findApplicationOrThrow(id);
         applicationRepository.delete(application);
         log.info("Deleted application with id: {}", id);
-    }
 
-    public ApplicationDto createApplicationWithoutTransaction(
-        final ApplicationCreateDto createDto) {
-        log.info("=== Demonstrating WITHOUT @Transactional ===");
-        return createApplicationInternal(createDto, false, false);
-    }
-
-    @Transactional
-    public ApplicationDto createApplicationWithTransaction(
-        final ApplicationCreateDto createDto) {
-        log.info("=== Demonstrating WITH @Transactional ===");
-        return createApplicationInternal(createDto, true, false);
+        cacheService.invalidate();
     }
 
     private ApplicationDto createApplicationInternal(
@@ -167,11 +308,9 @@ public class ApplicationService {
         Application saved = applicationRepository.save(application);
         log.info("Application saved with id: {}", saved.getId());
 
-
         if (createDto.getServiceIds() != null && !createDto.getServiceIds().isEmpty()) {
             List<AdditionalService> services = serviceRepository.findAllById(
                 createDto.getServiceIds());
-
 
             if (services.size() != createDto.getServiceIds().size()) {
                 String errorMsg = useTransactionalCheck
@@ -252,3 +391,4 @@ public class ApplicationService {
                 "Заявление не найдено с id: " + id));
     }
 }
+

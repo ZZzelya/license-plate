@@ -18,9 +18,14 @@ spring:
         dialect: org.hibernate.dialect.PostgreSQLDialect
     open-in-view: false
 
+  Jackson:
+    date-format: "yyyy-MM-dd HH:mm"
+    time-zone: Europe/Minsk
+
 logging:
   level:
     com.example.licenseplate: DEBUG
+    com.example.licenseplate.service.cache: DEBUG
     org.hibernate.SQL: DEBUG
     org.hibernate.orm.jdbc.bind: TRACE
   pattern:

@@ -2,9 +2,15 @@ package com.example.licenseplate.controller;
 
 import com.example.licenseplate.dto.request.ApplicationCreateDto;
 import com.example.licenseplate.dto.response.ApplicationDto;
+import com.example.licenseplate.model.enums.ApplicationStatus;
 import com.example.licenseplate.service.ApplicationService;
 import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
+import lombok.extern.slf4j.Slf4j;
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.PageRequest;
+import org.springframework.data.domain.Pageable;
+import org.springframework.data.domain.Sort;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.DeleteMapping;
@@ -19,6 +25,7 @@ import org.springframework.web.bind.annotation.RestController;
 
 import java.util.List;
 
+@Slf4j
 @RestController
 @RequestMapping("/api/applications")
 @RequiredArgsConstructor
@@ -91,5 +98,90 @@ public class ApplicationController {
     public ResponseEntity<Void> deleteApplication(@PathVariable final Long id) {
         applicationService.deleteApplication(id);
         return ResponseEntity.noContent().build();
+    }
+
+    @GetMapping("/filter")
+    public ResponseEntity<List<ApplicationDto>> getApplicationsByStatusAndRegion(
+        @RequestParam ApplicationStatus status,
+        @RequestParam String region) {
+        return ResponseEntity.ok(
+            applicationService.getApplicationsByStatusAndRegion(status, region));
+    }
+
+    @GetMapping("/filter/cached")
+    public ResponseEntity<List<ApplicationDto>> getApplicationsByStatusAndRegionCached(
+        @RequestParam ApplicationStatus status,
+        @RequestParam String region) {
+        return ResponseEntity.ok(
+            applicationService.getApplicationsByStatusAndRegionCached(status, region));
+    }
+
+    @GetMapping("/filter/native")
+    public ResponseEntity<List<ApplicationDto>> getApplicationsByStatusAndRegionNative(
+        @RequestParam ApplicationStatus status,
+        @RequestParam String region) {
+        return ResponseEntity.ok(
+            applicationService.getApplicationsByStatusAndRegionNative(status, region));
+    }
+
+    @DeleteMapping("/cache")
+    public ResponseEntity<Void> invalidateCache() {
+        applicationService.invalidateCache();
+        return ResponseEntity.ok().build();
+    }
+
+    @DeleteMapping("/cache/region/{region}")
+    public ResponseEntity<Void> invalidateCacheByRegion(@PathVariable String region) {
+        applicationService.invalidateCacheByRegion(region);
+        return ResponseEntity.ok().build();
+    }
+
+    @DeleteMapping("/cache/status/{status}")
+    public ResponseEntity<Void> invalidateCacheByStatus(@PathVariable String status) {
+        applicationService.invalidateCacheByStatus(status);
+        return ResponseEntity.ok().build();
+    }
+
+    // ==================== ИСПРАВЛЕННАЯ ПАГИНАЦИЯ ====================
+
+    /**
+     * ПРОСТОЙ И РАБОЧИЙ ВАРИАНТ - используй этот!
+     */
+    @GetMapping("/by-passport/paginated")
+    public ResponseEntity<Page<ApplicationDto>> getApplicationsByPassportPaginated(
+        @RequestParam String passportNumber,
+        @RequestParam(defaultValue = "0") int page,
+        @RequestParam(defaultValue = "10") int size) {
+
+        log.info("Пагинация: passport={}, page={}, size={}", passportNumber, page, size);
+
+        Pageable pageable = PageRequest.of(page, size, Sort.by("submissionDate").descending());
+
+        return ResponseEntity.ok(
+            applicationService.getApplicationsByPassportPaginated(passportNumber, pageable));
+    }
+
+    /**
+     * С СОРТИРОВКОЙ ПО ОДНОМУ ПОЛЮ
+     */
+    @GetMapping("/by-passport/paginated/sorted")
+    public ResponseEntity<Page<ApplicationDto>> getApplicationsByPassportPaginatedSorted(
+        @RequestParam String passportNumber,
+        @RequestParam(defaultValue = "0") int page,
+        @RequestParam(defaultValue = "10") int size,
+        @RequestParam(defaultValue = "submissionDate") String sortBy,
+        @RequestParam(defaultValue = "desc") String direction) {
+
+        log.info("Пагинация с сортировкой: passport={}, page={}, size={}, sortBy={}, direction={}",
+            passportNumber, page, size, sortBy, direction);
+
+        Sort sort = direction.equalsIgnoreCase("desc")
+            ? Sort.by(sortBy).descending()
+            : Sort.by(sortBy).ascending();
+
+        Pageable pageable = PageRequest.of(page, size, sort);
+
+        return ResponseEntity.ok(
+            applicationService.getApplicationsByPassportPaginated(passportNumber, pageable));
     }
 }

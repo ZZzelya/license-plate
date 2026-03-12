@@ -1,5 +1,6 @@
 package com.example.licenseplate.dto.response;
 
+import com.fasterxml.jackson.annotation.JsonFormat;
 import lombok.AllArgsConstructor;
 import lombok.Builder;
 import lombok.Data;
@@ -16,9 +17,16 @@ import java.util.List;
 public class ApplicationDto {
     private Long id;
     private String status;
+
+    @JsonFormat(pattern = "yyyy-MM-dd HH:mm")
     private LocalDateTime submissionDate;
+
+    @JsonFormat(pattern = "yyyy-MM-dd HH:mm")
     private LocalDateTime reservedUntil;
+
+    @JsonFormat(pattern = "yyyy-MM-dd HH:mm")
     private LocalDateTime confirmationDate;
+
     private BigDecimal paymentAmount;
     private String notes;
     private String vehicleVin;

@@ -73,16 +73,12 @@ public class LicensePlate {
                 app.getStatus() == ApplicationStatus.COMPLETED)
             .max((a1, a2) -> a2.getSubmissionDate().compareTo(a1.getSubmissionDate()))
             .map(app -> {
-                switch (app.getStatus()) {
-                    case PENDING:
-                        return PlateStatus.RESERVED;
-                    case CONFIRMED:
-                        return PlateStatus.RESERVED;
-                    case COMPLETED:
-                        return PlateStatus.ISSUED;
-                    default:
-                        return PlateStatus.AVAILABLE;
-                }
+                return switch (app.getStatus()) {
+                    case PENDING -> PlateStatus.RESERVED;
+                    case CONFIRMED -> PlateStatus.RESERVED;
+                    case COMPLETED -> PlateStatus.ISSUED;
+                    default -> PlateStatus.AVAILABLE;
+                };
             })
             .orElse(PlateStatus.AVAILABLE);
     }

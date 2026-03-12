@@ -1,6 +1,5 @@
 package com.example.licenseplate.service.mapper;
 
-import com.example.licenseplate.dto.request.ApplicationCreateDto;
 import com.example.licenseplate.dto.response.ApplicationDto;
 import com.example.licenseplate.model.entity.Application;
 import lombok.RequiredArgsConstructor;
@@ -54,31 +53,6 @@ public class ApplicationMapper {
         }
 
         return dto;
-    }
-
-    public Application toEntity(ApplicationCreateDto dto) {
-        if (dto == null) {
-            return null;
-        }
-
-        Application application = new Application();
-        application.setVehicleVin(dto.getVehicleVin());
-        application.setVehicleModel(dto.getVehicleModel());
-        application.setVehicleYear(dto.getVehicleYear());
-        application.setNotes(dto.getNotes());
-
-        return application;
-    }
-
-    public void updateEntity(Application application, ApplicationCreateDto dto) {
-        if (dto == null || application == null) {
-            return;
-        }
-
-        application.setVehicleVin(dto.getVehicleVin());
-        application.setVehicleModel(dto.getVehicleModel());
-        application.setVehicleYear(dto.getVehicleYear());
-        application.setNotes(dto.getNotes());
     }
 
     public List<ApplicationDto> toDtoList(List<Application> applications) {
