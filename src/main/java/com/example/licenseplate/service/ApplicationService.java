@@ -219,10 +219,6 @@ public class ApplicationService {
         log.info(PAGINATION_LOG,
             passportNumber, pageable.getPageNumber(), pageable.getPageSize());
 
-        Applicant applicant = applicantRepository.findByPassportNumber(passportNumber)
-            .orElseThrow(() -> new ResourceNotFoundException(
-                String.format(APPLICANT_NOT_FOUND, passportNumber)));
-
         Page<Application> applicationPage = applicationRepository
             .findByApplicantPassport(passportNumber, pageable);
 
