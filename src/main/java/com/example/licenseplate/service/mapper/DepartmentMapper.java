@@ -7,6 +7,7 @@ import com.example.licenseplate.model.entity.RegistrationDept;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Component;
 
+import java.util.Collections;
 import java.util.List;
 
 @Component
@@ -82,6 +83,9 @@ public class DepartmentMapper {
     }
 
     public List<DepartmentDto> toDtoList(List<RegistrationDept> departments) {
+        if (departments == null) {
+            return Collections.emptyList();
+        }
         return departments.stream()
             .map(this::toDto)
             .toList();

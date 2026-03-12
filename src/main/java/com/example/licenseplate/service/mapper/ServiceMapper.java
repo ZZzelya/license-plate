@@ -5,6 +5,7 @@ import com.example.licenseplate.dto.response.ServiceDto;
 import com.example.licenseplate.model.entity.AdditionalService;
 import org.springframework.stereotype.Component;
 
+import java.util.Collections;
 import java.util.List;
 
 @Component
@@ -56,6 +57,9 @@ public class ServiceMapper {
     }
 
     public List<ServiceDto> toDtoList(List<AdditionalService> services) {
+        if (services == null) {
+            return Collections.emptyList();
+        }
         return services.stream()
             .map(this::toDto)
             .toList();
@@ -63,7 +67,7 @@ public class ServiceMapper {
 
     public List<String> toNameList(List<AdditionalService> services) {
         if (services == null) {
-            return List.of();
+            return Collections.emptyList();
         }
         return services.stream()
             .map(AdditionalService::getName)

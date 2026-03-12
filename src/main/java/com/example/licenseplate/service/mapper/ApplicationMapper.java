@@ -5,6 +5,7 @@ import com.example.licenseplate.model.entity.Application;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Component;
 
+import java.util.Collections;
 import java.util.List;
 
 @Component
@@ -56,6 +57,9 @@ public class ApplicationMapper {
     }
 
     public List<ApplicationDto> toDtoList(List<Application> applications) {
+        if (applications == null) {
+            return Collections.emptyList();
+        }
         return applications.stream()
             .map(this::toDto)
             .toList();

@@ -5,6 +5,7 @@ import com.example.licenseplate.dto.response.LicensePlateDto;
 import com.example.licenseplate.model.entity.LicensePlate;
 import org.springframework.stereotype.Component;
 
+import java.util.Collections;
 import java.util.List;
 
 @Component
@@ -55,6 +56,9 @@ public class LicensePlateMapper {
     }
 
     public List<LicensePlateDto> toDtoList(List<LicensePlate> plates) {
+        if (plates == null) {
+            return Collections.emptyList();
+        }
         return plates.stream()
             .map(this::toDto)
             .toList();

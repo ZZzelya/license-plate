@@ -5,6 +5,7 @@ import com.example.licenseplate.dto.response.ApplicantDto;
 import com.example.licenseplate.model.entity.Applicant;
 import org.springframework.stereotype.Component;
 
+import java.util.Collections;
 import java.util.List;
 
 @Component
@@ -59,6 +60,9 @@ public class ApplicantMapper {
     }
 
     public List<ApplicantDto> toDtoList(List<Applicant> applicants) {
+        if (applicants == null) {
+            return Collections.emptyList();  // ← ВАЖНО: пустой список вместо null!
+        }
         return applicants.stream()
             .map(this::toDto)
             .toList();
