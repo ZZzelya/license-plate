@@ -6,6 +6,7 @@ import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Service;
 
 import java.time.LocalDateTime;
+import java.util.Collections;
 import java.util.List;
 import java.util.Map;
 import java.util.Objects;
@@ -25,7 +26,7 @@ public class ApplicationCacheService {
         if (entry != null && !entry.isExpired()) {
             List<ApplicationDto> data = entry.getData();
             log.info("Cache HIT for key: {}, data size: {}", key, data != null ? data.size() : 0);
-            return data;  // возвращаем данные (могут быть пустыми, но это данные!)
+            return data;
         }
 
         if (entry != null) {
@@ -35,7 +36,7 @@ public class ApplicationCacheService {
             log.info("Cache MISS for key: {}", key);
         }
 
-        return null;  // null = нет записи в кэше
+        return Collections.emptyList();
     }
 
     public void put(String status, String region, List<ApplicationDto> data) {

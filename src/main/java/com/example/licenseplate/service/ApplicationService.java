@@ -180,22 +180,18 @@ public class ApplicationService {
             );
         }
 
-        // Пробуем получить из кэша
         List<ApplicationDto> cached = cacheService.get(status.name(), region);
         if (cached != null) {
             log.info(CACHE_HIT, region, status);
 
-            // Проверяем, не пустой ли результат в кэше
             if (cached.isEmpty()) {
-                log.warn("⚠️ В кэше пустой результат для {} {}, удаляем его", region, status);
-                cacheService.invalidate(); // очищаем проблемную запись
-                // идём дальше в БД
+                log.warn("В кэше пустой результат для {} {}, удаляем его", region, status);
+                cacheService.invalidate();
             } else {
-                return cached; // нормальные данные из кэша
+                return cached;
             }
         }
 
-        // Если в кэше нет (null) или там был пустой результат - идём в БД
         List<Application> applications = applicationRepository
             .findByStatusAndDepartmentRegion(status, region);
 
@@ -206,7 +202,6 @@ public class ApplicationService {
             );
         }
 
-        // Сохраняем в кэш ТОЛЬКО непустой результат
         List<ApplicationDto> result = applicationMapper.toDtoList(applications);
         cacheService.put(status.name(), region, result);
 
