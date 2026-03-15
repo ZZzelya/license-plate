@@ -64,7 +64,6 @@ public class ApplicationService {
     private static final String FETCHING_CACHED = "Fetching applications by status: {} and region: {} (CACHED)";
     private static final String REGION_NOT_FOUND_LOG = "Region '{}' not found";
     private static final String CACHE_HIT = "Returning cached result for region: {}, status: {}";
-    private static final String CACHE_EMPTY = "В кэше пустой результат для региона {} со статусом {}";
     private static final String FOUND_APPLICATIONS = "Найдено {} заявок в регионе {} со статусом {}";
     private static final String FOUND_APPLICATIONS_NATIVE = "Native query: найдено {} заявок в регионе {} " +
         "со статусом {}";
@@ -181,23 +180,33 @@ public class ApplicationService {
             );
         }
 
+        // Пробуем получить из кэша
         List<ApplicationDto> cached = cacheService.get(status.name(), region);
         if (cached != null) {
             log.info(CACHE_HIT, region, status);
-            return cached;
+
+            // Проверяем, не пустой ли результат в кэше
+            if (cached.isEmpty()) {
+                log.warn("⚠️ В кэше пустой результат для {} {}, удаляем его", region, status);
+                cacheService.invalidate(); // очищаем проблемную запись
+                // идём дальше в БД
+            } else {
+                return cached; // нормальные данные из кэша
+            }
         }
 
+        // Если в кэше нет (null) или там был пустой результат - идём в БД
         List<Application> applications = applicationRepository
             .findByStatusAndDepartmentRegion(status, region);
 
         if (applications.isEmpty()) {
             log.warn(APPLICATIONS_WITH_STATUS_NOT_FOUND, status, region);
-
             throw new ResourceNotFoundException(
                 String.format(APPLICATIONS_NOT_FOUND, status, region)
             );
         }
 
+        // Сохраняем в кэш ТОЛЬКО непустой результат
         List<ApplicationDto> result = applicationMapper.toDtoList(applications);
         cacheService.put(status.name(), region, result);
 

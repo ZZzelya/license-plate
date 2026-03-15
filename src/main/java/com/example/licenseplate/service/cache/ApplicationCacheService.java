@@ -1,7 +1,6 @@
 package com.example.licenseplate.service.cache;
 
 import com.example.licenseplate.dto.response.ApplicationDto;
-import com.fasterxml.jackson.annotation.JsonFormat;
 import lombok.Getter;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Service;
@@ -26,13 +25,7 @@ public class ApplicationCacheService {
         if (entry != null && !entry.isExpired()) {
             List<ApplicationDto> data = entry.getData();
             log.info("Cache HIT for key: {}, data size: {}", key, data != null ? data.size() : 0);
-
-            if (data == null || data.isEmpty()) {
-                log.info("Cache contains EMPTY result for key: {}, removing it", key);
-                cache.remove(key);
-                return null;
-            }
-            return data;
+            return data;  // возвращаем данные (могут быть пустыми, но это данные!)
         }
 
         if (entry != null) {
@@ -42,13 +35,12 @@ public class ApplicationCacheService {
             log.info("Cache MISS for key: {}", key);
         }
 
-        return null;
+        return null;  // null = нет записи в кэше
     }
-
 
     public void put(String status, String region, List<ApplicationDto> data) {
         if (data == null || data.isEmpty()) {
-            log.info("Not caching EMPTY result for key: {}/{}", status, region);
+            log.info("Не кэшируем пустой результат для {}/{}", status, region);
             return;
         }
 
@@ -58,8 +50,9 @@ public class ApplicationCacheService {
     }
 
     public void invalidate() {
+        int sizeBefore = cache.size();
         cache.clear();
-        log.info("Cache fully invalidated");
+        log.info("Cache fully invalidated. Удалено {} записей", sizeBefore);
     }
 
     public void invalidateByRegion(String region) {
@@ -112,7 +105,6 @@ public class ApplicationCacheService {
         }
     }
 
-    @JsonFormat(pattern = "yyyy-MM-dd HH:mm")
     private static class CacheEntry<T> {
         @Getter
         private final T data;
