@@ -142,11 +142,6 @@ public class ApplicationController {
         return ResponseEntity.ok().build();
     }
 
-    // ==================== ИСПРАВЛЕННАЯ ПАГИНАЦИЯ ====================
-
-    /**
-     * ПРОСТОЙ И РАБОЧИЙ ВАРИАНТ - используй этот!
-     */
     @GetMapping("/by-passport/paginated")
     public ResponseEntity<Page<ApplicationDto>> getApplicationsByPassportPaginated(
         @RequestParam String passportNumber,
@@ -161,9 +156,6 @@ public class ApplicationController {
             applicationService.getApplicationsByPassportPaginated(passportNumber, pageable));
     }
 
-    /**
-     * С СОРТИРОВКОЙ ПО ОДНОМУ ПОЛЮ
-     */
     @GetMapping("/by-passport/paginated/sorted")
     public ResponseEntity<Page<ApplicationDto>> getApplicationsByPassportPaginatedSorted(
         @RequestParam String passportNumber,

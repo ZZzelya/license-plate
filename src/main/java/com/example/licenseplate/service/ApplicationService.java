@@ -184,13 +184,6 @@ public class ApplicationService {
         List<ApplicationDto> cached = cacheService.get(status.name(), region);
         if (cached != null) {
             log.info(CACHE_HIT, region, status);
-
-            if (cached.isEmpty()) {
-                log.warn(CACHE_EMPTY, region, status);
-                throw new ResourceNotFoundException(
-                    String.format(APPLICATIONS_NOT_FOUND, status, region)
-                );
-            }
             return cached;
         }
 
@@ -199,6 +192,7 @@ public class ApplicationService {
 
         if (applications.isEmpty()) {
             log.warn(APPLICATIONS_WITH_STATUS_NOT_FOUND, status, region);
+
             throw new ResourceNotFoundException(
                 String.format(APPLICATIONS_NOT_FOUND, status, region)
             );

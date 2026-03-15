@@ -7,7 +7,6 @@ import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Service;
 
 import java.time.LocalDateTime;
-import java.util.Collections;
 import java.util.List;
 import java.util.Map;
 import java.util.Objects;
@@ -25,8 +24,15 @@ public class ApplicationCacheService {
         CacheEntry<List<ApplicationDto>> entry = cache.get(key);
 
         if (entry != null && !entry.isExpired()) {
-            log.info("Cache HIT for key: {}", key);
-            return entry.getData();
+            List<ApplicationDto> data = entry.getData();
+            log.info("Cache HIT for key: {}, data size: {}", key, data != null ? data.size() : 0);
+
+            if (data == null || data.isEmpty()) {
+                log.info("Cache contains EMPTY result for key: {}, removing it", key);
+                cache.remove(key);
+                return null;
+            }
+            return data;
         }
 
         if (entry != null) {
@@ -36,14 +42,19 @@ public class ApplicationCacheService {
             log.info("Cache MISS for key: {}", key);
         }
 
-        return Collections.emptyList();
+        return null;
     }
 
 
     public void put(String status, String region, List<ApplicationDto> data) {
+        if (data == null || data.isEmpty()) {
+            log.info("Not caching EMPTY result for key: {}/{}", status, region);
+            return;
+        }
+
         CacheKey key = new CacheKey(status, region);
         cache.put(key, new CacheEntry<>(data));
-        log.info("Cache updated for key: {}", key);
+        log.info("Cache updated for key: {}, data size: {}", key, data.size());
     }
 
     public void invalidate() {
