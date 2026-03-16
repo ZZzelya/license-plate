@@ -185,7 +185,7 @@ public class ApplicationService {
             log.info(CACHE_HIT, region, status);
 
             if (cached.isEmpty()) {
-                log.warn("В кэше пустой результат для {} {}, удаляем его", region, status);
+                log.warn("В кэше пустой результат для {} {}", region, status);
                 cacheService.invalidate();
             } else {
                 return cached;
