@@ -41,6 +41,7 @@ public class ApplicationService {
     private final ApplicationCacheService cacheService;
     private final DepartmentRepository departmentRepository;
 
+    // Константы для сообщений об ошибках
     private static final String REGION_NOT_FOUND = "Регион '%s' не найден";
     private static final String APPLICANT_NOT_FOUND = "Заявитель с паспортом '%s' не найден";
     private static final String APPLICATION_NOT_FOUND = "Заявление не найдено с id: %d";
@@ -51,6 +52,9 @@ public class ApplicationService {
     private static final String INVALID_STATUS = "Заявление не в статусе PENDING: %s";
     private static final String RESERVATION_EXPIRED = "Время бронирования истекло";
     private static final String CANNOT_CANCEL = "Нельзя отменить заявление в статусе: %s";
+    private static final String NOT_IN_CONFIRMED_STATUS = "Application is not in CONFIRMED status: {}";
+
+    // Константы для логов
     private static final String NO_APPLICATIONS = "У заявителя {} нет заявок";
     private static final String CACHE_INVALIDATED = "Cache invalidated after creation";
     private static final String APPLICATION_SAVED = "Application saved with id: {}";
@@ -76,7 +80,6 @@ public class ApplicationService {
     private static final String APPLICATIONS_WITH_STATUS_NOT_FOUND = "Заявки со статусом {} в регионе {} не найдены";
     private static final String APPLICATIONS_WITH_STATUS_NOT_FOUND_NATIVE = "Заявки со статусом {} в регионе {} " +
         "не найдены (native)";
-    private static final String NOT_IN_CONFIRMED_STATUS = "Application is not in CONFIRMED status: {}";
 
     @Transactional(readOnly = true)
     public List<ApplicationDto> getAllApplications() {
@@ -188,7 +191,6 @@ public class ApplicationService {
         List<Application> applications = applicationRepository
             .findByStatusAndDepartmentRegion(status, region);
 
-
         List<ApplicationDto> result = applicationMapper.toDtoList(applications);
         cacheService.put(status.name(), region, result);
 
@@ -263,12 +265,12 @@ public class ApplicationService {
 
         if (application.getStatus() != ApplicationStatus.PENDING) {
             throw new BusinessException(
-                String.format("Заявление не в статусе PENDING: %s", application.getStatus()));
+                String.format(INVALID_STATUS, application.getStatus()));
         }
 
         if (application.getReservedUntil().isBefore(LocalDateTime.now())) {
             expireApplication(application);
-            throw new BusinessException("Время бронирования истекло");
+            throw new BusinessException(RESERVATION_EXPIRED);
         }
 
         application.setStatus(ApplicationStatus.CONFIRMED);
@@ -286,7 +288,7 @@ public class ApplicationService {
 
         if (application.getStatus() != ApplicationStatus.CONFIRMED) {
             throw new BusinessException(
-                String.format("Заявление не в статусе CONFIRMED: %s", application.getStatus()));
+                String.format(NOT_IN_CONFIRMED_STATUS, application.getStatus()));
         }
 
         application.setStatus(ApplicationStatus.COMPLETED);
@@ -309,7 +311,7 @@ public class ApplicationService {
         if (application.getStatus() == ApplicationStatus.COMPLETED ||
             application.getStatus() == ApplicationStatus.CANCELLED) {
             throw new BusinessException(
-                String.format("Нельзя отменить заявление в статусе: %s", application.getStatus()));
+                String.format(CANNOT_CANCEL, application.getStatus()));
         }
 
         application.setStatus(ApplicationStatus.CANCELLED);

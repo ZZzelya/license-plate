@@ -1,4 +1,3 @@
-// exception/GlobalExceptionHandler.java
 package com.example.licenseplate.exception;
 
 import com.example.licenseplate.dto.response.ErrorResponse;
@@ -13,7 +12,6 @@ import org.springframework.web.bind.annotation.RestControllerAdvice;
 
 import java.time.LocalDateTime;
 import java.util.List;
-import java.util.stream.Collectors;
 
 @Slf4j
 @RestControllerAdvice
@@ -37,11 +35,8 @@ public class GlobalExceptionHandler {
     public ResponseEntity<ErrorResponse> handleIllegalStateException(
         IllegalStateException ex, HttpServletRequest request) {
         log.warn("Illegal state: {}", ex.getMessage());
-        // Если это конфликт состояний - 409
-        if (ex.getMessage() != null && (
-            ex.getMessage().contains("active applications") ||
-                ex.getMessage().contains("existing applications") ||
-                ex.getMessage().contains("already exists"))) {
+
+        if (ex.getMessage() != null && isConflictException(ex.getMessage())) {
             return buildErrorResponse(ex, HttpStatus.CONFLICT, request);
         }
         return buildErrorResponse(ex, HttpStatus.BAD_REQUEST, request);
@@ -52,18 +47,7 @@ public class GlobalExceptionHandler {
         BusinessException ex, HttpServletRequest request) {
         log.warn("Business violation: {}", ex.getMessage());
 
-        HttpStatus status = HttpStatus.BAD_REQUEST;
-
-        if (ex.getMessage() != null) {
-            if (ex.getMessage().contains("already exists") ||
-                ex.getMessage().contains("already used") ||
-                ex.getMessage().contains("Cannot delete") ||
-                ex.getMessage().contains("active applications") ||
-                ex.getMessage().contains("при активных заявлениях") ||
-                ex.getMessage().contains("используется")) {
-                status = HttpStatus.CONFLICT; // 409
-            }
-        }
+        HttpStatus status = determineHttpStatus(ex.getMessage());
 
         return buildErrorResponse(ex, status, request);
     }
@@ -75,7 +59,7 @@ public class GlobalExceptionHandler {
             .getFieldErrors()
             .stream()
             .map(this::mapToValidationError)
-            .collect(Collectors.toList());
+            .toList();
 
         ErrorResponse response = ErrorResponse.builder()
             .timestamp(LocalDateTime.now())
@@ -122,5 +106,29 @@ public class GlobalExceptionHandler {
             .message(fieldError.getDefaultMessage())
             .rejectedValue(fieldError.getRejectedValue())
             .build();
+    }
+
+    private boolean isConflictException(String message) {
+        return message.contains("active applications") ||
+            message.contains("existing applications") ||
+            message.contains("already exists") ||
+            message.contains("already used") ||
+            message.contains("Cannot delete");
+    }
+
+    private HttpStatus determineHttpStatus(String message) {
+        if (message != null && (
+            message.contains("already exists") ||
+                message.contains("already used") ||
+                message.contains("Cannot delete") ||
+                message.contains("active applications") ||
+                message.contains("при активных заявлениях") ||
+                message.contains("используется") ||
+                message.contains("нельзя удалить") ||
+                message.contains("уже существует") ||
+                message.contains("уже используется"))) {
+            return HttpStatus.CONFLICT;
+        }
+        return HttpStatus.BAD_REQUEST;
     }
 }
