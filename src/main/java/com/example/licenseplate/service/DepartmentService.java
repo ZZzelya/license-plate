@@ -78,8 +78,7 @@ public class DepartmentService {
     public void deleteDepartment(Long id) {
         RegistrationDept department = findDepartmentOrThrow(id);
 
-        if (department.getLicensePlates() != null &&
-            !department.getLicensePlates().isEmpty()) {
+        if (department.getLicensePlates() != null && !department.getLicensePlates().isEmpty()) {
             throw new BusinessException(
                 "Cannot delete department with existing license plates");
         }

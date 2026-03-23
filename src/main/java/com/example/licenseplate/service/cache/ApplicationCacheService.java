@@ -41,7 +41,6 @@ public class ApplicationCacheService {
 
     public void put(String status, String region, List<ApplicationDto> data) {
         if (data == null || data.isEmpty()) {
-            log.info("Не кэшируем пустой результат для {}/{}", status, region);
             return;
         }
 
@@ -51,9 +50,8 @@ public class ApplicationCacheService {
     }
 
     public void invalidate() {
-        int sizeBefore = cache.size();
         cache.clear();
-        log.info("Cache fully invalidated. Удалено {} записей", sizeBefore);
+        log.info("Cache fully invalidated.");
     }
 
     public void invalidateByRegion(String region) {

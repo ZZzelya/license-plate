@@ -173,13 +173,6 @@ public class ApplicationService {
 
         log.info(FETCHING_CACHED, status, region);
 
-        if (!departmentRepository.existsByRegion(region)) {
-            log.warn(REGION_NOT_FOUND_LOG, region);
-            throw new ResourceNotFoundException(
-                String.format(REGION_NOT_FOUND, region)
-            );
-        }
-
         List<ApplicationDto> cached = cacheService.get(status.name(), region);
         if (cached != null) {
             log.info(CACHE_HIT, region, status);
@@ -195,12 +188,6 @@ public class ApplicationService {
         List<Application> applications = applicationRepository
             .findByStatusAndDepartmentRegion(status, region);
 
-        if (applications.isEmpty()) {
-            log.warn(APPLICATIONS_WITH_STATUS_NOT_FOUND, status, region);
-            throw new ResourceNotFoundException(
-                String.format(APPLICATIONS_NOT_FOUND, status, region)
-            );
-        }
 
         List<ApplicationDto> result = applicationMapper.toDtoList(applications);
         cacheService.put(status.name(), region, result);
@@ -276,12 +263,12 @@ public class ApplicationService {
 
         if (application.getStatus() != ApplicationStatus.PENDING) {
             throw new BusinessException(
-                String.format(INVALID_STATUS, application.getStatus()));
+                String.format("Заявление не в статусе PENDING: %s", application.getStatus()));
         }
 
         if (application.getReservedUntil().isBefore(LocalDateTime.now())) {
             expireApplication(application);
-            throw new BusinessException(RESERVATION_EXPIRED);
+            throw new BusinessException("Время бронирования истекло");
         }
 
         application.setStatus(ApplicationStatus.CONFIRMED);
@@ -299,7 +286,7 @@ public class ApplicationService {
 
         if (application.getStatus() != ApplicationStatus.CONFIRMED) {
             throw new BusinessException(
-                String.format(NOT_IN_CONFIRMED_STATUS, application.getStatus()));
+                String.format("Заявление не в статусе CONFIRMED: %s", application.getStatus()));
         }
 
         application.setStatus(ApplicationStatus.COMPLETED);
@@ -322,7 +309,7 @@ public class ApplicationService {
         if (application.getStatus() == ApplicationStatus.COMPLETED ||
             application.getStatus() == ApplicationStatus.CANCELLED) {
             throw new BusinessException(
-                String.format(CANNOT_CANCEL, application.getStatus()));
+                String.format("Нельзя отменить заявление в статусе: %s", application.getStatus()));
         }
 
         application.setStatus(ApplicationStatus.CANCELLED);

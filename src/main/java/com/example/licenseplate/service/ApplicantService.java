@@ -72,19 +72,17 @@ public class ApplicantService {
     public ApplicantDto changePassport(Long id, String newPassportNumber) {
         Applicant applicant = findApplicantOrThrow(id);
 
-        // Проверяем, что новый паспорт не занят
         if (applicantRepository.existsByPassportNumber(newPassportNumber)) {
-            throw new BusinessException("Паспорт " + newPassportNumber + " уже используется");
+            throw new BusinessException("Паспорт " + newPassportNumber + " уже используется"); // 409
         }
 
-        // Проверяем, нет ли активных заявлений
         if (applicant.getApplications() != null && !applicant.getApplications().isEmpty()) {
             boolean hasActiveApplications = applicant.getApplications().stream()
                 .anyMatch(app -> app.getStatus() == ApplicationStatus.PENDING ||
                     app.getStatus() == ApplicationStatus.CONFIRMED);
 
             if (hasActiveApplications) {
-                throw new BusinessException("Нельзя сменить паспорт при активных заявлениях");
+                throw new BusinessException("Нельзя сменить паспорт при активных заявлениях"); // 409
             }
         }
 
@@ -100,10 +98,8 @@ public class ApplicantService {
     public void deleteApplicant(Long id) {
         Applicant applicant = findApplicantOrThrow(id);
 
-        if (applicant.getApplications() != null &&
-            !applicant.getApplications().isEmpty()) {
-            throw new BusinessException(
-                "Cannot delete applicant with existing applications");
+        if (applicant.getApplications() != null && !applicant.getApplications().isEmpty()) {
+            throw new BusinessException("Cannot delete applicant with existing applications"); // 409
         }
 
         applicantRepository.delete(applicant);
