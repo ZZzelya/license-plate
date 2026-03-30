@@ -1,161 +1,81 @@
-2026-03-26 11:35:58.690 [http-nio-8080-exec-9] INFO  c.e.l.aspect.LoggingAspect - ApplicantMapper.toDtoList executed in 5 ms
-2026-03-26 11:35:58.692 [http-nio-8080-exec-9] INFO  c.e.l.aspect.LoggingAspect - ApplicantService.getAllApplicants executed in 10 ms
-2026-03-26 11:35:59.356 [http-nio-8080-exec-10] DEBUG c.e.l.aspect.LoggingAspect - Executing ApplicantService.getAllApplicants with args: []
-2026-03-26 11:35:59.358 [http-nio-8080-exec-10] DEBUG org.hibernate.SQL - 
-    select
-        a1_0.id,
-        a1_0.address,
-        a1_0.email,
-        a1_0.full_name,
-        a1_0.passport_number,
-        a1_0.phone_number 
-    from
-        applicants a1_0
-2026-03-26 11:35:59.360 [http-nio-8080-exec-10] DEBUG c.e.l.aspect.LoggingAspect - Executing ApplicantMapper.toDtoList with args: [[Applicant(id=1, fullName=Зелень Алесандр Иванович, passportNumber=MP1234567, phoneNumber=+375 (29) 367-45-67, email=zelenaleksandr4@gmail.com, address=г.Минск, ул.Янки Купалы, 15-25), Applicant(id=7, fullName=UNKNOWN, passportNumber=MH1543675, phoneNumber=null, email=null, address=null), Applicant(id=8, fullName=UNKNOWN, passportNumber=MP9999999, phoneNumber=null, email=null, address=null)]]
-2026-03-26 11:35:59.364 [http-nio-8080-exec-10] DEBUG org.hibernate.SQL - 
-    select
-        a1_0.applicant_id,
-        a1_0.id,
-        a1_0.confirmation_date,
-        a1_0.confirmed_date,
-        a1_0.dept_id,
-        a1_0.license_plate_id,
-        a1_0.notes,
-        a1_0.payment_amount,
-        a1_0.reserved_until,
-        a1_0.status,
-        a1_0.submission_date,
-        a1_0.updated_at,
-        a1_0.vehicle_model,
-        a1_0.vehicle_vin,
-        a1_0.vehicle_year 
-    from
-        applications a1_0 
-    where
-        a1_0.applicant_id=?
-2026-03-26 11:35:59.368 [http-nio-8080-exec-10] DEBUG org.hibernate.SQL - 
-    select
-        a1_0.applicant_id,
-        a1_0.id,
-        a1_0.confirmation_date,
-        a1_0.confirmed_date,
-        a1_0.dept_id,
-        a1_0.license_plate_id,
-        a1_0.notes,
-        a1_0.payment_amount,
-        a1_0.reserved_until,
-        a1_0.status,
-        a1_0.submission_date,
-        a1_0.updated_at,
-        a1_0.vehicle_model,
-        a1_0.vehicle_vin,
-        a1_0.vehicle_year 
-    from
-        applications a1_0 
-    where
-        a1_0.applicant_id=?
-2026-03-26 11:35:59.369 [http-nio-8080-exec-10] DEBUG org.hibernate.SQL - 
-    select
-        a1_0.applicant_id,
-        a1_0.id,
-        a1_0.confirmation_date,
-        a1_0.confirmed_date,
-        a1_0.dept_id,
-        a1_0.license_plate_id,
-        a1_0.notes,
-        a1_0.payment_amount,
-        a1_0.reserved_until,
-        a1_0.status,
-        a1_0.submission_date,
-        a1_0.updated_at,
-        a1_0.vehicle_model,
-        a1_0.vehicle_vin,
-        a1_0.vehicle_year 
-    from
-        applications a1_0 
-    where
-        a1_0.applicant_id=?
-2026-03-26 11:35:59.370 [http-nio-8080-exec-10] INFO  c.e.l.aspect.LoggingAspect - ApplicantMapper.toDtoList executed in 10 ms
-2026-03-26 11:35:59.370 [http-nio-8080-exec-10] INFO  c.e.l.aspect.LoggingAspect - ApplicantService.getAllApplicants executed in 13 ms
-2026-03-26 11:36:00.003 [http-nio-8080-exec-1] DEBUG c.e.l.aspect.LoggingAspect - Executing ApplicantService.getAllApplicants with args: []
-2026-03-26 11:36:00.004 [http-nio-8080-exec-1] DEBUG org.hibernate.SQL - 
-    select
-        a1_0.id,
-        a1_0.address,
-        a1_0.email,
-        a1_0.full_name,
-        a1_0.passport_number,
-        a1_0.phone_number 
-    from
-        applicants a1_0
-2026-03-26 11:36:00.006 [http-nio-8080-exec-1] DEBUG c.e.l.aspect.LoggingAspect - Executing ApplicantMapper.toDtoList with args: [[Applicant(id=1, fullName=Зелень Алесандр Иванович, passportNumber=MP1234567, phoneNumber=+375 (29) 367-45-67, email=zelenaleksandr4@gmail.com, address=г.Минск, ул.Янки Купалы, 15-25), Applicant(id=7, fullName=UNKNOWN, passportNumber=MH1543675, phoneNumber=null, email=null, address=null), Applicant(id=8, fullName=UNKNOWN, passportNumber=MP9999999, phoneNumber=null, email=null, address=null)]]
-2026-03-26 11:36:00.007 [http-nio-8080-exec-1] DEBUG org.hibernate.SQL - 
-    select
-        a1_0.applicant_id,
-        a1_0.id,
-        a1_0.confirmation_date,
-        a1_0.confirmed_date,
-        a1_0.dept_id,
-        a1_0.license_plate_id,
-        a1_0.notes,
-        a1_0.payment_amount,
-        a1_0.reserved_until,
-        a1_0.status,
-        a1_0.submission_date,
-        a1_0.updated_at,
-        a1_0.vehicle_model,
-        a1_0.vehicle_vin,
-        a1_0.vehicle_year 
-    from
-        applications a1_0 
-    where
-        a1_0.applicant_id=?
-2026-03-26 11:36:00.011 [http-nio-8080-exec-1] DEBUG org.hibernate.SQL - 
-    select
-        a1_0.applicant_id,
-        a1_0.id,
-        a1_0.confirmation_date,
-        a1_0.confirmed_date,
-        a1_0.dept_id,
-        a1_0.license_plate_id,
-        a1_0.notes,
-        a1_0.payment_amount,
-        a1_0.reserved_until,
-        a1_0.status,
-        a1_0.submission_date,
-        a1_0.updated_at,
-        a1_0.vehicle_model,
-        a1_0.vehicle_vin,
-        a1_0.vehicle_year 
-    from
-        applications a1_0 
-    where
-        a1_0.applicant_id=?
-2026-03-26 11:36:00.012 [http-nio-8080-exec-1] DEBUG org.hibernate.SQL - 
-    select
-        a1_0.applicant_id,
-        a1_0.id,
-        a1_0.confirmation_date,
-        a1_0.confirmed_date,
-        a1_0.dept_id,
-        a1_0.license_plate_id,
-        a1_0.notes,
-        a1_0.payment_amount,
-        a1_0.reserved_until,
-        a1_0.status,
-        a1_0.submission_date,
-        a1_0.updated_at,
-        a1_0.vehicle_model,
-        a1_0.vehicle_vin,
-        a1_0.vehicle_year 
-    from
-        applications a1_0 
-    where
-        a1_0.applicant_id=?
-2026-03-26 11:36:00.014 [http-nio-8080-exec-1] INFO  c.e.l.aspect.LoggingAspect - ApplicantMapper.toDtoList executed in 7 ms
-2026-03-26 11:36:00.014 [http-nio-8080-exec-1] INFO  c.e.l.aspect.LoggingAspect - ApplicantService.getAllApplicants executed in 11 ms
-2026-03-26 11:36:06.753 [SpringApplicationShutdownHook] INFO  o.s.boot.tomcat.GracefulShutdown - Commencing graceful shutdown. Waiting for active requests to complete
-2026-03-26 11:36:06.765 [tomcat-shutdown] INFO  o.s.boot.tomcat.GracefulShutdown - Graceful shutdown complete
-2026-03-26 11:36:06.770 [SpringApplicationShutdownHook] INFO  o.s.o.j.LocalContainerEntityManagerFactoryBean - Closing JPA EntityManagerFactory for persistence unit 'default'
-2026-03-26 11:36:06.772 [SpringApplicationShutdownHook] INFO  com.zaxxer.hikari.HikariDataSource - HikariPool-1 - Shutdown initiated...
-2026-03-26 11:36:06.774 [SpringApplicationShutdownHook] INFO  com.zaxxer.hikari.HikariDataSource - HikariPool-1 - Shutdown completed.
+2026-03-30 11:20:43.796 [main] INFO  c.e.l.service.ApplicationService - === Demonstrating WITHOUT @Transactional ===
+2026-03-30 11:20:43.813 [main] INFO  c.e.l.service.ApplicationService - Пагинация для паспорта: MP1234567, page: 0, size: 10
+2026-03-30 11:20:43.813 [main] INFO  c.e.l.service.ApplicationService - Найдено 1 заявок из 1
+2026-03-30 11:20:43.816 [main] INFO  c.e.l.service.ApplicationService - Пагинация для паспорта: MP1234567, page: 0, size: 10
+2026-03-30 11:20:43.817 [main] INFO  c.e.l.service.ApplicationService - У заявителя MP1234567 нет заявок
+2026-03-30 11:20:43.817 [main] INFO  c.e.l.service.ApplicationService - Найдено 0 заявок из 0
+2026-03-30 11:20:43.830 [main] INFO  c.e.l.service.ApplicationService - Fetching applications by status: PENDING and region: UNKNOWN (NATIVE)
+2026-03-30 11:20:43.830 [main] WARN  c.e.l.service.ApplicationService - Region 'UNKNOWN' not found
+2026-03-30 11:20:43.833 [main] INFO  c.e.l.service.ApplicationService - Fetching applications by status: PENDING and region: MINSK (NATIVE)
+2026-03-30 11:20:43.833 [main] INFO  c.e.l.service.ApplicationService - Native query: найдено 1 заявок в регионе MINSK со статусом PENDING
+2026-03-30 11:20:43.836 [main] INFO  c.e.l.service.ApplicationService - === Creating bulk applications WITH @Transactional ===
+2026-03-30 11:20:43.838 [main] ERROR c.e.l.service.ApplicationService - Failed to create application for plate 1234 AB-7: Cannot invoke "com.example.licenseplate.model.entity.Application.getId()" because "saved" is null
+2026-03-30 11:20:43.846 [main] INFO  c.e.l.service.ApplicationService - === Creating bulk applications WITHOUT @Transactional ===
+2026-03-30 11:20:43.847 [main] INFO  c.e.l.service.ApplicationService - Application saved with id: 1
+2026-03-30 11:20:43.847 [main] ERROR c.e.l.service.ApplicationService - Failed to create application for plate 1234 AB-7: Cannot invoke "java.util.List.add(Object)" because the return value of "com.example.licenseplate.dto.response.BulkApplicationResult.getSuccessfulApplications()" is null
+2026-03-30 11:20:43.850 [main] INFO  c.e.l.service.ApplicationService - === Creating bulk applications WITH @Transactional ===
+2026-03-30 11:20:43.853 [main] INFO  c.e.l.service.ApplicationService - === Creating bulk applications WITH @Transactional ===
+2026-03-30 11:20:43.854 [main] ERROR c.e.l.service.ApplicationService - Failed to create application for plate 1234 AB-7: Cannot invoke "com.example.licenseplate.model.entity.Application.getId()" because "saved" is null
+2026-03-30 11:20:43.857 [main] INFO  c.e.l.service.ApplicationService - === Creating bulk applications WITH @Transactional ===
+2026-03-30 11:20:43.857 [main] INFO  c.e.l.service.ApplicationService - Application saved with id: 1
+2026-03-30 11:20:43.857 [main] ERROR c.e.l.service.ApplicationService - Failed to create application for plate 1234 AB-7: Cannot invoke "java.util.List.add(Object)" because the return value of "com.example.licenseplate.dto.response.BulkApplicationResult.getSuccessfulApplications()" is null
+2026-03-30 11:20:43.861 [main] INFO  c.e.l.service.ApplicationService - === Demonstrating WITH @Transactional ===
+2026-03-30 11:20:43.866 [main] INFO  c.e.l.service.ApplicationService - Creating application with transaction
+2026-03-30 11:20:43.869 [main] INFO  c.e.l.service.ApplicationService - Creating application with transaction
+2026-03-30 11:20:43.872 [main] INFO  c.e.l.service.ApplicationService - Creating application with transaction
+2026-03-30 11:20:43.876 [main] INFO  c.e.l.service.ApplicationService - Creating application with transaction
+2026-03-30 11:20:43.877 [main] INFO  c.e.l.service.ApplicationService - Application saved with id: 1
+2026-03-30 11:20:43.880 [main] INFO  c.e.l.service.ApplicationService - Deleted application with id: 1
+2026-03-30 11:20:43.888 [main] INFO  c.e.l.service.ApplicationService - Confirmed application with id: 1
+2026-03-30 11:20:43.893 [main] INFO  c.e.l.service.ApplicationService - Application 1 expired
+2026-03-30 11:20:43.895 [main] INFO  c.e.l.service.ApplicationService - Creating application with transaction
+2026-03-30 11:20:43.899 [main] INFO  c.e.l.service.ApplicationService - Creating application with transaction
+2026-03-30 11:20:43.899 [main] INFO  c.e.l.service.ApplicationService - Application saved with id: 1
+2026-03-30 11:20:43.899 [main] INFO  c.e.l.service.ApplicationService - Cache invalidated after creation
+2026-03-30 11:20:43.913 [main] INFO  c.e.l.service.ApplicationService - Completed application with id: 1
+2026-03-30 11:20:43.924 [main] INFO  c.e.l.service.ApplicationService - Cancelled application with id: 1
+2026-03-30 11:20:43.934 [main] INFO  c.e.l.service.ApplicationService - Application 1 expired
+2026-03-30 11:20:43.937 [main] INFO  c.e.l.service.ApplicationService - Creating application with transaction
+2026-03-30 11:20:43.938 [main] INFO  c.e.l.service.ApplicationService - Application saved with id: 1
+2026-03-30 11:20:43.938 [main] INFO  c.e.l.service.ApplicationService - Cache invalidated after creation
+2026-03-30 11:20:43.950 [main] INFO  c.e.l.service.ApplicationService - Creating application with transaction
+2026-03-30 11:20:43.950 [main] INFO  c.e.l.service.ApplicationService - Application saved with id: 1
+2026-03-30 11:20:43.950 [main] INFO  c.e.l.service.ApplicationService - Cache invalidated after creation
+2026-03-30 11:20:43.957 [main] INFO  c.e.l.service.ApplicationService - Creating application with transaction
+2026-03-30 11:20:43.960 [main] INFO  c.e.l.service.ApplicationService - Creating application with transaction
+2026-03-30 11:20:43.970 [main] INFO  c.e.l.service.ApplicationService - Fetching applications by status: PENDING and region: MINSK (JPQL)
+2026-03-30 11:20:43.970 [main] INFO  c.e.l.service.ApplicationService - Найдено 1 заявок в регионе MINSK со статусом PENDING
+2026-03-30 11:20:43.973 [main] INFO  c.e.l.service.ApplicationService - Fetching applications by status: PENDING and region: MINSK (JPQL)
+2026-03-30 11:20:43.973 [main] WARN  c.e.l.service.ApplicationService - Заявки со статусом PENDING в регионе MINSK не найдены
+2026-03-30 11:20:43.975 [main] INFO  c.e.l.service.ApplicationService - Fetching applications by status: PENDING and region: UNKNOWN (JPQL)
+2026-03-30 11:20:43.975 [main] WARN  c.e.l.service.ApplicationService - Region 'UNKNOWN' not found
+2026-03-30 11:20:43.977 [main] INFO  c.e.l.service.ApplicationService - Fetching applications by status: PENDING and region: MINSK (CACHED)
+2026-03-30 11:20:43.978 [main] INFO  c.e.l.service.ApplicationService - Returning cached result for region: MINSK, status: PENDING
+2026-03-30 11:20:43.979 [main] INFO  c.e.l.service.ApplicationService - Fetching applications by status: PENDING and region: MINSK (CACHED)
+2026-03-30 11:20:43.980 [main] INFO  c.e.l.service.ApplicationService - Cached 1 results for region: MINSK, status: PENDING
+2026-03-30 11:20:43.982 [main] INFO  c.e.l.service.ApplicationService - Fetching applications by status: PENDING and region: MINSK (CACHED)
+2026-03-30 11:20:43.982 [main] INFO  c.e.l.service.ApplicationService - Returning cached result for region: MINSK, status: PENDING
+2026-03-30 11:20:43.982 [main] WARN  c.e.l.service.ApplicationService - В кэше пустой результат для MINSK PENDING
+2026-03-30 11:20:43.983 [main] INFO  c.e.l.service.ApplicationService - Cached 0 results for region: MINSK, status: PENDING
+2026-03-30 11:20:43.986 [main] INFO  c.e.l.service.ApplicationService - У заявителя MP1234567 нет заявок
+2026-03-30 11:20:44.024 [main] INFO  c.e.l.service.ApplicantService - Changed passport for applicant 1: MP7654321 -> MP7654321
+2026-03-30 11:20:44.028 [main] INFO  c.e.l.service.ApplicantService - Changed passport for applicant 1: MP7654321 -> MP7654321
+2026-03-30 11:20:44.035 [main] INFO  c.e.l.service.ApplicantService - Changed passport for applicant 1: MP7654321 -> MP7654321
+2026-03-30 11:20:44.038 [main] INFO  c.e.l.service.ApplicantService - Created applicant with id: 1, passport: MP1234567
+2026-03-30 11:20:44.058 [main] INFO  c.e.l.service.ApplicantService - Updated applicant with id: 1
+2026-03-30 11:20:44.063 [main] INFO  c.e.l.service.ApplicantService - Updated applicant with id: 1
+2026-03-30 11:20:44.073 [main] INFO  c.e.l.service.ApplicantService - Deleted applicant with id: 1
+2026-03-30 11:20:44.075 [main] INFO  c.e.l.service.ApplicantService - Deleted applicant with id: 1
+2026-03-30 11:20:44.108 [main] INFO  c.e.l.service.LicensePlateService - Deleted license plate with id: 1
+2026-03-30 11:20:44.110 [main] INFO  c.e.l.service.LicensePlateService - Deleted license plate with id: 1
+2026-03-30 11:20:44.111 [main] INFO  c.e.l.service.LicensePlateService - Deleted license plate with id: 1
+2026-03-30 11:20:44.114 [main] INFO  c.e.l.service.LicensePlateService - Updated license plate with id: 1
+2026-03-30 11:20:44.116 [main] INFO  c.e.l.service.LicensePlateService - Updated license plate with id: 1
+2026-03-30 11:20:44.124 [main] INFO  c.e.l.service.LicensePlateService - Created license plate: 1234 AB-7 in department: МРЭО ГАИ
+2026-03-30 11:20:44.174 [main] INFO  c.e.l.s.ServiceManagementService - Updated service with id: 1
+2026-03-30 11:20:44.179 [main] INFO  c.e.l.s.ServiceManagementService - Updated service with id: 1
+2026-03-30 11:20:44.181 [main] INFO  c.e.l.s.ServiceManagementService - Updated service with id: 1
+2026-03-30 11:20:44.187 [main] INFO  c.e.l.s.ServiceManagementService - Deleted service with id: 1
+2026-03-30 11:20:44.188 [main] INFO  c.e.l.s.ServiceManagementService - Deleted service with id: 1
+2026-03-30 11:20:44.206 [main] INFO  c.e.l.s.ServiceManagementService - Created service: Новая услуга with price: 100
+2026-03-30 11:20:44.209 [main] INFO  c.e.l.s.ServiceManagementService - Created service: Срочное оформление with price: 50

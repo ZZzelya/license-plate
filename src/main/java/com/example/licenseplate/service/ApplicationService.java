@@ -1,7 +1,9 @@
 package com.example.licenseplate.service;
 
 import com.example.licenseplate.dto.request.ApplicationCreateDto;
+import com.example.licenseplate.dto.request.BulkApplicationCreateDto;
 import com.example.licenseplate.dto.response.ApplicationDto;
+import com.example.licenseplate.dto.response.BulkApplicationResult;
 import com.example.licenseplate.exception.ResourceNotFoundException;
 import com.example.licenseplate.exception.BusinessException;
 import com.example.licenseplate.model.entity.Applicant;
@@ -25,6 +27,7 @@ import org.springframework.transaction.annotation.Transactional;
 
 import java.math.BigDecimal;
 import java.time.LocalDateTime;
+import java.util.ArrayList;
 import java.util.List;
 import java.util.Optional;
 
@@ -41,7 +44,6 @@ public class ApplicationService {
     private final ApplicationCacheService cacheService;
     private final DepartmentRepository departmentRepository;
 
-    // Константы для сообщений об ошибках
     private static final String REGION_NOT_FOUND = "Регион '%s' не найден";
     private static final String APPLICANT_NOT_FOUND = "Заявитель с паспортом '%s' не найден";
     private static final String APPLICATION_NOT_FOUND = "Заявление не найдено с id: %d";
@@ -54,7 +56,6 @@ public class ApplicationService {
     private static final String CANNOT_CANCEL = "Нельзя отменить заявление в статусе: %s";
     private static final String NOT_IN_CONFIRMED_STATUS = "Application is not in CONFIRMED status: {}";
 
-    // Константы для логов
     private static final String NO_APPLICATIONS = "У заявителя {} нет заявок";
     private static final String CACHE_INVALIDATED = "Cache invalidated after creation";
     private static final String APPLICATION_SAVED = "Application saved with id: {}";
@@ -69,8 +70,8 @@ public class ApplicationService {
     private static final String REGION_NOT_FOUND_LOG = "Region '{}' not found";
     private static final String CACHE_HIT = "Returning cached result for region: {}, status: {}";
     private static final String FOUND_APPLICATIONS = "Найдено {} заявок в регионе {} со статусом {}";
-    private static final String FOUND_APPLICATIONS_NATIVE = "Native query: найдено {} заявок в регионе {} " +
-        "со статусом {}";
+    private static final String FOUND_APPLICATIONS_NATIVE = "Native query: найдено {} заявок в регионе {} со статусом" +
+        " {}";
     private static final String CACHED_RESULTS = "Cached {} results for region: {}, status: {}";
     private static final String PAGINATION_LOG = "Пагинация для паспорта: {}, page: {}, size: {}";
     private static final String PAGINATION_RESULT = "Найдено {} заявок из {}";
@@ -78,8 +79,8 @@ public class ApplicationService {
     private static final String WITHOUT_TX = "=== Demonstrating WITHOUT @Transactional ===";
     private static final String WITH_TX = "=== Demonstrating WITH @Transactional ===";
     private static final String APPLICATIONS_WITH_STATUS_NOT_FOUND = "Заявки со статусом {} в регионе {} не найдены";
-    private static final String APPLICATIONS_WITH_STATUS_NOT_FOUND_NATIVE = "Заявки со статусом {} в регионе {} " +
-        "не найдены (native)";
+    private static final String APPLICATIONS_WITH_STATUS_NOT_FOUND_NATIVE = "Заявки со статусом {} в регионе {}" +
+        " не найдены (native)";
 
     @Transactional(readOnly = true)
     public List<ApplicationDto> getAllApplications() {
@@ -241,7 +242,6 @@ public class ApplicationService {
         return result;
     }
 
-    @Transactional
     public ApplicationDto createApplicationWithoutTransaction(
         final ApplicationCreateDto createDto) {
         log.info(WITHOUT_TX);
@@ -353,26 +353,87 @@ public class ApplicationService {
             }
         }
 
-        Application application = buildApplication(applicant, plate, createDto);
-        Application saved = applicationRepository.save(application);
-        log.info(APPLICATION_SAVED, saved.getId());
-
+        List<AdditionalService> services = null;
         if (createDto.getServiceIds() != null && !createDto.getServiceIds().isEmpty()) {
-            List<AdditionalService> services = serviceRepository.findAllById(
-                createDto.getServiceIds());
-
+            services = serviceRepository.findAllById(createDto.getServiceIds());
             if (services.size() != createDto.getServiceIds().size()) {
                 String errorMsg = useTransactionalCheck
                     ? SERVICES_NOT_FOUND + " - transaction will rollback! Application will not be saved."
                     : SERVICES_NOT_FOUND + " - but application is already saved! Data is now inconsistent!";
                 throw new BusinessException(errorMsg);
             }
+        }
 
+        Application application = buildApplication(applicant, plate, createDto, services);
+        Application saved = applicationRepository.save(application);
+        log.info(APPLICATION_SAVED, saved.getId());
+
+        if (services != null && !services.isEmpty()) {
             saved.setAdditionalServices(services);
             applicationRepository.save(saved);
         }
 
         return applicationMapper.toDto(saved);
+    }
+
+    private ApplicationDto createSingleApplication(ApplicationCreateDto createDto, Applicant applicant,
+                                                   boolean transactional) {
+        LicensePlate plate = licensePlateRepository.findByPlateNumber(createDto.getPlateNumber())
+            .orElseThrow(() -> new ResourceNotFoundException(
+                String.format(PLATE_NOT_FOUND, createDto.getPlateNumber())));
+
+        if (!plate.isAvailable()) {
+            throw new BusinessException(String.format(PLATE_NOT_AVAILABLE, createDto.getPlateNumber()));
+        }
+
+        List<AdditionalService> services = null;
+        if (createDto.getServiceIds() != null && !createDto.getServiceIds().isEmpty()) {
+            services = serviceRepository.findAllById(createDto.getServiceIds());
+            if (services.size() != createDto.getServiceIds().size()) {
+                throw new BusinessException(SERVICES_NOT_FOUND);
+            }
+        }
+
+        Application application = buildApplication(applicant, plate, createDto, services);
+        application.setStatus(transactional ? ApplicationStatus.CONFIRMED : ApplicationStatus.PENDING);
+
+        Application saved = applicationRepository.save(application);
+        log.info(APPLICATION_SAVED, saved.getId());
+
+        if (services != null && !services.isEmpty()) {
+            saved.setAdditionalServices(services);
+            applicationRepository.save(saved);
+        }
+
+        return applicationMapper.toDto(saved);
+    }
+
+    private Application buildApplication(Applicant applicant, LicensePlate plate,
+                                         ApplicationCreateDto dto, List<AdditionalService> services) {
+        Application application = new Application();
+        application.setApplicant(applicant);
+        application.setLicensePlate(plate);
+        application.setDepartment(plate.getDepartment());
+        application.setStatus(ApplicationStatus.PENDING);
+        application.setSubmissionDate(LocalDateTime.now());
+        application.setReservedUntil(LocalDateTime.now().plusHours(1));
+        application.setVehicleVin(dto.getVehicleVin());
+        application.setVehicleModel(dto.getVehicleModel());
+        application.setVehicleYear(dto.getVehicleYear());
+        application.setNotes(dto.getNotes());
+        application.setPaymentAmount(calculateTotalAmount(plate, services));
+        return application;
+    }
+
+    private BigDecimal calculateTotalAmount(LicensePlate plate, List<AdditionalService> services) {
+        BigDecimal total = plate.getPrice();
+        if (services != null && !services.isEmpty()) {
+            BigDecimal servicesTotal = services.stream()
+                .map(AdditionalService::getPrice)
+                .reduce(BigDecimal.ZERO, BigDecimal::add);
+            total = total.add(servicesTotal);
+        }
+        return total;
     }
 
     private Applicant findApplicantByPassport(String passportNumber) {
@@ -397,37 +458,6 @@ public class ApplicationService {
                 String.format(PLATE_NOT_FOUND, plateNumber)));
     }
 
-    private Application buildApplication(Applicant applicant, LicensePlate plate,
-                                         ApplicationCreateDto dto) {
-        Application application = new Application();
-        application.setApplicant(applicant);
-        application.setLicensePlate(plate);
-        application.setDepartment(plate.getDepartment());
-        application.setStatus(ApplicationStatus.PENDING);
-        application.setSubmissionDate(LocalDateTime.now());
-        application.setReservedUntil(LocalDateTime.now().plusHours(1));
-        application.setVehicleVin(dto.getVehicleVin());
-        application.setVehicleModel(dto.getVehicleModel());
-        application.setVehicleYear(dto.getVehicleYear());
-        application.setNotes(dto.getNotes());
-        application.setPaymentAmount(calculateTotalAmount(plate, dto.getServiceIds()));
-        return application;
-    }
-
-    private BigDecimal calculateTotalAmount(LicensePlate plate, List<Long> serviceIds) {
-        BigDecimal total = plate.getPrice();
-
-        if (serviceIds != null && !serviceIds.isEmpty()) {
-            List<AdditionalService> services = serviceRepository.findAllById(serviceIds);
-            BigDecimal servicesTotal = services.stream()
-                .map(AdditionalService::getPrice)
-                .reduce(BigDecimal.ZERO, BigDecimal::add);
-            total = total.add(servicesTotal);
-        }
-
-        return total;
-    }
-
     private void expireApplication(Application application) {
         application.setStatus(ApplicationStatus.EXPIRED);
         applicationRepository.save(application);
@@ -438,5 +468,67 @@ public class ApplicationService {
         return applicationRepository.findById(id)
             .orElseThrow(() -> new ResourceNotFoundException(
                 String.format(APPLICATION_NOT_FOUND, id)));
+    }
+
+    @Transactional
+    public BulkApplicationResult createBulkApplicationsWithTransaction(BulkApplicationCreateDto bulkDto) {
+        log.info("=== Creating bulk applications WITH @Transactional ===");
+        return processBulkApplications(bulkDto, true);
+    }
+
+    public BulkApplicationResult createBulkApplicationsWithoutTransaction(BulkApplicationCreateDto bulkDto) {
+        log.info("=== Creating bulk applications WITHOUT @Transactional ===");
+        return processBulkApplications(bulkDto, false);
+    }
+
+    private BulkApplicationResult processBulkApplications(BulkApplicationCreateDto bulkDto,
+                                                          boolean transactional) {
+        BulkApplicationResult result = BulkApplicationResult.builder()
+            .totalRequested(bulkDto.getApplications().size())
+            .successful(0)
+            .failed(0)
+            .successfulApplications(new ArrayList<>())
+            .errors(new ArrayList<>())
+            .build();
+
+        boolean hasDuplicatePlates = bulkDto.getApplications().stream()
+            .map(ApplicationCreateDto::getPlateNumber)
+            .distinct()
+            .count() != bulkDto.getApplications().size();
+
+        if (hasDuplicatePlates) {
+            throw new BusinessException("Duplicate plate numbers in bulk request");
+        }
+
+        Applicant applicant = applicantRepository.findByPassportNumber(bulkDto.getPassportNumber())
+            .orElseThrow(() -> new ResourceNotFoundException(
+                String.format(APPLICANT_NOT_FOUND, bulkDto.getPassportNumber())));
+
+        bulkDto.getApplications().forEach(createDto -> {
+            try {
+                ApplicationDto created = createSingleApplication(createDto, applicant, transactional);
+                result.getSuccessfulApplications().add(created);
+                result.setSuccessful(result.getSuccessful() + 1);
+            } catch (Exception e) {
+                log.error("Failed to create application for plate {}: {}",
+                    createDto.getPlateNumber(), e.getMessage());
+                result.getErrors().add(String.format("Plate %s: %s",
+                    createDto.getPlateNumber(), e.getMessage()));
+                result.setFailed(result.getFailed() + 1);
+
+                if (transactional) {
+                    throw new BusinessException("Bulk application failed: " + e.getMessage());
+                }
+            }
+        });
+
+        log.info("Bulk application completed: total={}, success={}, failed={}",
+            result.getTotalRequested(), result.getSuccessful(), result.getFailed());
+
+        if (result.getSuccessful() > 0) {
+            cacheService.invalidate();
+        }
+
+        return result;
     }
 }

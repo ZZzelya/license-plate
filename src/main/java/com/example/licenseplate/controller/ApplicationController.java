@@ -1,7 +1,9 @@
 package com.example.licenseplate.controller;
 
 import com.example.licenseplate.dto.request.ApplicationCreateDto;
+import com.example.licenseplate.dto.request.BulkApplicationCreateDto;
 import com.example.licenseplate.dto.response.ApplicationDto;
+import com.example.licenseplate.dto.response.BulkApplicationResult;
 import com.example.licenseplate.model.enums.ApplicationStatus;
 import com.example.licenseplate.service.ApplicationService;
 import io.swagger.v3.oas.annotations.Operation;
@@ -523,4 +525,45 @@ public class ApplicationController {
         return ResponseEntity.ok(
             applicationService.getApplicationsByPassportPaginated(passportNumber, pageable));
     }
+
+
+    @Operation(
+        summary = "Bulk создание заявлений (с транзакцией)",
+        description = "Массовое создание заявлений. При ошибке откатываются все изменения."
+    )
+    @ApiResponses(value = {
+        @ApiResponse(
+            responseCode = "200",
+            description = "Bulk операция выполнена",
+            content = @Content(schema = @Schema(implementation = BulkApplicationResult.class))
+        ),
+        @ApiResponse(responseCode = "400", description = "Неверные данные"),
+        @ApiResponse(responseCode = "404", description = "Заявитель не найден"),
+        @ApiResponse(responseCode = "409", description = "Конфликт номеров")
+    })
+    @PostMapping("/bulk/with-tx")
+    public ResponseEntity<BulkApplicationResult> createBulkApplicationsWithTransaction(
+        @Valid @RequestBody BulkApplicationCreateDto bulkDto) {
+        return ResponseEntity.ok(applicationService.createBulkApplicationsWithTransaction(bulkDto));
+    }
+
+    @Operation(
+        summary = "Bulk создание заявлений (без транзакции) - ДЕМО",
+        description = "Массовое создание заявлений. При ошибке успешные сохраняются."
+    )
+    @ApiResponses(value = {
+        @ApiResponse(
+            responseCode = "200",
+            description = "Bulk операция выполнена (частично)",
+            content = @Content(schema = @Schema(implementation = BulkApplicationResult.class))
+        ),
+        @ApiResponse(responseCode = "400", description = "Неверные данные"),
+        @ApiResponse(responseCode = "404", description = "Заявитель не найден")
+    })
+    @PostMapping("/bulk/without-tx")
+    public ResponseEntity<BulkApplicationResult> createBulkApplicationsWithoutTransaction(
+        @Valid @RequestBody BulkApplicationCreateDto bulkDto) {
+        return ResponseEntity.ok(applicationService.createBulkApplicationsWithoutTransaction(bulkDto));
+    }
+
 }
