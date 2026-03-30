@@ -1,81 +1,75 @@
-2026-03-30 11:20:43.796 [main] INFO  c.e.l.service.ApplicationService - === Demonstrating WITHOUT @Transactional ===
-2026-03-30 11:20:43.813 [main] INFO  c.e.l.service.ApplicationService - Пагинация для паспорта: MP1234567, page: 0, size: 10
-2026-03-30 11:20:43.813 [main] INFO  c.e.l.service.ApplicationService - Найдено 1 заявок из 1
-2026-03-30 11:20:43.816 [main] INFO  c.e.l.service.ApplicationService - Пагинация для паспорта: MP1234567, page: 0, size: 10
-2026-03-30 11:20:43.817 [main] INFO  c.e.l.service.ApplicationService - У заявителя MP1234567 нет заявок
-2026-03-30 11:20:43.817 [main] INFO  c.e.l.service.ApplicationService - Найдено 0 заявок из 0
-2026-03-30 11:20:43.830 [main] INFO  c.e.l.service.ApplicationService - Fetching applications by status: PENDING and region: UNKNOWN (NATIVE)
-2026-03-30 11:20:43.830 [main] WARN  c.e.l.service.ApplicationService - Region 'UNKNOWN' not found
-2026-03-30 11:20:43.833 [main] INFO  c.e.l.service.ApplicationService - Fetching applications by status: PENDING and region: MINSK (NATIVE)
-2026-03-30 11:20:43.833 [main] INFO  c.e.l.service.ApplicationService - Native query: найдено 1 заявок в регионе MINSK со статусом PENDING
-2026-03-30 11:20:43.836 [main] INFO  c.e.l.service.ApplicationService - === Creating bulk applications WITH @Transactional ===
-2026-03-30 11:20:43.838 [main] ERROR c.e.l.service.ApplicationService - Failed to create application for plate 1234 AB-7: Cannot invoke "com.example.licenseplate.model.entity.Application.getId()" because "saved" is null
-2026-03-30 11:20:43.846 [main] INFO  c.e.l.service.ApplicationService - === Creating bulk applications WITHOUT @Transactional ===
-2026-03-30 11:20:43.847 [main] INFO  c.e.l.service.ApplicationService - Application saved with id: 1
-2026-03-30 11:20:43.847 [main] ERROR c.e.l.service.ApplicationService - Failed to create application for plate 1234 AB-7: Cannot invoke "java.util.List.add(Object)" because the return value of "com.example.licenseplate.dto.response.BulkApplicationResult.getSuccessfulApplications()" is null
-2026-03-30 11:20:43.850 [main] INFO  c.e.l.service.ApplicationService - === Creating bulk applications WITH @Transactional ===
-2026-03-30 11:20:43.853 [main] INFO  c.e.l.service.ApplicationService - === Creating bulk applications WITH @Transactional ===
-2026-03-30 11:20:43.854 [main] ERROR c.e.l.service.ApplicationService - Failed to create application for plate 1234 AB-7: Cannot invoke "com.example.licenseplate.model.entity.Application.getId()" because "saved" is null
-2026-03-30 11:20:43.857 [main] INFO  c.e.l.service.ApplicationService - === Creating bulk applications WITH @Transactional ===
-2026-03-30 11:20:43.857 [main] INFO  c.e.l.service.ApplicationService - Application saved with id: 1
-2026-03-30 11:20:43.857 [main] ERROR c.e.l.service.ApplicationService - Failed to create application for plate 1234 AB-7: Cannot invoke "java.util.List.add(Object)" because the return value of "com.example.licenseplate.dto.response.BulkApplicationResult.getSuccessfulApplications()" is null
-2026-03-30 11:20:43.861 [main] INFO  c.e.l.service.ApplicationService - === Demonstrating WITH @Transactional ===
-2026-03-30 11:20:43.866 [main] INFO  c.e.l.service.ApplicationService - Creating application with transaction
-2026-03-30 11:20:43.869 [main] INFO  c.e.l.service.ApplicationService - Creating application with transaction
-2026-03-30 11:20:43.872 [main] INFO  c.e.l.service.ApplicationService - Creating application with transaction
-2026-03-30 11:20:43.876 [main] INFO  c.e.l.service.ApplicationService - Creating application with transaction
-2026-03-30 11:20:43.877 [main] INFO  c.e.l.service.ApplicationService - Application saved with id: 1
-2026-03-30 11:20:43.880 [main] INFO  c.e.l.service.ApplicationService - Deleted application with id: 1
-2026-03-30 11:20:43.888 [main] INFO  c.e.l.service.ApplicationService - Confirmed application with id: 1
-2026-03-30 11:20:43.893 [main] INFO  c.e.l.service.ApplicationService - Application 1 expired
-2026-03-30 11:20:43.895 [main] INFO  c.e.l.service.ApplicationService - Creating application with transaction
-2026-03-30 11:20:43.899 [main] INFO  c.e.l.service.ApplicationService - Creating application with transaction
-2026-03-30 11:20:43.899 [main] INFO  c.e.l.service.ApplicationService - Application saved with id: 1
-2026-03-30 11:20:43.899 [main] INFO  c.e.l.service.ApplicationService - Cache invalidated after creation
-2026-03-30 11:20:43.913 [main] INFO  c.e.l.service.ApplicationService - Completed application with id: 1
-2026-03-30 11:20:43.924 [main] INFO  c.e.l.service.ApplicationService - Cancelled application with id: 1
-2026-03-30 11:20:43.934 [main] INFO  c.e.l.service.ApplicationService - Application 1 expired
-2026-03-30 11:20:43.937 [main] INFO  c.e.l.service.ApplicationService - Creating application with transaction
-2026-03-30 11:20:43.938 [main] INFO  c.e.l.service.ApplicationService - Application saved with id: 1
-2026-03-30 11:20:43.938 [main] INFO  c.e.l.service.ApplicationService - Cache invalidated after creation
-2026-03-30 11:20:43.950 [main] INFO  c.e.l.service.ApplicationService - Creating application with transaction
-2026-03-30 11:20:43.950 [main] INFO  c.e.l.service.ApplicationService - Application saved with id: 1
-2026-03-30 11:20:43.950 [main] INFO  c.e.l.service.ApplicationService - Cache invalidated after creation
-2026-03-30 11:20:43.957 [main] INFO  c.e.l.service.ApplicationService - Creating application with transaction
-2026-03-30 11:20:43.960 [main] INFO  c.e.l.service.ApplicationService - Creating application with transaction
-2026-03-30 11:20:43.970 [main] INFO  c.e.l.service.ApplicationService - Fetching applications by status: PENDING and region: MINSK (JPQL)
-2026-03-30 11:20:43.970 [main] INFO  c.e.l.service.ApplicationService - Найдено 1 заявок в регионе MINSK со статусом PENDING
-2026-03-30 11:20:43.973 [main] INFO  c.e.l.service.ApplicationService - Fetching applications by status: PENDING and region: MINSK (JPQL)
-2026-03-30 11:20:43.973 [main] WARN  c.e.l.service.ApplicationService - Заявки со статусом PENDING в регионе MINSK не найдены
-2026-03-30 11:20:43.975 [main] INFO  c.e.l.service.ApplicationService - Fetching applications by status: PENDING and region: UNKNOWN (JPQL)
-2026-03-30 11:20:43.975 [main] WARN  c.e.l.service.ApplicationService - Region 'UNKNOWN' not found
-2026-03-30 11:20:43.977 [main] INFO  c.e.l.service.ApplicationService - Fetching applications by status: PENDING and region: MINSK (CACHED)
-2026-03-30 11:20:43.978 [main] INFO  c.e.l.service.ApplicationService - Returning cached result for region: MINSK, status: PENDING
-2026-03-30 11:20:43.979 [main] INFO  c.e.l.service.ApplicationService - Fetching applications by status: PENDING and region: MINSK (CACHED)
-2026-03-30 11:20:43.980 [main] INFO  c.e.l.service.ApplicationService - Cached 1 results for region: MINSK, status: PENDING
-2026-03-30 11:20:43.982 [main] INFO  c.e.l.service.ApplicationService - Fetching applications by status: PENDING and region: MINSK (CACHED)
-2026-03-30 11:20:43.982 [main] INFO  c.e.l.service.ApplicationService - Returning cached result for region: MINSK, status: PENDING
-2026-03-30 11:20:43.982 [main] WARN  c.e.l.service.ApplicationService - В кэше пустой результат для MINSK PENDING
-2026-03-30 11:20:43.983 [main] INFO  c.e.l.service.ApplicationService - Cached 0 results for region: MINSK, status: PENDING
-2026-03-30 11:20:43.986 [main] INFO  c.e.l.service.ApplicationService - У заявителя MP1234567 нет заявок
-2026-03-30 11:20:44.024 [main] INFO  c.e.l.service.ApplicantService - Changed passport for applicant 1: MP7654321 -> MP7654321
-2026-03-30 11:20:44.028 [main] INFO  c.e.l.service.ApplicantService - Changed passport for applicant 1: MP7654321 -> MP7654321
-2026-03-30 11:20:44.035 [main] INFO  c.e.l.service.ApplicantService - Changed passport for applicant 1: MP7654321 -> MP7654321
-2026-03-30 11:20:44.038 [main] INFO  c.e.l.service.ApplicantService - Created applicant with id: 1, passport: MP1234567
-2026-03-30 11:20:44.058 [main] INFO  c.e.l.service.ApplicantService - Updated applicant with id: 1
-2026-03-30 11:20:44.063 [main] INFO  c.e.l.service.ApplicantService - Updated applicant with id: 1
-2026-03-30 11:20:44.073 [main] INFO  c.e.l.service.ApplicantService - Deleted applicant with id: 1
-2026-03-30 11:20:44.075 [main] INFO  c.e.l.service.ApplicantService - Deleted applicant with id: 1
-2026-03-30 11:20:44.108 [main] INFO  c.e.l.service.LicensePlateService - Deleted license plate with id: 1
-2026-03-30 11:20:44.110 [main] INFO  c.e.l.service.LicensePlateService - Deleted license plate with id: 1
-2026-03-30 11:20:44.111 [main] INFO  c.e.l.service.LicensePlateService - Deleted license plate with id: 1
-2026-03-30 11:20:44.114 [main] INFO  c.e.l.service.LicensePlateService - Updated license plate with id: 1
-2026-03-30 11:20:44.116 [main] INFO  c.e.l.service.LicensePlateService - Updated license plate with id: 1
-2026-03-30 11:20:44.124 [main] INFO  c.e.l.service.LicensePlateService - Created license plate: 1234 AB-7 in department: МРЭО ГАИ
-2026-03-30 11:20:44.174 [main] INFO  c.e.l.s.ServiceManagementService - Updated service with id: 1
-2026-03-30 11:20:44.179 [main] INFO  c.e.l.s.ServiceManagementService - Updated service with id: 1
-2026-03-30 11:20:44.181 [main] INFO  c.e.l.s.ServiceManagementService - Updated service with id: 1
-2026-03-30 11:20:44.187 [main] INFO  c.e.l.s.ServiceManagementService - Deleted service with id: 1
-2026-03-30 11:20:44.188 [main] INFO  c.e.l.s.ServiceManagementService - Deleted service with id: 1
-2026-03-30 11:20:44.206 [main] INFO  c.e.l.s.ServiceManagementService - Created service: Новая услуга with price: 100
-2026-03-30 11:20:44.209 [main] INFO  c.e.l.s.ServiceManagementService - Created service: Срочное оформление with price: 50
+2026-03-30 23:37:19.617 [restartedMain] INFO  o.s.b.d.e.DevToolsPropertyDefaultsPostProcessor - For additional web related logging consider setting the 'logging.level.web' property to 'DEBUG'
+2026-03-30 23:37:20.194 [restartedMain] INFO  o.s.d.r.c.RepositoryConfigurationDelegate - Bootstrapping Spring Data JPA repositories in DEFAULT mode.
+2026-03-30 23:37:20.240 [restartedMain] INFO  o.s.d.r.c.RepositoryConfigurationDelegate - Finished Spring Data repository scanning in 39 ms. Found 5 JPA repository interfaces.
+2026-03-30 23:37:20.679 [restartedMain] INFO  o.s.boot.tomcat.TomcatWebServer - Tomcat initialized with port 8080 (http)
+2026-03-30 23:37:20.686 [restartedMain] INFO  o.a.coyote.http11.Http11NioProtocol - Initializing ProtocolHandler ["http-nio-8080"]
+2026-03-30 23:37:20.690 [restartedMain] INFO  o.a.catalina.core.StandardService - Starting service [Tomcat]
+2026-03-30 23:37:20.690 [restartedMain] INFO  o.a.catalina.core.StandardEngine - Starting Servlet engine: [Apache Tomcat/11.0.18]
+2026-03-30 23:37:20.717 [restartedMain] INFO  o.s.b.w.c.s.WebApplicationContextInitializer - Root WebApplicationContext: initialization completed in 1096 ms
+2026-03-30 23:37:21.180 [restartedMain] INFO  o.s.o.j.p.SpringPersistenceUnitInfo - No LoadTimeWeaver setup: ignoring JPA class transformer
+2026-03-30 23:37:21.198 [restartedMain] INFO  com.zaxxer.hikari.HikariDataSource - HikariPool-1 - Starting...
+2026-03-30 23:37:21.297 [restartedMain] INFO  com.zaxxer.hikari.pool.HikariPool - HikariPool-1 - Added connection org.postgresql.jdbc.PgConnection@406e9fed
+2026-03-30 23:37:21.297 [restartedMain] INFO  com.zaxxer.hikari.HikariDataSource - HikariPool-1 - Start completed.
+2026-03-30 23:37:21.319 [restartedMain] WARN  org.hibernate.orm.deprecation - HHH90000025: PostgreSQLDialect does not need to be specified explicitly using 'hibernate.dialect' (remove the property setting and it will be selected by default)
+2026-03-30 23:37:22.020 [restartedMain] INFO  o.s.o.j.LocalContainerEntityManagerFactoryBean - Initialized JPA EntityManagerFactory for persistence unit 'default'
+2026-03-30 23:37:22.091 [restartedMain] INFO  o.s.d.j.r.q.QueryEnhancerFactories - Hibernate is in classpath; If applicable, HQL parser will be used.
+2026-03-30 23:37:22.760 [restartedMain] WARN  o.s.b.j.a.JpaBaseConfiguration$JpaWebConfiguration - spring.jpa.open-in-view is enabled by default. Therefore, database queries may be performed during view rendering. Explicitly configure spring.jpa.open-in-view to disable this warning
+2026-03-30 23:37:23.234 [restartedMain] INFO  o.s.b.a.e.web.EndpointLinksResolver - Exposing 3 endpoints beneath base path '/actuator'
+2026-03-30 23:37:23.282 [restartedMain] INFO  o.a.coyote.http11.Http11NioProtocol - Starting ProtocolHandler ["http-nio-8080"]
+2026-03-30 23:37:23.292 [restartedMain] INFO  o.s.boot.tomcat.TomcatWebServer - Tomcat started on port 8080 (http) with context path '/'
+2026-03-30 23:37:23.300 [restartedMain] INFO  c.e.l.LicensePlateApplication - Started LicensePlateApplication in 4.01 seconds (process running for 4.44)
+2026-03-30 23:37:23.305 [restartedMain] WARN  o.s.c.events.SpringDocAppInitializer - SpringDoc /api-docs endpoint is enabled by default. To disable it in production, set the property 'springdoc.api-docs.enabled=false'
+2026-03-30 23:37:23.305 [restartedMain] WARN  o.s.c.events.SpringDocAppInitializer - SpringDoc /swagger-ui.html endpoint is enabled by default. To disable it in production, set the property 'springdoc.swagger-ui.enabled=false'
+2026-03-30 23:37:23.346 [scheduling-1] DEBUG org.hibernate.SQL - 
+    select
+        a1_0.id,
+        a1_0.applicant_id,
+        a1_0.confirmation_date,
+        a1_0.confirmed_date,
+        a1_0.dept_id,
+        a1_0.license_plate_id,
+        a1_0.notes,
+        a1_0.payment_amount,
+        a1_0.reserved_until,
+        a1_0.status,
+        a1_0.submission_date,
+        a1_0.updated_at,
+        a1_0.vehicle_model,
+        a1_0.vehicle_vin,
+        a1_0.vehicle_year 
+    from
+        applications a1_0 
+    where
+        a1_0.status=? 
+        and a1_0.reserved_until<?
+2026-03-30 23:37:23.594 [RMI TCP Connection(3)-192.168.10.105] INFO  o.a.c.c.C.[Tomcat].[localhost].[/] - Initializing Spring DispatcherServlet 'dispatcherServlet'
+2026-03-30 23:37:23.594 [RMI TCP Connection(3)-192.168.10.105] INFO  o.s.web.servlet.DispatcherServlet - Initializing Servlet 'dispatcherServlet'
+2026-03-30 23:37:23.596 [RMI TCP Connection(3)-192.168.10.105] INFO  o.s.web.servlet.DispatcherServlet - Completed initialization in 2 ms
+2026-03-30 23:39:30.673 [http-nio-8080-exec-5] INFO  o.s.api.AbstractOpenApiResource - Init duration for springdoc-openapi is: 411 ms
+2026-03-30 23:47:23.366 [scheduling-1] DEBUG org.hibernate.SQL - 
+    select
+        a1_0.id,
+        a1_0.applicant_id,
+        a1_0.confirmation_date,
+        a1_0.confirmed_date,
+        a1_0.dept_id,
+        a1_0.license_plate_id,
+        a1_0.notes,
+        a1_0.payment_amount,
+        a1_0.reserved_until,
+        a1_0.status,
+        a1_0.submission_date,
+        a1_0.updated_at,
+        a1_0.vehicle_model,
+        a1_0.vehicle_vin,
+        a1_0.vehicle_year 
+    from
+        applications a1_0 
+    where
+        a1_0.status=? 
+        and a1_0.reserved_until<?
+2026-03-30 23:49:10.323 [SpringApplicationShutdownHook] INFO  o.s.boot.tomcat.GracefulShutdown - Commencing graceful shutdown. Waiting for active requests to complete
+2026-03-30 23:49:10.329 [tomcat-shutdown] INFO  o.s.boot.tomcat.GracefulShutdown - Graceful shutdown complete
+2026-03-30 23:49:10.333 [SpringApplicationShutdownHook] INFO  o.s.o.j.LocalContainerEntityManagerFactoryBean - Closing JPA EntityManagerFactory for persistence unit 'default'
+2026-03-30 23:49:10.335 [SpringApplicationShutdownHook] INFO  com.zaxxer.hikari.HikariDataSource - HikariPool-1 - Shutdown initiated...
+2026-03-30 23:49:10.336 [SpringApplicationShutdownHook] INFO  com.zaxxer.hikari.HikariDataSource - HikariPool-1 - Shutdown completed.
