@@ -28,6 +28,7 @@ import org.springframework.transaction.annotation.Transactional;
 import java.math.BigDecimal;
 import java.time.LocalDateTime;
 import java.util.ArrayList;
+import java.util.Collections;
 import java.util.List;
 import java.util.Optional;
 
@@ -365,7 +366,7 @@ public class ApplicationService {
 
     private List<AdditionalService> getServices(ApplicationCreateDto createDto, boolean useTransactionalCheck) {
         if (createDto.getServiceIds() == null || createDto.getServiceIds().isEmpty()) {
-            return null;
+            return Collections.emptyList();
         }
 
         List<AdditionalService> services = serviceRepository.findAllById(createDto.getServiceIds());
