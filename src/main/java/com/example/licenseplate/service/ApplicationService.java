@@ -70,8 +70,8 @@ public class ApplicationService {
     private static final String REGION_NOT_FOUND_LOG = "Region '{}' not found";
     private static final String CACHE_HIT = "Returning cached result for region: {}, status: {}";
     private static final String FOUND_APPLICATIONS = "Найдено {} заявок в регионе {} со статусом {}";
-    private static final String FOUND_APPLICATIONS_NATIVE = "Native query: найдено {} заявок в регионе {} со статусом" +
-        " {}";
+    private static final String FOUND_APPLICATIONS_NATIVE = "Native query: найдено {} заявок в регионе {}" +
+        " со статусом {}";
     private static final String CACHED_RESULTS = "Cached {} results for region: {}, status: {}";
     private static final String PAGINATION_LOG = "Пагинация для паспорта: {}, page: {}, size: {}";
     private static final String PAGINATION_RESULT = "Найдено {} заявок из {}";
@@ -79,8 +79,8 @@ public class ApplicationService {
     private static final String WITHOUT_TX = "=== Demonstrating WITHOUT @Transactional ===";
     private static final String WITH_TX = "=== Demonstrating WITH @Transactional ===";
     private static final String APPLICATIONS_WITH_STATUS_NOT_FOUND = "Заявки со статусом {} в регионе {} не найдены";
-    private static final String APPLICATIONS_WITH_STATUS_NOT_FOUND_NATIVE = "Заявки со статусом {} в регионе {}" +
-        " не найдены (native)";
+    private static final String APPLICATIONS_WITH_STATUS_NOT_FOUND_NATIVE = "Заявки со статусом {} в регионе " +
+        "{} не найдены (native)";
 
     @Transactional(readOnly = true)
     public List<ApplicationDto> getAllApplications() {
@@ -335,36 +335,54 @@ public class ApplicationService {
         boolean useTransactionalCheck,
         boolean useExistingApplicant) {
 
-        Applicant applicant = useExistingApplicant
-            ? findApplicantByPassport(createDto.getPassportNumber())
-            : findOrCreateApplicant(createDto.getPassportNumber());
-
+        Applicant applicant = getApplicant(createDto, useExistingApplicant);
         LicensePlate plate = findPlateByNumber(createDto.getPlateNumber());
 
+        validatePlateAvailability(plate, createDto.getPlateNumber(), useTransactionalCheck);
+
+        List<AdditionalService> services = getServices(createDto, useTransactionalCheck);
+
+        return saveApplication(applicant, plate, createDto, services);
+    }
+
+    private Applicant getApplicant(ApplicationCreateDto createDto, boolean useExistingApplicant) {
+        return useExistingApplicant
+            ? findApplicantByPassport(createDto.getPassportNumber())
+            : findOrCreateApplicant(createDto.getPassportNumber());
+    }
+
+    private void validatePlateAvailability(LicensePlate plate, String plateNumber, boolean useTransactionalCheck) {
         if (useTransactionalCheck) {
             if (!plate.isAvailable()) {
-                throw new IllegalStateException(
-                    String.format(PLATE_NOT_AVAILABLE, createDto.getPlateNumber()));
+                throw new IllegalStateException(String.format(PLATE_NOT_AVAILABLE, plateNumber));
             }
         } else {
             if (!licensePlateRepository.isPlateAvailable(plate.getId())) {
-                throw new IllegalStateException(
-                    String.format(PLATE_NOT_AVAILABLE, createDto.getPlateNumber()));
+                throw new IllegalStateException(String.format(PLATE_NOT_AVAILABLE, plateNumber));
             }
         }
+    }
 
-        List<AdditionalService> services = null;
-        if (createDto.getServiceIds() != null && !createDto.getServiceIds().isEmpty()) {
-            services = serviceRepository.findAllById(createDto.getServiceIds());
-            if (services.size() != createDto.getServiceIds().size()) {
-                String errorMsg = useTransactionalCheck
-                    ? SERVICES_NOT_FOUND + " - transaction will rollback! Application will not be saved."
-                    : SERVICES_NOT_FOUND + " - but application is already saved! Data is now inconsistent!";
-                throw new BusinessException(errorMsg);
-            }
+    private List<AdditionalService> getServices(ApplicationCreateDto createDto, boolean useTransactionalCheck) {
+        if (createDto.getServiceIds() == null || createDto.getServiceIds().isEmpty()) {
+            return null;
         }
 
-        Application application = buildApplication(applicant, plate, createDto, services);
+        List<AdditionalService> services = serviceRepository.findAllById(createDto.getServiceIds());
+
+        if (services.size() != createDto.getServiceIds().size()) {
+            String errorMsg = useTransactionalCheck
+                ? SERVICES_NOT_FOUND + " - transaction will rollback! Application will not be saved."
+                : SERVICES_NOT_FOUND + " - but application is already saved! Data is now inconsistent!";
+            throw new BusinessException(errorMsg);
+        }
+
+        return services;
+    }
+
+    private ApplicationDto saveApplication(Applicant applicant, LicensePlate plate,
+                                           ApplicationCreateDto dto, List<AdditionalService> services) {
+        Application application = buildApplication(applicant, plate, dto, services);
         Application saved = applicationRepository.save(application);
         log.info(APPLICATION_SAVED, saved.getId());
 
