@@ -24,6 +24,8 @@ import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Nested;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
+import org.junit.jupiter.params.ParameterizedTest;
+import org.junit.jupiter.params.provider.CsvSource;
 import org.mockito.ArgumentCaptor;
 import org.mockito.InjectMocks;
 import org.mockito.Mock;
@@ -1259,20 +1261,6 @@ class ApplicationServiceTest {
         }
 
         @Test
-        @DisplayName("Should log when empty page on first page in pagination")
-        void shouldLogWhenEmptyPageOnFirstPage() {
-            Pageable pageable = PageRequest.of(0, 10);
-            Page<Application> emptyPage = new PageImpl<>(Collections.emptyList(), pageable, 0);
-
-            when(applicationRepository.findByApplicantPassport("MP1234567", pageable))
-                .thenReturn(emptyPage);
-
-            Page<ApplicationDto> result = applicationService.getApplicationsByPassportPaginated("MP1234567", pageable);
-
-            assertThat(result.getContent()).isEmpty();
-        }
-
-        @Test
         @DisplayName("Should set CONFIRMED status when transactional in bulk")
         void shouldSetConfirmedStatusWhenTransactional() {
             ApplicationCreateDto app1 = ApplicationCreateDto.builder()
@@ -1515,24 +1503,14 @@ class ApplicationServiceTest {
                 .hasMessageContaining("Bulk application failed");
         }
 
-        @Test
-        @DisplayName("Should cover pagination log when page is 0 and empty")
-        void shouldCoverPaginationLogWhenPageZeroAndEmpty() {
-            Pageable pageable = PageRequest.of(0, 10);
-            Page<Application> emptyPage = new PageImpl<>(Collections.emptyList(), pageable, 0);
-
-            when(applicationRepository.findByApplicantPassport("MP1234567", pageable))
-                .thenReturn(emptyPage);
-
-            Page<ApplicationDto> result = applicationService.getApplicationsByPassportPaginated("MP1234567", pageable);
-
-            assertThat(result.getContent()).isEmpty();
-        }
-
-        @Test
-        @DisplayName("Should cover pagination when page is not 0 and empty")
-        void shouldCoverPaginationWhenPageNotZeroAndEmpty() {
-            Pageable pageable = PageRequest.of(1, 10);
+        @ParameterizedTest
+        @DisplayName("Should cover pagination with empty page")
+        @CsvSource({
+            "0, Should log when page is 0 and empty",
+            "1, Should not log when page is not 0 and empty"
+        })
+        void shouldCoverPaginationWithEmptyPage(int pageNumber, String description) {
+            Pageable pageable = PageRequest.of(pageNumber, 10);
             Page<Application> emptyPage = new PageImpl<>(Collections.emptyList(), pageable, 0);
 
             when(applicationRepository.findByApplicantPassport("MP1234567", pageable))
