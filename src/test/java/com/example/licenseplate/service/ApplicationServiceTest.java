@@ -1676,6 +1676,173 @@ class ApplicationServiceTest {
         }
 
         @Test
+        @DisplayName("Cover createSingleApplication with services - transactional mode (size mismatch - error)")
+        void shouldCoverCreateSingleApplicationWithServicesTransactionalError() {
+            List<Long> serviceIds = List.of(1L, 2L);
+
+            ApplicationCreateDto appDto = ApplicationCreateDto.builder()
+                .passportNumber("MP1234567")
+                .plateNumber("1234 AB-7")
+                .serviceIds(serviceIds)
+                .build();
+
+            BulkApplicationCreateDto bulkDto = BulkApplicationCreateDto.builder()
+                .passportNumber("MP1234567")
+                .applications(List.of(appDto))
+                .build();
+
+            LicensePlate availablePlate = LicensePlate.builder()
+                .id(1L)
+                .plateNumber("1234 AB-7")
+                .price(BigDecimal.valueOf(100))
+                .department(testDept)
+                .applications(new ArrayList<>())
+                .build();
+
+            when(applicantRepository.findByPassportNumber("MP1234567")).thenReturn(Optional.of(testApplicant));
+            when(licensePlateRepository.findByPlateNumber("1234 AB-7")).thenReturn(Optional.of(availablePlate));
+
+            when(serviceRepository.findAllById(serviceIds)).thenReturn(List.of(AdditionalService.builder().id(1L).build()));
+
+            assertThatThrownBy(() -> applicationService.createBulkApplicationsWithTransaction(bulkDto))
+                .isInstanceOf(BusinessException.class)
+                .hasMessageContaining("Некоторые услуги не найдены");
+
+            verify(serviceRepository).findAllById(serviceIds);
+
+            verify(applicationRepository, never()).save(any(Application.class));
+        }
+
+        @Test
+        @DisplayName("Cover createSingleApplication with services - non-transactional mode (size mismatch - error)")
+        void shouldCoverCreateSingleApplicationWithServicesNonTransactionalError() {
+            List<Long> serviceIds = List.of(1L, 2L);
+
+            ApplicationCreateDto appDto = ApplicationCreateDto.builder()
+                .passportNumber("MP1234567")
+                .plateNumber("1234 AB-7")
+                .serviceIds(serviceIds)
+                .build();
+
+            BulkApplicationCreateDto bulkDto = BulkApplicationCreateDto.builder()
+                .passportNumber("MP1234567")
+                .applications(List.of(appDto))
+                .build();
+
+            LicensePlate availablePlate = LicensePlate.builder()
+                .id(1L)
+                .plateNumber("1234 AB-7")
+                .price(BigDecimal.valueOf(100))
+                .department(testDept)
+                .applications(new ArrayList<>())
+                .build();
+
+            when(applicantRepository.findByPassportNumber("MP1234567")).thenReturn(Optional.of(testApplicant));
+            when(licensePlateRepository.findByPlateNumber("1234 AB-7")).thenReturn(Optional.of(availablePlate));
+
+            when(serviceRepository.findAllById(serviceIds)).thenReturn(List.of(AdditionalService.builder().id(1L).build()));
+
+            assertThatThrownBy(() -> applicationService.createBulkApplicationsWithoutTransaction(bulkDto))
+                .isInstanceOf(BusinessException.class)
+                .hasMessageContaining("Некоторые услуги не найдены");
+
+            verify(serviceRepository).findAllById(serviceIds);
+        }
+
+        @Test
+        @DisplayName("Cover createSingleApplication with services - transactional mode (success)")
+        void shouldCoverCreateSingleApplicationWithServicesTransactionalSuccess() {
+            AdditionalService service1 = AdditionalService.builder().id(1L).price(BigDecimal.valueOf(50)).build();
+            AdditionalService service2 = AdditionalService.builder().id(2L).price(BigDecimal.valueOf(30)).build();
+            List<Long> serviceIds = List.of(1L, 2L);
+
+            ApplicationCreateDto appDto = ApplicationCreateDto.builder()
+                .passportNumber("MP1234567")
+                .plateNumber("1234 AB-7")
+                .serviceIds(serviceIds)
+                .build();
+
+            BulkApplicationCreateDto bulkDto = BulkApplicationCreateDto.builder()
+                .passportNumber("MP1234567")
+                .applications(List.of(appDto))
+                .build();
+
+            LicensePlate availablePlate = LicensePlate.builder()
+                .id(1L)
+                .plateNumber("1234 AB-7")
+                .price(BigDecimal.valueOf(100))
+                .department(testDept)
+                .applications(new ArrayList<>())
+                .build();
+
+            when(applicantRepository.findByPassportNumber("MP1234567")).thenReturn(Optional.of(testApplicant));
+            when(licensePlateRepository.findByPlateNumber("1234 AB-7")).thenReturn(Optional.of(availablePlate));
+            when(serviceRepository.findAllById(serviceIds)).thenReturn(List.of(service1, service2));
+
+            when(applicationRepository.save(any(Application.class)))
+                .thenAnswer(invocation -> {
+                    Application app = invocation.getArgument(0);
+                    app.setId(1L);
+                    return app;
+                });
+            when(applicationMapper.toDto(any(Application.class))).thenReturn(testApplicationDto);
+
+            BulkApplicationResult result = applicationService.createBulkApplicationsWithTransaction(bulkDto);
+
+            assertThat(result.getTotalRequested()).isEqualTo(1);
+            assertThat(result.getSuccessful()).isEqualTo(1);
+
+            verify(serviceRepository).findAllById(serviceIds);
+            verify(applicationRepository, times(2)).save(any(Application.class));
+        }
+
+        @Test
+        @DisplayName("Cover createSingleApplication with services - non-transactional mode (success)")
+        void shouldCoverCreateSingleApplicationWithServicesNonTransactionalSuccess() {
+            AdditionalService service1 = AdditionalService.builder().id(1L).price(BigDecimal.valueOf(50)).build();
+            AdditionalService service2 = AdditionalService.builder().id(2L).price(BigDecimal.valueOf(30)).build();
+            List<Long> serviceIds = List.of(1L, 2L);
+
+            ApplicationCreateDto appDto = ApplicationCreateDto.builder()
+                .passportNumber("MP1234567")
+                .plateNumber("1234 AB-7")
+                .serviceIds(serviceIds)
+                .build();
+
+            BulkApplicationCreateDto bulkDto = BulkApplicationCreateDto.builder()
+                .passportNumber("MP1234567")
+                .applications(List.of(appDto))
+                .build();
+
+            LicensePlate availablePlate = LicensePlate.builder()
+                .id(1L)
+                .plateNumber("1234 AB-7")
+                .price(BigDecimal.valueOf(100))
+                .department(testDept)
+                .applications(new ArrayList<>())
+                .build();
+
+            when(applicantRepository.findByPassportNumber("MP1234567")).thenReturn(Optional.of(testApplicant));
+            when(licensePlateRepository.findByPlateNumber("1234 AB-7")).thenReturn(Optional.of(availablePlate));
+            when(serviceRepository.findAllById(serviceIds)).thenReturn(List.of(service1, service2));
+            when(applicationRepository.save(any(Application.class)))
+                .thenAnswer(invocation -> {
+                    Application app = invocation.getArgument(0);
+                    app.setId(1L);
+                    return app;
+                });
+            when(applicationMapper.toDto(any(Application.class))).thenReturn(testApplicationDto);
+
+            BulkApplicationResult result = applicationService.createBulkApplicationsWithoutTransaction(bulkDto);
+
+            assertThat(result.getTotalRequested()).isEqualTo(1);
+            assertThat(result.getSuccessful()).isEqualTo(1);
+
+            verify(serviceRepository).findAllById(serviceIds);
+            verify(applicationRepository, times(2)).save(any(Application.class));
+        }
+
+        @Test
         @DisplayName("Should cover createSingleApplication with serviceIds null in transactional mode")
         void shouldCoverCreateSingleApplicationServiceIdsNullTransactional() {
             ApplicationCreateDto app1 = ApplicationCreateDto.builder()
@@ -1700,6 +1867,29 @@ class ApplicationServiceTest {
             assertThat(result.getSuccessful()).isEqualTo(1);
 
             verify(serviceRepository, never()).findAllById(anyList());
+        }
+
+        @Test
+        @DisplayName("Cover saveApplication with services not null and not empty")
+        void shouldCoverSaveApplicationWithServices() {
+            AdditionalService service1 = AdditionalService.builder().id(1L).price(BigDecimal.valueOf(50)).build();
+            List<AdditionalService> services = List.of(service1);
+
+            ApplicationCreateDto dto = ApplicationCreateDto.builder()
+                .passportNumber("MP1234567")
+                .plateNumber("1234 AB-7")
+                .serviceIds(List.of(1L))
+                .build();
+
+            when(applicantRepository.findByPassportNumber("MP1234567")).thenReturn(Optional.of(testApplicant));
+            when(licensePlateRepository.findByPlateNumber("1234 AB-7")).thenReturn(Optional.of(testPlate));
+            when(serviceRepository.findAllById(List.of(1L))).thenReturn(services);
+            when(applicationRepository.save(any(Application.class))).thenAnswer(i -> i.getArgument(0));
+            when(applicationMapper.toDto(any(Application.class))).thenReturn(testApplicationDto);
+
+            applicationService.createApplication(dto);
+
+            verify(applicationRepository, times(2)).save(any(Application.class));
         }
 
         @Test
@@ -1728,6 +1918,8 @@ class ApplicationServiceTest {
 
             verify(serviceRepository, never()).findAllById(anyList());
         }
+
+
 
         @Test
         @DisplayName("Should cover services not null and not empty branch in createSingleApplication")
