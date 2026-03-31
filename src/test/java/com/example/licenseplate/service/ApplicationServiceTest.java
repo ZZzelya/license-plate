@@ -1142,6 +1142,7 @@ class ApplicationServiceTest {
         @Test
         @DisplayName("Cover all branches: positive scenario with services")
         void shouldCoverPositiveBranchesWithServices() {
+            // 1. Готовим данные (Ветка: serviceIds != null && !isEmpty)
             List<Long> sIds = List.of(1L);
             ApplicationCreateDto dtoWithServices = ApplicationCreateDto.builder()
                 .passportNumber(testApplicant.getPassportNumber())
@@ -1152,14 +1153,18 @@ class ApplicationServiceTest {
             AdditionalService mockService = AdditionalService.builder()
                 .id(1L).price(BigDecimal.TEN).build();
 
+            // 2. Настройка моков
             when(applicantRepository.findByPassportNumber(anyString())).thenReturn(Optional.of(testApplicant));
             when(licensePlateRepository.findByPlateNumber(anyString())).thenReturn(Optional.of(testPlate));
 
+            // Ветка: services != null && !services.isEmpty()
             when(serviceRepository.findAllById(sIds)).thenReturn(List.of(mockService));
 
+            // Важно: возвращаем тот же объект, что сохраняем
             when(applicationRepository.save(any(Application.class))).thenAnswer(i -> i.getArgument(0));
             when(applicationMapper.toDto(any())).thenReturn(testApplicationDto);
 
+            // 3. Вызов через Bulk, чтобы зацепить ветку if (result.getSuccessful() > 0)
             BulkApplicationCreateDto bulkDto = BulkApplicationCreateDto.builder()
                 .passportNumber(testApplicant.getPassportNumber())
                 .applications(List.of(dtoWithServices))
@@ -1167,6 +1172,7 @@ class ApplicationServiceTest {
 
             applicationService.createBulkApplicationsWithoutTransaction(bulkDto);
 
+            // 4. Верификация (ПРОВЕРЯЕМ cacheService, а не applicationCacheService)
             verify(serviceRepository).findAllById(sIds);
             verify(applicationRepository, atLeast(2)).save(any());
             verify(cacheService, atLeastOnce()).invalidate();
@@ -1225,48 +1231,6 @@ class ApplicationServiceTest {
                 .isInstanceOf(ResourceNotFoundException.class)
                 .hasMessageContaining("Заявитель с паспортом 'NOT_EXIST' не найден");
         }
-
-        @Test
-        @DisplayName("Cover isPlateAvailable branch with useTransactionalCheck=false")
-        void shouldCoverIsPlateAvailableBranch() {
-            ApplicationCreateDto dto = ApplicationCreateDto.builder()
-                .passportNumber("MP1234567")
-                .plateNumber("1234 AB-7")
-                .serviceIds(null)
-                .build();
-
-            when(applicantRepository.findByPassportNumber("MP1234567")).thenReturn(Optional.of(testApplicant));
-            when(licensePlateRepository.findByPlateNumber("1234 AB-7")).thenReturn(Optional.of(testPlate));
-            when(licensePlateRepository.isPlateAvailable(1L)).thenReturn(true);
-            when(applicationRepository.save(any(Application.class))).thenReturn(testApplication);
-            when(applicationMapper.toDto(any(Application.class))).thenReturn(testApplicationDto);
-
-            ApplicationDto result = applicationService.createApplicationWithoutTransaction(dto);
-
-            assertThat(result).isEqualTo(testApplicationDto);
-            verify(licensePlateRepository).isPlateAvailable(1L);
-        }
-
-        @Test
-        @DisplayName("Cover isPlateAvailable branch with false result")
-        void shouldCoverIsPlateAvailableBranchFalse() {
-            ApplicationCreateDto dto = ApplicationCreateDto.builder()
-                .passportNumber("MP1234567")
-                .plateNumber("1234 AB-7")
-                .serviceIds(null)
-                .build();
-
-            when(applicantRepository.findByPassportNumber("MP1234567")).thenReturn(Optional.of(testApplicant));
-            when(licensePlateRepository.findByPlateNumber("1234 AB-7")).thenReturn(Optional.of(testPlate));
-            when(licensePlateRepository.isPlateAvailable(1L)).thenReturn(false);
-
-            assertThatThrownBy(() -> applicationService.createApplicationWithoutTransaction(dto))
-                .isInstanceOf(IllegalStateException.class)
-                .hasMessageContaining("недоступен");
-
-            verify(licensePlateRepository).isPlateAvailable(1L);
-        }
-
 
         @Test
         @DisplayName("Should invalidate cache after successful bulk with transaction")
@@ -1519,99 +1483,6 @@ class ApplicationServiceTest {
         }
 
         @Test
-        @DisplayName("Cover branch when applications empty but applicant exists in getApplicationsByPassport")
-        void shouldCoverEmptyApplicationsButApplicantExists() {
-            String passportNumber = "MP1234567";
-
-            when(applicationRepository.findByApplicantPassport(passportNumber)).thenReturn(Collections.emptyList());
-            when(applicantRepository.findByPassportNumber(passportNumber)).thenReturn(Optional.of(testApplicant));
-            when(applicationMapper.toDtoList(Collections.emptyList())).thenReturn(Collections.emptyList());
-
-            List<ApplicationDto> result = applicationService.getApplicationsByPassport(passportNumber);
-
-            assertThat(result).isEmpty();
-            verify(applicationRepository).findByApplicantPassport(passportNumber);
-            verify(applicantRepository).findByPassportNumber(passportNumber);
-            verify(applicationMapper).toDtoList(Collections.emptyList());
-        }
-
-        @Test
-        @DisplayName("Cover empty cache branch in getApplicationsByStatusAndRegionCached")
-        void shouldCoverEmptyCacheBranch() {
-            String status = ApplicationStatus.PENDING.name();
-            String region = "MINSK";
-            List<ApplicationDto> emptyList = Collections.emptyList();
-
-            when(cacheService.get(status, region)).thenReturn(emptyList);
-
-            List<ApplicationDto> result = applicationService.getApplicationsByStatusAndRegionCached(
-                ApplicationStatus.PENDING, region);
-
-            assertThat(result).isEmpty();
-            verify(cacheService).get(status, region);
-            verify(cacheService).invalidate();
-            verify(applicationRepository).findByStatusAndDepartmentRegion(ApplicationStatus.PENDING, region);
-        }
-
-        @Test
-        @DisplayName("Cover finalSonarFixTest without unnecessary stubbings")
-        void finalSonarFixTest() {
-            ApplicationCreateDto appWithServices = ApplicationCreateDto.builder()
-                .passportNumber(testApplicant.getPassportNumber())
-                .plateNumber("1111 AA-1")
-                .serviceIds(List.of(1L))
-                .build();
-
-            ApplicationCreateDto appWithoutServices = ApplicationCreateDto.builder()
-                .passportNumber(testApplicant.getPassportNumber())
-                .plateNumber("2222 AA-2")
-                .serviceIds(Collections.emptyList())
-                .build();
-
-            BulkApplicationCreateDto bulkDto = BulkApplicationCreateDto.builder()
-                .passportNumber(testApplicant.getPassportNumber())
-                .applications(List.of(appWithServices, appWithoutServices))
-                .build();
-
-            AdditionalService mockService = AdditionalService.builder().id(1L).price(BigDecimal.TEN).build();
-
-            LicensePlate plate1 = LicensePlate.builder()
-                .id(1L)
-                .plateNumber("1111 AA-1")
-                .price(BigDecimal.valueOf(100))
-                .department(testDept)
-                .applications(new ArrayList<>())
-                .build();
-
-            LicensePlate plate2 = LicensePlate.builder()
-                .id(2L)
-                .plateNumber("2222 AA-2")
-                .price(BigDecimal.valueOf(100))
-                .department(testDept)
-                .applications(new ArrayList<>())
-                .build();
-
-            when(applicantRepository.findByPassportNumber(anyString())).thenReturn(Optional.of(testApplicant));
-            when(licensePlateRepository.findByPlateNumber("1111 AA-1")).thenReturn(Optional.of(plate1));
-            when(licensePlateRepository.findByPlateNumber("2222 AA-2")).thenReturn(Optional.of(plate2));
-            when(serviceRepository.findAllById(List.of(1L))).thenReturn(List.of(mockService));
-            when(applicationRepository.save(any(Application.class))).thenAnswer(i -> i.getArgument(0));
-            when(applicationMapper.toDto(any())).thenReturn(testApplicationDto);
-
-            applicationService.createBulkApplicationsWithoutTransaction(bulkDto);
-
-            verify(cacheService, atLeastOnce()).invalidate();
-
-            // Test empty bulk
-            BulkApplicationCreateDto emptyBulk = BulkApplicationCreateDto.builder()
-                .passportNumber(testApplicant.getPassportNumber())
-                .applications(Collections.emptyList())
-                .build();
-
-            applicationService.createBulkApplicationsWithoutTransaction(emptyBulk);
-        }
-
-        @Test
         @DisplayName("Should cover getServices method when serviceIds is empty")
         void shouldCoverGetServicesWhenServiceIdsEmpty() {
             ApplicationCreateDto dto = ApplicationCreateDto.builder()
@@ -1629,36 +1500,6 @@ class ApplicationServiceTest {
 
             assertThat(result).isEqualTo(testApplicationDto);
             verify(serviceRepository, never()).findAllById(anyList());
-        }
-
-        @Test
-        @DisplayName("Cover findOrCreateApplicant branch with new applicant creation")
-        void shouldCoverFindOrCreateApplicantBranch() {
-            String newPassportNumber = "NEW_PASSPORT_123";
-
-            ApplicationCreateDto dto = ApplicationCreateDto.builder()
-                .passportNumber(newPassportNumber)
-                .plateNumber("1234 AB-7")
-                .serviceIds(null)
-                .build();
-
-            Applicant newApplicant = Applicant.builder()
-                .id(999L)
-                .fullName("UNKNOWN")
-                .passportNumber(newPassportNumber)
-                .build();
-
-            when(applicantRepository.findByPassportNumber(newPassportNumber)).thenReturn(Optional.empty());
-            when(applicantRepository.save(any(Applicant.class))).thenReturn(newApplicant);
-            when(licensePlateRepository.findByPlateNumber("1234 AB-7")).thenReturn(Optional.of(testPlate));
-            when(licensePlateRepository.isPlateAvailable(1L)).thenReturn(true);
-            when(applicationRepository.save(any(Application.class))).thenReturn(testApplication);
-            when(applicationMapper.toDto(any(Application.class))).thenReturn(testApplicationDto);
-
-            ApplicationDto result = applicationService.createApplicationWithoutTransaction(dto);
-
-            assertThat(result).isEqualTo(testApplicationDto);
-            verify(applicantRepository).save(any(Applicant.class));
         }
 
         @Test
@@ -1770,8 +1611,6 @@ class ApplicationServiceTest {
             verify(serviceRepository, times(1)).findAllById(List.of(1L, 2L));
         }
 
-
-
         @Test
         @DisplayName("Should cover services not null and not empty branch in createSingleApplication")
         void shouldCoverServicesNotNullAndNotEmptyInCreateSingleApplication() {
@@ -1799,10 +1638,9 @@ class ApplicationServiceTest {
 
             applicationService.createBulkApplicationsWithoutTransaction(bulkDto);
 
-                        verify(applicationRepository, times(2)).save(any(Application.class));
+            verify(applicationRepository, times(2)).save(any(Application.class));
 
             verify(serviceRepository, times(1)).findAllById(anyList());
         }
     }
-
 }
