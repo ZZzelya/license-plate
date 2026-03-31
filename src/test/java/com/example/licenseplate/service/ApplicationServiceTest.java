@@ -1142,7 +1142,6 @@ class ApplicationServiceTest {
         @Test
         @DisplayName("Cover all branches: positive scenario with services")
         void shouldCoverPositiveBranchesWithServices() {
-            // 1. Готовим данные (Ветка: serviceIds != null && !isEmpty)
             List<Long> sIds = List.of(1L);
             ApplicationCreateDto dtoWithServices = ApplicationCreateDto.builder()
                 .passportNumber(testApplicant.getPassportNumber())
@@ -1153,18 +1152,14 @@ class ApplicationServiceTest {
             AdditionalService mockService = AdditionalService.builder()
                 .id(1L).price(BigDecimal.TEN).build();
 
-            // 2. Настройка моков
             when(applicantRepository.findByPassportNumber(anyString())).thenReturn(Optional.of(testApplicant));
             when(licensePlateRepository.findByPlateNumber(anyString())).thenReturn(Optional.of(testPlate));
 
-            // Ветка: services != null && !services.isEmpty()
             when(serviceRepository.findAllById(sIds)).thenReturn(List.of(mockService));
 
-            // Важно: возвращаем тот же объект, что сохраняем
             when(applicationRepository.save(any(Application.class))).thenAnswer(i -> i.getArgument(0));
             when(applicationMapper.toDto(any())).thenReturn(testApplicationDto);
 
-            // 3. Вызов через Bulk, чтобы зацепить ветку if (result.getSuccessful() > 0)
             BulkApplicationCreateDto bulkDto = BulkApplicationCreateDto.builder()
                 .passportNumber(testApplicant.getPassportNumber())
                 .applications(List.of(dtoWithServices))
@@ -1172,7 +1167,6 @@ class ApplicationServiceTest {
 
             applicationService.createBulkApplicationsWithoutTransaction(bulkDto);
 
-            // 4. Верификация (ПРОВЕРЯЕМ cacheService, а не applicationCacheService)
             verify(serviceRepository).findAllById(sIds);
             verify(applicationRepository, atLeast(2)).save(any());
             verify(cacheService, atLeastOnce()).invalidate();
