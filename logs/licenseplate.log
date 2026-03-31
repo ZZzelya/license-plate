@@ -1,28 +1,21 @@
-2026-03-31 17:54:04.564 [restartedMain] INFO  o.s.b.d.e.DevToolsPropertyDefaultsPostProcessor - Devtools property defaults active! Set 'spring.devtools.add-properties' to 'false' to disable
-2026-03-31 17:54:04.568 [restartedMain] INFO  o.s.b.d.e.DevToolsPropertyDefaultsPostProcessor - For additional web related logging consider setting the 'logging.level.web' property to 'DEBUG'
-2026-03-31 17:54:05.295 [restartedMain] INFO  o.s.d.r.c.RepositoryConfigurationDelegate - Bootstrapping Spring Data JPA repositories in DEFAULT mode.
-2026-03-31 17:54:05.342 [restartedMain] INFO  o.s.d.r.c.RepositoryConfigurationDelegate - Finished Spring Data repository scanning in 40 ms. Found 5 JPA repository interfaces.
-2026-03-31 17:54:05.894 [restartedMain] INFO  o.s.b.w.e.tomcat.TomcatWebServer - Tomcat initialized with port 8080 (http)
-2026-03-31 17:54:05.903 [restartedMain] INFO  o.a.coyote.http11.Http11NioProtocol - Initializing ProtocolHandler ["http-nio-8080"]
-2026-03-31 17:54:05.903 [restartedMain] INFO  o.a.catalina.core.StandardService - Starting service [Tomcat]
-2026-03-31 17:54:05.904 [restartedMain] INFO  o.a.catalina.core.StandardEngine - Starting Servlet engine: [Apache Tomcat/10.1.39]
-2026-03-31 17:54:05.938 [restartedMain] INFO  o.a.c.c.C.[Tomcat].[localhost].[/] - Initializing Spring embedded WebApplicationContext
-2026-03-31 17:54:05.938 [restartedMain] INFO  o.s.b.w.s.c.ServletWebServerApplicationContext - Root WebApplicationContext: initialization completed in 1370 ms
-2026-03-31 17:54:06.405 [restartedMain] INFO  o.s.o.j.p.SpringPersistenceUnitInfo - No LoadTimeWeaver setup: ignoring JPA class transformer
-2026-03-31 17:54:06.430 [restartedMain] INFO  com.zaxxer.hikari.HikariDataSource - HikariPool-1 - Starting...
-2026-03-31 17:54:06.582 [restartedMain] INFO  com.zaxxer.hikari.pool.HikariPool - HikariPool-1 - Added connection org.postgresql.jdbc.PgConnection@768d78b5
-2026-03-31 17:54:06.583 [restartedMain] INFO  com.zaxxer.hikari.HikariDataSource - HikariPool-1 - Start completed.
-2026-03-31 17:54:06.622 [restartedMain] WARN  org.hibernate.orm.deprecation - HHH90000025: PostgreSQLDialect does not need to be specified explicitly using 'hibernate.dialect' (remove the property setting and it will be selected by default)
-2026-03-31 17:54:07.350 [restartedMain] INFO  o.s.o.j.LocalContainerEntityManagerFactoryBean - Initialized JPA EntityManagerFactory for persistence unit 'default'
-2026-03-31 17:54:07.662 [restartedMain] INFO  o.s.d.j.r.query.QueryEnhancerFactory - Hibernate is in classpath; If applicable, HQL parser will be used.
-2026-03-31 17:54:08.459 [restartedMain] WARN  o.s.b.a.o.j.JpaBaseConfiguration$JpaWebConfiguration - spring.jpa.open-in-view is enabled by default. Therefore, database queries may be performed during view rendering. Explicitly configure spring.jpa.open-in-view to disable this warning
-2026-03-31 17:54:09.070 [restartedMain] INFO  o.s.b.a.h.H2ConsoleAutoConfiguration - H2 console available at '/h2-console'. Database available at 'jdbc:postgresql://localhost:5432/license_plate_db'
-2026-03-31 17:54:09.118 [restartedMain] INFO  o.s.b.d.a.OptionalLiveReloadServer - LiveReload server is running on port 35729
-2026-03-31 17:54:09.125 [restartedMain] INFO  o.s.b.a.e.web.EndpointLinksResolver - Exposing 3 endpoints beneath base path '/actuator'
-2026-03-31 17:54:09.170 [restartedMain] INFO  o.a.coyote.http11.Http11NioProtocol - Starting ProtocolHandler ["http-nio-8080"]
-2026-03-31 17:54:09.181 [restartedMain] INFO  o.s.b.w.e.tomcat.TomcatWebServer - Tomcat started on port 8080 (http) with context path '/'
-2026-03-31 17:54:09.192 [restartedMain] INFO  c.e.l.LicensePlateApplication - Started LicensePlateApplication in 5.04 seconds (process running for 5.45)
-2026-03-31 17:54:09.239 [scheduling-1] DEBUG org.hibernate.SQL - 
+2026-03-31 18:30:05.104 [restartedMain] INFO  o.a.catalina.core.StandardEngine - Starting Servlet engine: [Apache Tomcat/10.1.39]
+2026-03-31 18:30:05.127 [restartedMain] INFO  o.a.c.c.C.[Tomcat].[localhost].[/] - Initializing Spring embedded WebApplicationContext
+2026-03-31 18:30:05.127 [restartedMain] INFO  o.s.b.w.s.c.ServletWebServerApplicationContext - Root WebApplicationContext: initialization completed in 392 ms
+2026-03-31 18:30:05.261 [restartedMain] INFO  o.s.o.j.p.SpringPersistenceUnitInfo - No LoadTimeWeaver setup: ignoring JPA class transformer
+2026-03-31 18:30:05.262 [restartedMain] INFO  com.zaxxer.hikari.HikariDataSource - HikariPool-2 - Starting...
+2026-03-31 18:30:05.314 [restartedMain] INFO  com.zaxxer.hikari.pool.HikariPool - HikariPool-2 - Added connection org.postgresql.jdbc.PgConnection@2845986
+2026-03-31 18:30:05.315 [restartedMain] INFO  com.zaxxer.hikari.HikariDataSource - HikariPool-2 - Start completed.
+2026-03-31 18:30:05.322 [restartedMain] WARN  org.hibernate.orm.deprecation - HHH90000025: PostgreSQLDialect does not need to be specified explicitly using 'hibernate.dialect' (remove the property setting and it will be selected by default)
+2026-03-31 18:30:05.414 [restartedMain] INFO  o.s.o.j.LocalContainerEntityManagerFactoryBean - Initialized JPA EntityManagerFactory for persistence unit 'default'
+2026-03-31 18:30:05.708 [restartedMain] WARN  o.s.b.a.o.j.JpaBaseConfiguration$JpaWebConfiguration - spring.jpa.open-in-view is enabled by default. Therefore, database queries may be performed during view rendering. Explicitly configure spring.jpa.open-in-view to disable this warning
+2026-03-31 18:30:06.131 [restartedMain] INFO  o.s.b.a.h.H2ConsoleAutoConfiguration - H2 console available at '/h2-console'. Database available at 'jdbc:postgresql://localhost:5432/license_plate_db'
+2026-03-31 18:30:06.160 [restartedMain] INFO  o.s.b.d.a.OptionalLiveReloadServer - LiveReload server is running on port 35729
+2026-03-31 18:30:06.165 [restartedMain] INFO  o.s.b.a.e.web.EndpointLinksResolver - Exposing 3 endpoints beneath base path '/actuator'
+2026-03-31 18:30:06.186 [restartedMain] INFO  o.a.coyote.http11.Http11NioProtocol - Starting ProtocolHandler ["http-nio-8080"]
+2026-03-31 18:30:06.188 [restartedMain] INFO  o.s.b.w.e.tomcat.TomcatWebServer - Tomcat started on port 8080 (http) with context path '/'
+2026-03-31 18:30:06.194 [restartedMain] INFO  c.e.l.LicensePlateApplication - Started LicensePlateApplication in 1.483 seconds (process running for 2162.452)
+2026-03-31 18:30:06.196 [restartedMain] INFO  o.s.b.d.a.ConditionEvaluationDeltaLoggingListener - Condition evaluation unchanged
+2026-03-31 18:30:06.196 [scheduling-1] DEBUG org.hibernate.SQL - 
     select
         a1_0.id,
         a1_0.applicant_id,
@@ -44,73 +37,40 @@
     where
         a1_0.status=? 
         and a1_0.reserved_until<?
-2026-03-31 17:54:09.277 [scheduling-1] INFO  c.e.l.scheduler.ApplicationScheduler - Found 2 expired PENDING applications
-2026-03-31 17:54:09.291 [scheduling-1] DEBUG org.hibernate.SQL - 
-    update
-        applications 
-    set
-        applicant_id=?,
-        confirmation_date=?,
-        dept_id=?,
-        license_plate_id=?,
-        notes=?,
-        payment_amount=?,
-        reserved_until=?,
-        status=?,
-        submission_date=?,
-        updated_at=?,
-        vehicle_model=?,
-        vehicle_vin=?,
-        vehicle_year=? 
-    where
-        id=?
-2026-03-31 17:54:09.297 [scheduling-1] DEBUG org.hibernate.SQL - 
-    update
-        applications 
-    set
-        applicant_id=?,
-        confirmation_date=?,
-        dept_id=?,
-        license_plate_id=?,
-        notes=?,
-        payment_amount=?,
-        reserved_until=?,
-        status=?,
-        submission_date=?,
-        updated_at=?,
-        vehicle_model=?,
-        vehicle_vin=?,
-        vehicle_year=? 
-    where
-        id=?
-2026-03-31 17:54:09.506 [RMI TCP Connection(4)-192.168.10.105] INFO  o.a.c.c.C.[Tomcat].[localhost].[/] - Initializing Spring DispatcherServlet 'dispatcherServlet'
-2026-03-31 17:54:09.506 [RMI TCP Connection(4)-192.168.10.105] INFO  o.s.web.servlet.DispatcherServlet - Initializing Servlet 'dispatcherServlet'
-2026-03-31 17:54:09.508 [RMI TCP Connection(4)-192.168.10.105] INFO  o.s.web.servlet.DispatcherServlet - Completed initialization in 2 ms
-2026-03-31 17:54:15.406 [http-nio-8080-exec-9] INFO  o.s.api.AbstractOpenApiResource - Init duration for springdoc-openapi is: 457 ms
-2026-03-31 18:04:09.311 [scheduling-1] DEBUG org.hibernate.SQL - 
-    select
-        a1_0.id,
-        a1_0.applicant_id,
-        a1_0.confirmation_date,
-        a1_0.confirmed_date,
-        a1_0.dept_id,
-        a1_0.license_plate_id,
-        a1_0.notes,
-        a1_0.payment_amount,
-        a1_0.reserved_until,
-        a1_0.status,
-        a1_0.submission_date,
-        a1_0.updated_at,
-        a1_0.vehicle_model,
-        a1_0.vehicle_vin,
-        a1_0.vehicle_year 
-    from
-        applications a1_0 
-    where
-        a1_0.status=? 
-        and a1_0.reserved_until<?
-2026-03-31 18:09:43.391 [HikariPool-1 housekeeper] WARN  com.zaxxer.hikari.pool.HikariPool - HikariPool-1 - Thread starvation or clock leap detected (housekeeper delta=1m6s441ms714µs100ns).
-2026-03-31 18:14:45.771 [scheduling-1] DEBUG org.hibernate.SQL - 
+2026-03-31 18:30:07.603 [File Watcher] INFO  o.s.b.d.a.LocalDevToolsAutoConfiguration$RestartingClassPathChangeChangedEventListener - Restarting due to 2 class path changes (2 additions, 0 deletions, 0 modifications)
+2026-03-31 18:30:07.604 [Thread-7] INFO  o.s.b.w.e.tomcat.GracefulShutdown - Commencing graceful shutdown. Waiting for active requests to complete
+2026-03-31 18:30:07.605 [tomcat-shutdown] INFO  o.a.coyote.http11.Http11NioProtocol - Pausing ProtocolHandler ["http-nio-8080"]
+2026-03-31 18:30:07.615 [tomcat-shutdown] INFO  o.s.b.w.e.tomcat.GracefulShutdown - Graceful shutdown complete
+2026-03-31 18:30:07.616 [Thread-7] INFO  o.a.coyote.http11.Http11NioProtocol - Stopping ProtocolHandler ["http-nio-8080"]
+2026-03-31 18:30:07.618 [Thread-7] INFO  o.s.o.j.LocalContainerEntityManagerFactoryBean - Closing JPA EntityManagerFactory for persistence unit 'default'
+2026-03-31 18:30:07.619 [Thread-7] INFO  com.zaxxer.hikari.HikariDataSource - HikariPool-2 - Shutdown initiated...
+2026-03-31 18:30:07.621 [Thread-7] INFO  com.zaxxer.hikari.HikariDataSource - HikariPool-2 - Shutdown completed.
+2026-03-31 18:30:07.678 [restartedMain] INFO  c.e.l.LicensePlateApplication - Starting LicensePlateApplication using Java 21.0.10 with PID 10248 (D:\projectJava\license-plate\target\classes started by user in D:\projectJava\license-plate)
+2026-03-31 18:30:07.678 [restartedMain] DEBUG c.e.l.LicensePlateApplication - Running with Spring Boot v3.4.4, Spring v6.2.5
+2026-03-31 18:30:07.678 [restartedMain] INFO  c.e.l.LicensePlateApplication - No active profile set, falling back to 1 default profile: "default"
+2026-03-31 18:30:07.859 [restartedMain] INFO  o.s.d.r.c.RepositoryConfigurationDelegate - Bootstrapping Spring Data JPA repositories in DEFAULT mode.
+2026-03-31 18:30:07.872 [restartedMain] INFO  o.s.d.r.c.RepositoryConfigurationDelegate - Finished Spring Data repository scanning in 12 ms. Found 5 JPA repository interfaces.
+2026-03-31 18:30:07.973 [restartedMain] INFO  o.s.b.w.e.tomcat.TomcatWebServer - Tomcat initialized with port 8080 (http)
+2026-03-31 18:30:07.973 [restartedMain] INFO  o.a.coyote.http11.Http11NioProtocol - Initializing ProtocolHandler ["http-nio-8080"]
+2026-03-31 18:30:07.974 [restartedMain] INFO  o.a.catalina.core.StandardService - Starting service [Tomcat]
+2026-03-31 18:30:07.974 [restartedMain] INFO  o.a.catalina.core.StandardEngine - Starting Servlet engine: [Apache Tomcat/10.1.39]
+2026-03-31 18:30:07.986 [restartedMain] INFO  o.a.c.c.C.[Tomcat].[localhost].[/] - Initializing Spring embedded WebApplicationContext
+2026-03-31 18:30:07.986 [restartedMain] INFO  o.s.b.w.s.c.ServletWebServerApplicationContext - Root WebApplicationContext: initialization completed in 307 ms
+2026-03-31 18:30:08.114 [restartedMain] INFO  o.s.o.j.p.SpringPersistenceUnitInfo - No LoadTimeWeaver setup: ignoring JPA class transformer
+2026-03-31 18:30:08.114 [restartedMain] INFO  com.zaxxer.hikari.HikariDataSource - HikariPool-3 - Starting...
+2026-03-31 18:30:08.154 [restartedMain] INFO  com.zaxxer.hikari.pool.HikariPool - HikariPool-3 - Added connection org.postgresql.jdbc.PgConnection@25ef0d12
+2026-03-31 18:30:08.154 [restartedMain] INFO  com.zaxxer.hikari.HikariDataSource - HikariPool-3 - Start completed.
+2026-03-31 18:30:08.160 [restartedMain] WARN  org.hibernate.orm.deprecation - HHH90000025: PostgreSQLDialect does not need to be specified explicitly using 'hibernate.dialect' (remove the property setting and it will be selected by default)
+2026-03-31 18:30:08.236 [restartedMain] INFO  o.s.o.j.LocalContainerEntityManagerFactoryBean - Initialized JPA EntityManagerFactory for persistence unit 'default'
+2026-03-31 18:30:08.533 [restartedMain] WARN  o.s.b.a.o.j.JpaBaseConfiguration$JpaWebConfiguration - spring.jpa.open-in-view is enabled by default. Therefore, database queries may be performed during view rendering. Explicitly configure spring.jpa.open-in-view to disable this warning
+2026-03-31 18:30:08.973 [restartedMain] INFO  o.s.b.a.h.H2ConsoleAutoConfiguration - H2 console available at '/h2-console'. Database available at 'jdbc:postgresql://localhost:5432/license_plate_db'
+2026-03-31 18:30:09.007 [restartedMain] INFO  o.s.b.d.a.OptionalLiveReloadServer - LiveReload server is running on port 35729
+2026-03-31 18:30:09.012 [restartedMain] INFO  o.s.b.a.e.web.EndpointLinksResolver - Exposing 3 endpoints beneath base path '/actuator'
+2026-03-31 18:30:09.038 [restartedMain] INFO  o.a.coyote.http11.Http11NioProtocol - Starting ProtocolHandler ["http-nio-8080"]
+2026-03-31 18:30:09.040 [restartedMain] INFO  o.s.b.w.e.tomcat.TomcatWebServer - Tomcat started on port 8080 (http) with context path '/'
+2026-03-31 18:30:09.045 [restartedMain] INFO  c.e.l.LicensePlateApplication - Started LicensePlateApplication in 1.386 seconds (process running for 2165.304)
+2026-03-31 18:30:09.047 [restartedMain] INFO  o.s.b.d.a.ConditionEvaluationDeltaLoggingListener - Condition evaluation unchanged
+2026-03-31 18:30:09.047 [scheduling-1] DEBUG org.hibernate.SQL - 
     select
         a1_0.id,
         a1_0.applicant_id,
