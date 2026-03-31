@@ -697,12 +697,12 @@ class ApplicationServiceTest {
     @DisplayName("Complete Branch Coverage - All Conditions")
     class CompleteBranchCoverageTests {
 
-        // COVERS: if (createDto.getServiceIds() != null && !createDto.getServiceIds().isEmpty())
+
         @Test
         void coverServiceIdsCondition_AllBranches() {
             AdditionalService service = AdditionalService.builder().id(1L).price(BigDecimal.TEN).build();
 
-            // Branch 1: serviceIds = null
+
             ApplicationCreateDto dtoNull = ApplicationCreateDto.builder()
                 .passportNumber("MP1234567")
                 .plateNumber("1234 AB-7")
@@ -717,7 +717,6 @@ class ApplicationServiceTest {
             applicationService.createApplication(dtoNull);
             verify(serviceRepository, never()).findAllById(any());
 
-            // Branch 2: serviceIds = empty
             ApplicationCreateDto dtoEmpty = ApplicationCreateDto.builder()
                 .passportNumber("MP1234567")
                 .plateNumber("1234 AB-7")
@@ -727,7 +726,6 @@ class ApplicationServiceTest {
             applicationService.createApplication(dtoEmpty);
             verify(serviceRepository, never()).findAllById(any());
 
-            // Branch 3: serviceIds not empty
             ApplicationCreateDto dtoWith = ApplicationCreateDto.builder()
                 .passportNumber("MP1234567")
                 .plateNumber("1234 AB-7")
@@ -743,10 +741,8 @@ class ApplicationServiceTest {
             verify(serviceRepository, times(1)).findAllById(anyList());
         }
 
-        // COVERS: if (services != null && !services.isEmpty()) in saveApplication
         @Test
         void coverServicesConditionInSaveApplication_AllBranches() {
-            // Branch 1 & 2: services = null or empty
             ApplicationCreateDto dtoWithout = ApplicationCreateDto.builder()
                 .passportNumber("MP1234567")
                 .plateNumber("1234 AB-7")
@@ -761,7 +757,6 @@ class ApplicationServiceTest {
             applicationService.createApplication(dtoWithout);
             verify(applicationRepository, times(1)).save(any(Application.class));
 
-            // Branch 3: services not empty
             AdditionalService service = AdditionalService.builder().id(1L).price(BigDecimal.TEN).build();
             ApplicationCreateDto dtoWith = ApplicationCreateDto.builder()
                 .passportNumber("MP1234567")
@@ -778,12 +773,10 @@ class ApplicationServiceTest {
             verify(applicationRepository, times(3)).save(any(Application.class));
         }
 
-        // COVERS: if (services != null && !services.isEmpty()) in createSingleApplication
         @Test
         void coverServicesConditionInCreateSingleApplication_AllBranches() {
             AdditionalService service = AdditionalService.builder().id(1L).price(BigDecimal.TEN).build();
 
-            // Branch 1 & 2: services = null or empty
             ApplicationCreateDto appDtoWithout = ApplicationCreateDto.builder()
                 .passportNumber("MP1234567")
                 .plateNumber("1234 AB-7")
@@ -803,7 +796,6 @@ class ApplicationServiceTest {
             applicationService.createBulkApplicationsWithoutTransaction(bulkDtoWithout);
             verify(applicationRepository, times(1)).save(any(Application.class));
 
-            // Branch 3: services not empty
             ApplicationCreateDto appDtoWith = ApplicationCreateDto.builder()
                 .passportNumber("MP1234567")
                 .plateNumber("1234 AB-7")
@@ -824,7 +816,6 @@ class ApplicationServiceTest {
             verify(applicationRepository, times(3)).save(any(Application.class));
         }
 
-        // COVERS: if (result.getSuccessful() > 0)
         @Test
         void coverResultSuccessfulCondition_AllBranches() {
             // Branch 1: successful > 0 (true)
@@ -847,7 +838,6 @@ class ApplicationServiceTest {
             applicationService.createBulkApplicationsWithoutTransaction(successBulk);
             verify(cacheService, atLeastOnce()).invalidate();
 
-            // Branch 2: successful = 0 (false)
             ApplicationCreateDto failApp = ApplicationCreateDto.builder()
                 .passportNumber("MP1234567")
                 .plateNumber("NOT_EXIST")
