@@ -1674,7 +1674,7 @@ class ApplicationServiceTest {
             BulkApplicationResult result = applicationService.createBulkApplicationsWithoutTransaction(bulkDto);
 
             assertThat(result.getTotalRequested()).isEqualTo(1);
-            assertThat(result.getSuccessful()).isEqualTo(0);
+            assertThat(result.getSuccessful()).isZero();
             assertThat(result.getFailed()).isEqualTo(1);
             assertThat(result.getErrors()).hasSize(1);
             assertThat(result.getErrors().getFirst()).contains("Некоторые услуги не найдены");
@@ -1722,16 +1722,12 @@ class ApplicationServiceTest {
         }
 
         @Test
-        @DisplayName("Cover createSingleApplication with services - transactional mode (success)")
-        void shouldCoverCreateSingleApplicationWithServicesTransactionalSuccess() {
-            AdditionalService service1 = AdditionalService.builder().id(1L).price(BigDecimal.valueOf(50)).build();
-            AdditionalService service2 = AdditionalService.builder().id(2L).price(BigDecimal.valueOf(30)).build();
-            List<Long> serviceIds = List.of(1L, 2L);
-
+        @DisplayName("Cover createSingleApplication without services - transactional mode")
+        void shouldCoverCreateSingleApplicationWithoutServicesTransactional() {
             ApplicationCreateDto appDto = ApplicationCreateDto.builder()
                 .passportNumber("MP1234567")
                 .plateNumber("1234 AB-7")
-                .serviceIds(serviceIds)
+                .serviceIds(null)
                 .build();
 
             BulkApplicationCreateDto bulkDto = BulkApplicationCreateDto.builder()
@@ -1747,16 +1743,15 @@ class ApplicationServiceTest {
                 .applications(new ArrayList<>())
                 .build();
 
+            ArgumentCaptor<Application> appCaptor = ArgumentCaptor.forClass(Application.class);
+
             when(applicantRepository.findByPassportNumber("MP1234567")).thenReturn(Optional.of(testApplicant));
             when(licensePlateRepository.findByPlateNumber("1234 AB-7")).thenReturn(Optional.of(availablePlate));
-            when(serviceRepository.findAllById(serviceIds)).thenReturn(List.of(service1, service2));
-
-            when(applicationRepository.save(any(Application.class)))
-                .thenAnswer(invocation -> {
-                    Application app = invocation.getArgument(0);
-                    app.setId(1L);
-                    return app;
-                });
+            when(applicationRepository.save(appCaptor.capture())).thenAnswer(invocation -> {
+                Application app = invocation.getArgument(0);
+                app.setId(1L);
+                return app;
+            });
             when(applicationMapper.toDto(any(Application.class))).thenReturn(testApplicationDto);
 
             BulkApplicationResult result = applicationService.createBulkApplicationsWithTransaction(bulkDto);
@@ -1764,21 +1759,20 @@ class ApplicationServiceTest {
             assertThat(result.getTotalRequested()).isEqualTo(1);
             assertThat(result.getSuccessful()).isEqualTo(1);
 
-            verify(serviceRepository).findAllById(serviceIds);
-            verify(applicationRepository, times(2)).save(any(Application.class));
+            verify(applicationRepository, times(1)).save(any(Application.class));
+
+            Application savedApp = appCaptor.getValue();
+            assertThat(savedApp.getStatus()).isEqualTo(ApplicationStatus.CONFIRMED);
+            assertThat(savedApp.getAdditionalServices()).isEmpty();
         }
 
         @Test
-        @DisplayName("Cover createSingleApplication with services - non-transactional mode (success)")
-        void shouldCoverCreateSingleApplicationWithServicesNonTransactionalSuccess() {
-            AdditionalService service1 = AdditionalService.builder().id(1L).price(BigDecimal.valueOf(50)).build();
-            AdditionalService service2 = AdditionalService.builder().id(2L).price(BigDecimal.valueOf(30)).build();
-            List<Long> serviceIds = List.of(1L, 2L);
-
+        @DisplayName("Cover createSingleApplication without services - non-transactional mode")
+        void shouldCoverCreateSingleApplicationWithoutServicesNonTransactional() {
             ApplicationCreateDto appDto = ApplicationCreateDto.builder()
                 .passportNumber("MP1234567")
                 .plateNumber("1234 AB-7")
-                .serviceIds(serviceIds)
+                .serviceIds(null)
                 .build();
 
             BulkApplicationCreateDto bulkDto = BulkApplicationCreateDto.builder()
@@ -1794,15 +1788,15 @@ class ApplicationServiceTest {
                 .applications(new ArrayList<>())
                 .build();
 
+            ArgumentCaptor<Application> appCaptor = ArgumentCaptor.forClass(Application.class);
+
             when(applicantRepository.findByPassportNumber("MP1234567")).thenReturn(Optional.of(testApplicant));
             when(licensePlateRepository.findByPlateNumber("1234 AB-7")).thenReturn(Optional.of(availablePlate));
-            when(serviceRepository.findAllById(serviceIds)).thenReturn(List.of(service1, service2));
-            when(applicationRepository.save(any(Application.class)))
-                .thenAnswer(invocation -> {
-                    Application app = invocation.getArgument(0);
-                    app.setId(1L);
-                    return app;
-                });
+            when(applicationRepository.save(appCaptor.capture())).thenAnswer(invocation -> {
+                Application app = invocation.getArgument(0);
+                app.setId(1L);
+                return app;
+            });
             when(applicationMapper.toDto(any(Application.class))).thenReturn(testApplicationDto);
 
             BulkApplicationResult result = applicationService.createBulkApplicationsWithoutTransaction(bulkDto);
@@ -1810,8 +1804,11 @@ class ApplicationServiceTest {
             assertThat(result.getTotalRequested()).isEqualTo(1);
             assertThat(result.getSuccessful()).isEqualTo(1);
 
-            verify(serviceRepository).findAllById(serviceIds);
-            verify(applicationRepository, times(2)).save(any(Application.class));
+            verify(applicationRepository, times(1)).save(any(Application.class));
+
+            Application savedApp = appCaptor.getValue();
+            assertThat(savedApp.getStatus()).isEqualTo(ApplicationStatus.PENDING);
+            assertThat(savedApp.getAdditionalServices()).isEmpty();
         }
 
         @Test
