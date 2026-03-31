@@ -57,32 +57,6 @@ public class ApplicationService {
     private static final String CANNOT_CANCEL = "Нельзя отменить заявление в статусе: %s";
     private static final String NOT_IN_CONFIRMED_STATUS = "Application is not in CONFIRMED status: {}";
 
-    private static final String NO_APPLICATIONS = "У заявителя {} нет заявок";
-    private static final String CACHE_INVALIDATED = "Cache invalidated after creation";
-    private static final String APPLICATION_SAVED = "Application saved with id: {}";
-    private static final String APPLICATION_CONFIRMED = "Confirmed application with id: {}";
-    private static final String APPLICATION_COMPLETED = "Completed application with id: {}";
-    private static final String APPLICATION_CANCELLED = "Cancelled application with id: {}";
-    private static final String APPLICATION_DELETED = "Deleted application with id: {}";
-    private static final String APPLICATION_EXPIRED = "Application {} expired";
-    private static final String FETCHING_JPQL = "Fetching applications by status: {} and region: {} (JPQL)";
-    private static final String FETCHING_NATIVE = "Fetching applications by status: {} and region: {} (NATIVE)";
-    private static final String FETCHING_CACHED = "Fetching applications by status: {} and region: {} (CACHED)";
-    private static final String REGION_NOT_FOUND_LOG = "Region '{}' not found";
-    private static final String CACHE_HIT = "Returning cached result for region: {}, status: {}";
-    private static final String FOUND_APPLICATIONS = "Найдено {} заявок в регионе {} со статусом {}";
-    private static final String FOUND_APPLICATIONS_NATIVE = "Native query: найдено {} заявок в регионе {}" +
-        " со статусом {}";
-    private static final String CACHED_RESULTS = "Cached {} results for region: {}, status: {}";
-    private static final String PAGINATION_LOG = "Пагинация для паспорта: {}, page: {}, size: {}";
-    private static final String PAGINATION_RESULT = "Найдено {} заявок из {}";
-    private static final String CREATING_APPLICATION = "Creating application with transaction";
-    private static final String WITHOUT_TX = "=== Demonstrating WITHOUT @Transactional ===";
-    private static final String WITH_TX = "=== Demonstrating WITH @Transactional ===";
-    private static final String APPLICATIONS_WITH_STATUS_NOT_FOUND = "Заявки со статусом {} в регионе {} не найдены";
-    private static final String APPLICATIONS_WITH_STATUS_NOT_FOUND_NATIVE = "Заявки со статусом {} в регионе " +
-        "{} не найдены (native)";
-
     @Transactional(readOnly = true)
     public List<ApplicationDto> getAllApplications() {
         return applicationMapper.toDtoList(applicationRepository.findAll());
@@ -112,7 +86,7 @@ public class ApplicationService {
                     String.format(APPLICANT_NOT_FOUND, passportNumber)
                 );
             }
-            log.info(NO_APPLICATIONS, passportNumber);
+            log.info("У заявителя {} нет заявок", passportNumber);
         }
 
         return applicationMapper.toDtoList(applications);
@@ -122,10 +96,10 @@ public class ApplicationService {
     public List<ApplicationDto> getApplicationsByStatusAndRegion(
         ApplicationStatus status, String region) {
 
-        log.info(FETCHING_JPQL, status, region);
+        log.info("Fetching applications by status: {} and region: {} (JPQL)", status, region);
 
         if (!departmentRepository.existsByRegion(region)) {
-            log.warn(REGION_NOT_FOUND_LOG, region);
+            log.warn("Region '{}' not found", region);
             throw new ResourceNotFoundException(
                 String.format(REGION_NOT_FOUND, region)
             );
@@ -135,13 +109,13 @@ public class ApplicationService {
             .findByStatusAndDepartmentRegion(status, region);
 
         if (applications.isEmpty()) {
-            log.warn(APPLICATIONS_WITH_STATUS_NOT_FOUND, status, region);
+            log.warn("Заявки со статусом {} в регионе {} не найдены", status, region);
             throw new ResourceNotFoundException(
                 String.format(APPLICATIONS_NOT_FOUND, status, region)
             );
         }
 
-        log.info(FOUND_APPLICATIONS, applications.size(), region, status);
+        log.info("Найдено {} заявок в регионе {} со статусом {}", applications.size(), region, status);
         return applicationMapper.toDtoList(applications);
     }
 
@@ -149,10 +123,10 @@ public class ApplicationService {
     public List<ApplicationDto> getApplicationsByStatusAndRegionNative(
         ApplicationStatus status, String region) {
 
-        log.info(FETCHING_NATIVE, status, region);
+        log.info("Fetching applications by status: {} and region: {} (NATIVE)", status, region);
 
         if (!departmentRepository.existsByRegion(region)) {
-            log.warn(REGION_NOT_FOUND_LOG, region);
+            log.warn("Region '{}' not found", region);
             throw new ResourceNotFoundException(
                 String.format(REGION_NOT_FOUND, region)
             );
@@ -162,13 +136,13 @@ public class ApplicationService {
             .findByStatusAndDepartmentRegionNative(status.name(), region);
 
         if (applications.isEmpty()) {
-            log.warn(APPLICATIONS_WITH_STATUS_NOT_FOUND_NATIVE, status, region);
+            log.warn("Заявки со статусом {} в регионе {} не найдены (native)", status, region);
             throw new ResourceNotFoundException(
                 String.format(APPLICATIONS_NOT_FOUND, status, region)
             );
         }
 
-        log.info(FOUND_APPLICATIONS_NATIVE, applications.size(), region, status);
+        log.info("Native query: найдено {} заявок в регионе {} со статусом {}", applications.size(), region, status);
         return applicationMapper.toDtoList(applications);
     }
 
@@ -176,11 +150,11 @@ public class ApplicationService {
     public List<ApplicationDto> getApplicationsByStatusAndRegionCached(
         ApplicationStatus status, String region) {
 
-        log.info(FETCHING_CACHED, status, region);
+        log.info("Fetching applications by status: {} and region: {} (CACHED)", status, region);
 
         List<ApplicationDto> cached = cacheService.get(status.name(), region);
         if (cached != null) {
-            log.info(CACHE_HIT, region, status);
+            log.info("Returning cached result for region: {}, status: {}", region, status);
 
             if (cached.isEmpty()) {
                 log.warn("В кэше пустой результат для {} {}", region, status);
@@ -196,7 +170,7 @@ public class ApplicationService {
         List<ApplicationDto> result = applicationMapper.toDtoList(applications);
         cacheService.put(status.name(), region, result);
 
-        log.info(CACHED_RESULTS, result.size(), region, status);
+        log.info("Cached {} results for region: {}, status: {}", result.size(), region, status);
 
         return result;
     }
@@ -205,17 +179,17 @@ public class ApplicationService {
     public Page<ApplicationDto> getApplicationsByPassportPaginated(
         String passportNumber, Pageable pageable) {
 
-        log.info(PAGINATION_LOG,
+        log.info("Пагинация для паспорта: {}, page: {}, size: {}",
             passportNumber, pageable.getPageNumber(), pageable.getPageSize());
 
         Page<Application> applicationPage = applicationRepository
             .findByApplicantPassport(passportNumber, pageable);
 
         if (applicationPage.isEmpty() && pageable.getPageNumber() == 0) {
-            log.info(NO_APPLICATIONS, passportNumber);
+            log.info("У заявителя {} нет заявок", passportNumber);
         }
 
-        log.info(PAGINATION_RESULT,
+        log.info("Найдено {} заявок из {}",
             applicationPage.getNumberOfElements(),
             applicationPage.getTotalElements());
 
@@ -236,16 +210,16 @@ public class ApplicationService {
 
     @Transactional
     public ApplicationDto createApplication(final ApplicationCreateDto createDto) {
-        log.info(CREATING_APPLICATION);
+        log.info("Creating application with transaction");
         ApplicationDto result = createApplicationInternal(createDto, true, true);
         cacheService.invalidate();
-        log.info(CACHE_INVALIDATED);
+        log.info("Cache invalidated after creation");
         return result;
     }
 
     public ApplicationDto createApplicationWithoutTransaction(
         final ApplicationCreateDto createDto) {
-        log.info(WITHOUT_TX);
+        log.info("=== Demonstrating WITHOUT @Transactional ===");
         ApplicationDto result = createApplicationInternal(createDto, false, false);
         cacheService.invalidate();
         return result;
@@ -254,7 +228,7 @@ public class ApplicationService {
     @Transactional
     public ApplicationDto createApplicationWithTransaction(
         final ApplicationCreateDto createDto) {
-        log.info(WITH_TX);
+        log.info("=== Demonstrating WITH @Transactional ===");
         ApplicationDto result = createApplicationInternal(createDto, true, false);
         cacheService.invalidate();
         return result;
@@ -277,7 +251,7 @@ public class ApplicationService {
         application.setStatus(ApplicationStatus.CONFIRMED);
         application.setConfirmationDate(LocalDateTime.now());
 
-        log.info(APPLICATION_CONFIRMED, id);
+        log.info("Confirmed application with id: {}", id);
         cacheService.invalidate();
 
         return applicationMapper.toDto(applicationRepository.save(application));
@@ -299,7 +273,7 @@ public class ApplicationService {
         plate.setExpiryDate(LocalDateTime.now().plusYears(10));
         licensePlateRepository.save(plate);
 
-        log.info(APPLICATION_COMPLETED, id);
+        log.info("Completed application with id: {}", id);
         cacheService.invalidate();
 
         return applicationMapper.toDto(applicationRepository.save(application));
@@ -317,7 +291,7 @@ public class ApplicationService {
 
         application.setStatus(ApplicationStatus.CANCELLED);
 
-        log.info(APPLICATION_CANCELLED, id);
+        log.info("Cancelled application with id: {}", id);
         cacheService.invalidate();
 
         return applicationMapper.toDto(applicationRepository.save(application));
@@ -327,7 +301,7 @@ public class ApplicationService {
     public void deleteApplication(final Long id) {
         Application application = findApplicationOrThrow(id);
         applicationRepository.delete(application);
-        log.info(APPLICATION_DELETED, id);
+        log.info("Deleted application with id: {}", id);
         cacheService.invalidate();
     }
 
@@ -365,13 +339,14 @@ public class ApplicationService {
     }
 
     private List<AdditionalService> getServices(ApplicationCreateDto createDto, boolean useTransactionalCheck) {
-        if (createDto.getServiceIds() == null || createDto.getServiceIds().isEmpty()) {
+        List<Long> serviceIds = createDto.getServiceIds();
+        if (serviceIds == null || serviceIds.isEmpty()) {
             return Collections.emptyList();
         }
 
-        List<AdditionalService> services = serviceRepository.findAllById(createDto.getServiceIds());
+        List<AdditionalService> services = serviceRepository.findAllById(serviceIds);
 
-        if (services.size() != createDto.getServiceIds().size()) {
+        if (services.size() != serviceIds.size()) {
             String errorMsg = useTransactionalCheck
                 ? SERVICES_NOT_FOUND + " - transaction will rollback! Application will not be saved."
                 : SERVICES_NOT_FOUND + " - but application is already saved! Data is now inconsistent!";
@@ -385,9 +360,9 @@ public class ApplicationService {
                                            ApplicationCreateDto dto, List<AdditionalService> services) {
         Application application = buildApplication(applicant, plate, dto, services);
         Application saved = applicationRepository.save(application);
-        log.info(APPLICATION_SAVED, saved.getId());
+        log.info("Application saved with id: {}", saved.getId());
 
-        if (services != null && !services.isEmpty()) {
+        if (!services.isEmpty()) {
             saved.setAdditionalServices(services);
             applicationRepository.save(saved);
         }
@@ -405,7 +380,7 @@ public class ApplicationService {
             throw new BusinessException(String.format(PLATE_NOT_AVAILABLE, createDto.getPlateNumber()));
         }
 
-        List<AdditionalService> services = null;
+        List<AdditionalService> services = Collections.emptyList(); // Инициализируем пустым списком вместо null
         if (createDto.getServiceIds() != null && !createDto.getServiceIds().isEmpty()) {
             services = serviceRepository.findAllById(createDto.getServiceIds());
             if (services.size() != createDto.getServiceIds().size()) {
@@ -417,9 +392,9 @@ public class ApplicationService {
         application.setStatus(transactional ? ApplicationStatus.CONFIRMED : ApplicationStatus.PENDING);
 
         Application saved = applicationRepository.save(application);
-        log.info(APPLICATION_SAVED, saved.getId());
+        log.info("Application saved with id: {}", saved.getId());
 
-        if (services != null && !services.isEmpty()) {
+        if (!services.isEmpty()) {
             saved.setAdditionalServices(services);
             applicationRepository.save(saved);
         }
@@ -446,7 +421,7 @@ public class ApplicationService {
 
     private BigDecimal calculateTotalAmount(LicensePlate plate, List<AdditionalService> services) {
         BigDecimal total = plate.getPrice();
-        if (services != null && !services.isEmpty()) {
+        if (!services.isEmpty()) {
             BigDecimal servicesTotal = services.stream()
                 .map(AdditionalService::getPrice)
                 .reduce(BigDecimal.ZERO, BigDecimal::add);
@@ -480,7 +455,7 @@ public class ApplicationService {
     private void expireApplication(Application application) {
         application.setStatus(ApplicationStatus.EXPIRED);
         applicationRepository.save(application);
-        log.info(APPLICATION_EXPIRED, application.getId());
+        log.info("Application {} expired", application.getId());
     }
 
     private Application findApplicationOrThrow(final Long id) {
@@ -523,7 +498,7 @@ public class ApplicationService {
             .orElseThrow(() -> new ResourceNotFoundException(
                 String.format(APPLICANT_NOT_FOUND, bulkDto.getPassportNumber())));
 
-        bulkDto.getApplications().forEach(createDto -> {
+        for (ApplicationCreateDto createDto : bulkDto.getApplications()) {
             try {
                 ApplicationDto created = createSingleApplication(createDto, applicant, transactional);
                 result.getSuccessfulApplications().add(created);
@@ -539,7 +514,7 @@ public class ApplicationService {
                     throw new BusinessException("Bulk application failed: " + e.getMessage());
                 }
             }
-        });
+        }
 
         log.info("Bulk application completed: total={}, success={}, failed={}",
             result.getTotalRequested(), result.getSuccessful(), result.getFailed());
