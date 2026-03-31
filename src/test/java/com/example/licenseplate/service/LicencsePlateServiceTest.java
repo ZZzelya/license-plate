@@ -9,7 +9,7 @@ import com.example.licenseplate.model.entity.LicensePlate;
 import com.example.licenseplate.model.entity.RegistrationDept;
 import com.example.licenseplate.repository.DepartmentRepository;
 import com.example.licenseplate.repository.LicensePlateRepository;
-import com.example.licenseplate.service.mapper.LicensePlateMapper;
+import com.example.licenseplate.mapper.LicensePlateMapper;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Nested;
@@ -32,7 +32,7 @@ import static org.mockito.Mockito.*;
 
 @ExtendWith(MockitoExtension.class)
 @DisplayName("LicensePlateService Coverage Tests")
-class LicensePlateServiceTest {
+class LicencsePlateServiceTest {
 
     @Mock
     private LicensePlateRepository licensePlateRepository;

@@ -1,4 +1,4 @@
-package com.example.licenseplate.service.cache;
+package com.example.licenseplate.cache;
 
 import com.example.licenseplate.dto.response.ApplicationDto;
 import lombok.Getter;

@@ -7,7 +7,7 @@ import com.example.licenseplate.exception.ResourceNotFoundException;
 import com.example.licenseplate.exception.BusinessException;
 import com.example.licenseplate.model.entity.RegistrationDept;
 import com.example.licenseplate.repository.DepartmentRepository;
-import com.example.licenseplate.service.mapper.DepartmentMapper;
+import com.example.licenseplate.mapper.DepartmentMapper;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Service;

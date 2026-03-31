@@ -7,7 +7,7 @@ import com.example.licenseplate.exception.BusinessException;
 import com.example.licenseplate.model.entity.Applicant;
 import com.example.licenseplate.model.enums.ApplicationStatus;
 import com.example.licenseplate.repository.ApplicantRepository;
-import com.example.licenseplate.service.mapper.ApplicantMapper;
+import com.example.licenseplate.mapper.ApplicantMapper;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Service;

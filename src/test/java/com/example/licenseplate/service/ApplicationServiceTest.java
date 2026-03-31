@@ -17,8 +17,8 @@ import com.example.licenseplate.repository.ApplicationRepository;
 import com.example.licenseplate.repository.DepartmentRepository;
 import com.example.licenseplate.repository.LicensePlateRepository;
 import com.example.licenseplate.repository.ServiceRepository;
-import com.example.licenseplate.service.cache.ApplicationCacheService;
-import com.example.licenseplate.service.mapper.ApplicationMapper;
+import com.example.licenseplate.cache.ApplicationCacheService;
+import com.example.licenseplate.mapper.ApplicationMapper;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Nested;
@@ -47,7 +47,6 @@ import static org.assertj.core.api.Assertions.assertThatThrownBy;
 import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.ArgumentMatchers.anyList;
 import static org.mockito.ArgumentMatchers.anyLong;
-import static org.mockito.ArgumentMatchers.anyString;
 import static org.mockito.ArgumentMatchers.eq;
 import static org.mockito.Mockito.*;
 

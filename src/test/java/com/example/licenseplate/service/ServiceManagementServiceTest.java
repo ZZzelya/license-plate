@@ -7,7 +7,7 @@ import com.example.licenseplate.exception.ResourceNotFoundException;
 import com.example.licenseplate.model.entity.AdditionalService;
 import com.example.licenseplate.model.entity.Application;
 import com.example.licenseplate.repository.ServiceRepository;
-import com.example.licenseplate.service.mapper.ServiceMapper;
+import com.example.licenseplate.mapper.ServiceMapper;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Nested;

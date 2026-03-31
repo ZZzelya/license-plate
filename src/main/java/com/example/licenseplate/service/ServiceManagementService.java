@@ -6,7 +6,7 @@ import com.example.licenseplate.exception.ResourceNotFoundException;
 import com.example.licenseplate.exception.BusinessException;
 import com.example.licenseplate.model.entity.AdditionalService;
 import com.example.licenseplate.repository.ServiceRepository;
-import com.example.licenseplate.service.mapper.ServiceMapper;
+import com.example.licenseplate.mapper.ServiceMapper;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Service;

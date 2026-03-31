@@ -8,7 +8,7 @@ import com.example.licenseplate.model.entity.LicensePlate;
 import com.example.licenseplate.model.entity.RegistrationDept;
 import com.example.licenseplate.repository.LicensePlateRepository;
 import com.example.licenseplate.repository.DepartmentRepository;
-import com.example.licenseplate.service.mapper.LicensePlateMapper;
+import com.example.licenseplate.mapper.LicensePlateMapper;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Service;

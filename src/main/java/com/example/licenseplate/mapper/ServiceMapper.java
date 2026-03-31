@@ -1,4 +1,4 @@
-package com.example.licenseplate.service.mapper;
+package com.example.licenseplate.mapper;
 
 import com.example.licenseplate.dto.request.ServiceCreateDto;
 import com.example.licenseplate.dto.response.ServiceDto;

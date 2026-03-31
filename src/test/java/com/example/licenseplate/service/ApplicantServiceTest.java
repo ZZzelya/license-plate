@@ -8,7 +8,7 @@ import com.example.licenseplate.model.entity.Applicant;
 import com.example.licenseplate.model.entity.Application;
 import com.example.licenseplate.model.enums.ApplicationStatus;
 import com.example.licenseplate.repository.ApplicantRepository;
-import com.example.licenseplate.service.mapper.ApplicantMapper;
+import com.example.licenseplate.mapper.ApplicantMapper;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Nested;
