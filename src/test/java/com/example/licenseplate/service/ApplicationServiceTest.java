@@ -1267,6 +1267,7 @@ class ApplicationServiceTest {
             verify(licensePlateRepository).isPlateAvailable(1L);
         }
 
+
         @Test
         @DisplayName("Should invalidate cache after successful bulk with transaction")
         void shouldInvalidateCacheAfterBulkWithTransaction() {
