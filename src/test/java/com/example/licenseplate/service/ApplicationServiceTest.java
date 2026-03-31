@@ -818,7 +818,7 @@ class ApplicationServiceTest {
 
         @Test
         void coverResultSuccessfulCondition_AllBranches() {
-
+            // Branch 1: successful > 0 (true)
             ApplicationCreateDto successApp = ApplicationCreateDto.builder()
                 .passportNumber("MP1234567")
                 .plateNumber("1234 AB-7")
@@ -852,7 +852,6 @@ class ApplicationServiceTest {
             when(licensePlateRepository.findByPlateNumber("NOT_EXIST")).thenReturn(Optional.empty());
 
             applicationService.createBulkApplicationsWithoutTransaction(failBulk);
-
         }
     }
     @Nested
@@ -870,7 +869,6 @@ class ApplicationServiceTest {
                     ApplicationCreateDto.class,
                     List.class);
             saveApplicationMethod.setAccessible(true);
-
 
             AdditionalService service1 = AdditionalService.builder().id(1L).price(BigDecimal.valueOf(50)).build();
             AdditionalService service2 = AdditionalService.builder().id(2L).price(BigDecimal.valueOf(30)).build();
