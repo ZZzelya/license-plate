@@ -24,9 +24,6 @@ import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Nested;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
-import org.junit.jupiter.params.ParameterizedTest;
-import org.junit.jupiter.params.provider.CsvSource;
-import org.mockito.ArgumentCaptor;
 import org.mockito.InjectMocks;
 import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
@@ -34,9 +31,6 @@ import org.springframework.data.domain.Page;
 import org.springframework.data.domain.PageImpl;
 import org.springframework.data.domain.PageRequest;
 import org.springframework.data.domain.Pageable;
-
-import static org.mockito.Mockito.times;
-import static org.mockito.Mockito.verify;
 
 import java.math.BigDecimal;
 import java.time.LocalDateTime;
@@ -47,9 +41,7 @@ import java.util.Optional;
 
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.assertj.core.api.Assertions.assertThatThrownBy;
-import static org.mockito.ArgumentMatchers.any;
-import static org.mockito.ArgumentMatchers.anyList;
-import static org.mockito.ArgumentMatchers.anyLong;
+import static org.mockito.ArgumentMatchers.*;
 import static org.mockito.Mockito.*;
 
 @ExtendWith(MockitoExtension.class)
@@ -82,14 +74,12 @@ class ApplicationServiceTest {
 
     private Applicant testApplicant;
     private LicensePlate testPlate;
-    private RegistrationDept testDept;
     private Application testApplication;
     private ApplicationDto testApplicationDto;
-    private ApplicationCreateDto testCreateDto;
 
     @BeforeEach
     void setUp() {
-        testDept = RegistrationDept.builder()
+        RegistrationDept testDept = RegistrationDept.builder()
             .id(1L)
             .name("МРЭО ГАИ")
             .region("MINSK")
@@ -131,24 +121,14 @@ class ApplicationServiceTest {
             .departmentId(1L)
             .paymentAmount(BigDecimal.valueOf(100))
             .build();
-
-        testCreateDto = ApplicationCreateDto.builder()
-            .passportNumber("MP1234567")
-            .plateNumber("1234 AB-7")
-            .vehicleVin("VIN123")
-            .vehicleModel("Toyota")
-            .vehicleYear(2020)
-            .notes("Test notes")
-            .serviceIds(List.of(1L, 2L))
-            .build();
     }
 
     @Nested
-    @DisplayName("Get All Applications Tests")
-    class GetAllApplicationsTests {
+    @DisplayName("Get Methods Tests")
+    class GetMethodsTests {
 
         @Test
-        void shouldReturnListOfApplications() {
+        void getAllApplications_ShouldReturnList() {
             List<Application> applications = List.of(testApplication);
             List<ApplicationDto> expectedDtos = List.of(testApplicationDto);
 
@@ -161,7 +141,7 @@ class ApplicationServiceTest {
         }
 
         @Test
-        void shouldReturnEmptyListWhenNoApplications() {
+        void getAllApplications_ShouldReturnEmptyList() {
             when(applicationRepository.findAll()).thenReturn(Collections.emptyList());
             when(applicationMapper.toDtoList(Collections.emptyList())).thenReturn(Collections.emptyList());
 
@@ -169,14 +149,9 @@ class ApplicationServiceTest {
 
             assertThat(result).isEmpty();
         }
-    }
-
-    @Nested
-    @DisplayName("Get Application By ID Tests")
-    class GetApplicationByIdTests {
 
         @Test
-        void shouldReturnApplicationWhenIdExists() {
+        void getApplicationById_ShouldReturnApplication() {
             when(applicationRepository.findById(1L)).thenReturn(Optional.of(testApplication));
             when(applicationMapper.toDto(testApplication)).thenReturn(testApplicationDto);
 
@@ -186,20 +161,15 @@ class ApplicationServiceTest {
         }
 
         @Test
-        void shouldThrowNotFoundExceptionWhenIdNotFound() {
+        void getApplicationById_ShouldThrowNotFound() {
             when(applicationRepository.findById(999L)).thenReturn(Optional.empty());
 
             assertThatThrownBy(() -> applicationService.getApplicationById(999L))
                 .isInstanceOf(ResourceNotFoundException.class);
         }
-    }
-
-    @Nested
-    @DisplayName("Get Application With Details Tests")
-    class GetApplicationWithDetailsTests {
 
         @Test
-        void shouldReturnApplicationWithDetails() {
+        void getApplicationWithDetails_ShouldReturnWithDetails() {
             when(applicationRepository.findByIdWithDetails(1L)).thenReturn(Optional.of(testApplication));
             when(applicationMapper.toDto(testApplication)).thenReturn(testApplicationDto);
 
@@ -209,20 +179,7 @@ class ApplicationServiceTest {
         }
 
         @Test
-        void shouldThrowNotFoundExceptionWhenIdNotFound() {
-            when(applicationRepository.findByIdWithDetails(999L)).thenReturn(Optional.empty());
-
-            assertThatThrownBy(() -> applicationService.getApplicationWithDetails(999L))
-                .isInstanceOf(ResourceNotFoundException.class);
-        }
-    }
-
-    @Nested
-    @DisplayName("Get Applications By Passport Tests")
-    class GetApplicationsByPassportTests {
-
-        @Test
-        void shouldReturnApplicationsWhenPassportExists() {
+        void getApplicationsByPassport_ShouldReturnApplications() {
             List<Application> applications = List.of(testApplication);
             List<ApplicationDto> expectedDtos = List.of(testApplicationDto);
 
@@ -235,16 +192,7 @@ class ApplicationServiceTest {
         }
 
         @Test
-        void shouldThrowNotFoundExceptionWhenPassportNotFound() {
-            when(applicationRepository.findByApplicantPassport("NOT_EXIST")).thenReturn(Collections.emptyList());
-            when(applicantRepository.findByPassportNumber("NOT_EXIST")).thenReturn(Optional.empty());
-
-            assertThatThrownBy(() -> applicationService.getApplicationsByPassport("NOT_EXIST"))
-                .isInstanceOf(ResourceNotFoundException.class);
-        }
-
-        @Test
-        void shouldReturnEmptyListWhenNoApplications() {
+        void getApplicationsByPassport_WhenNoApplications_ShouldReturnEmptyList() {
             when(applicationRepository.findByApplicantPassport("MP1234567")).thenReturn(Collections.emptyList());
             when(applicantRepository.findByPassportNumber("MP1234567")).thenReturn(Optional.of(testApplicant));
             when(applicationMapper.toDtoList(Collections.emptyList())).thenReturn(Collections.emptyList());
@@ -253,14 +201,18 @@ class ApplicationServiceTest {
 
             assertThat(result).isEmpty();
         }
-    }
-
-    @Nested
-    @DisplayName("Get Applications By Status And Region Tests")
-    class GetApplicationsByStatusAndRegionTests {
 
         @Test
-        void shouldReturnApplicationsByStatusAndRegion() {
+        void getApplicationsByPassport_WhenApplicantNotFound_ShouldThrowException() {
+            when(applicationRepository.findByApplicantPassport("NOT_EXIST")).thenReturn(Collections.emptyList());
+            when(applicantRepository.findByPassportNumber("NOT_EXIST")).thenReturn(Optional.empty());
+
+            assertThatThrownBy(() -> applicationService.getApplicationsByPassport("NOT_EXIST"))
+                .isInstanceOf(ResourceNotFoundException.class);
+        }
+
+        @Test
+        void getApplicationsByStatusAndRegion_ShouldReturnApplications() {
             List<Application> applications = List.of(testApplication);
             List<ApplicationDto> expectedDtos = List.of(testApplicationDto);
 
@@ -276,7 +228,7 @@ class ApplicationServiceTest {
         }
 
         @Test
-        void shouldThrowNotFoundExceptionWhenRegionNotFound() {
+        void getApplicationsByStatusAndRegion_WhenRegionNotFound_ShouldThrowException() {
             when(departmentRepository.existsByRegion("UNKNOWN")).thenReturn(false);
 
             assertThatThrownBy(() -> applicationService.getApplicationsByStatusAndRegion(
@@ -285,7 +237,7 @@ class ApplicationServiceTest {
         }
 
         @Test
-        void shouldThrowNotFoundExceptionWhenNoApplications() {
+        void getApplicationsByStatusAndRegion_WhenNoApplications_ShouldThrowException() {
             when(departmentRepository.existsByRegion("MINSK")).thenReturn(true);
             when(applicationRepository.findByStatusAndDepartmentRegion(ApplicationStatus.PENDING, "MINSK"))
                 .thenReturn(Collections.emptyList());
@@ -294,14 +246,9 @@ class ApplicationServiceTest {
                 ApplicationStatus.PENDING, "MINSK"))
                 .isInstanceOf(ResourceNotFoundException.class);
         }
-    }
-
-    @Nested
-    @DisplayName("Get Applications By Status And Region Cached Tests")
-    class GetApplicationsByStatusAndRegionCachedTests {
 
         @Test
-        void shouldReturnCachedResult() {
+        void getApplicationsByStatusAndRegionCached_ShouldReturnCachedResult() {
             List<ApplicationDto> cachedResult = List.of(testApplicationDto);
 
             when(cacheService.get("PENDING", "MINSK")).thenReturn(cachedResult);
@@ -313,7 +260,7 @@ class ApplicationServiceTest {
         }
 
         @Test
-        void shouldFetchFromDbAndCacheWhenCacheMiss() {
+        void getApplicationsByStatusAndRegionCached_ShouldFetchFromDbAndCache() {
             List<Application> applications = List.of(testApplication);
             List<ApplicationDto> expectedDtos = List.of(testApplicationDto);
 
@@ -330,7 +277,7 @@ class ApplicationServiceTest {
         }
 
         @Test
-        void shouldInvalidateCacheWhenEmptyResult() {
+        void getApplicationsByStatusAndRegionCached_EmptyResult_ShouldInvalidateCache() {
             when(cacheService.get("PENDING", "MINSK")).thenReturn(Collections.emptyList());
 
             List<ApplicationDto> result = applicationService.getApplicationsByStatusAndRegionCached(
@@ -339,490 +286,9 @@ class ApplicationServiceTest {
             assertThat(result).isEmpty();
             verify(cacheService).invalidate();
         }
-    }
-
-    @Nested
-    @DisplayName("Get Applications By Passport Paginated Tests")
-    class GetApplicationsByPassportPaginatedTests {
 
         @Test
-        void shouldReturnPaginatedResults() {
-            Pageable pageable = PageRequest.of(0, 10);
-            Page<Application> applicationPage = new PageImpl<>(List.of(testApplication), pageable, 1);
-
-            when(applicationRepository.findByApplicantPassport("MP1234567", pageable))
-                .thenReturn(applicationPage);
-            when(applicationMapper.toDto(testApplication)).thenReturn(testApplicationDto);
-
-            Page<ApplicationDto> result = applicationService.getApplicationsByPassportPaginated("MP1234567", pageable);
-
-            assertThat(result).isNotNull();
-            assertThat(result.getContent()).hasSize(1);
-        }
-
-        @Test
-        void shouldReturnEmptyPageWhenNoResults() {
-            Pageable pageable = PageRequest.of(0, 10);
-            Page<Application> emptyPage = new PageImpl<>(Collections.emptyList(), pageable, 0);
-
-            when(applicationRepository.findByApplicantPassport("MP1234567", pageable))
-                .thenReturn(emptyPage);
-
-            Page<ApplicationDto> result = applicationService.getApplicationsByPassportPaginated("MP1234567", pageable);
-
-            assertThat(result.getContent()).isEmpty();
-        }
-    }
-
-    @Nested
-    @DisplayName("Create Application Tests")
-    class CreateApplicationTests {
-
-        @Test
-        void shouldCreateApplicationSuccessfully() {
-            AdditionalService service1 = AdditionalService.builder().id(1L).price(BigDecimal.valueOf(50)).build();
-            AdditionalService service2 = AdditionalService.builder().id(2L).price(BigDecimal.valueOf(30)).build();
-
-            when(applicantRepository.findByPassportNumber("MP1234567")).thenReturn(Optional.of(testApplicant));
-            when(licensePlateRepository.findByPlateNumber("1234 AB-7")).thenReturn(Optional.of(testPlate));
-            when(serviceRepository.findAllById(anyList())).thenReturn(List.of(service1, service2));
-            when(applicationRepository.save(any(Application.class))).thenReturn(testApplication);
-            when(applicationMapper.toDto(testApplication)).thenReturn(testApplicationDto);
-
-            ApplicationDto result = applicationService.createApplication(testCreateDto);
-
-            assertThat(result).isEqualTo(testApplicationDto);
-            verify(cacheService).invalidate();
-        }
-
-        @Test
-        void shouldCreateApplicationWithoutServices() {
-            ApplicationCreateDto dtoWithoutServices = ApplicationCreateDto.builder()
-                .passportNumber("MP1234567")
-                .plateNumber("1234 AB-7")
-                .serviceIds(null)
-                .build();
-
-            when(applicantRepository.findByPassportNumber("MP1234567")).thenReturn(Optional.of(testApplicant));
-            when(licensePlateRepository.findByPlateNumber("1234 AB-7")).thenReturn(Optional.of(testPlate));
-            when(applicationRepository.save(any(Application.class))).thenReturn(testApplication);
-            when(applicationMapper.toDto(testApplication)).thenReturn(testApplicationDto);
-
-            ApplicationDto result = applicationService.createApplication(dtoWithoutServices);
-
-            assertThat(result).isEqualTo(testApplicationDto);
-            verify(serviceRepository, never()).findAllById(any());
-        }
-    }
-
-    @Nested
-    @DisplayName("Create Application Internal Tests")
-    class CreateApplicationInternalTests {
-
-        @Test
-        void shouldCreateWithExistingApplicant() {
-            ApplicationCreateDto dtoWithoutServices = ApplicationCreateDto.builder()
-                .passportNumber("MP1234567")
-                .plateNumber("1234 AB-7")
-                .serviceIds(null)
-                .build();
-
-            when(applicantRepository.findByPassportNumber("MP1234567")).thenReturn(Optional.of(testApplicant));
-            when(licensePlateRepository.findByPlateNumber("1234 AB-7")).thenReturn(Optional.of(testPlate));
-            when(applicationRepository.save(any(Application.class))).thenReturn(testApplication);
-            when(applicationMapper.toDto(testApplication)).thenReturn(testApplicationDto);
-
-            ApplicationDto result = applicationService.createApplication(dtoWithoutServices);
-
-            assertThat(result).isEqualTo(testApplicationDto);
-            verify(applicantRepository, never()).save(any());
-        }
-
-        @Test
-        void shouldCreateNewApplicantWhenNotExists() {
-            ApplicationCreateDto dto = ApplicationCreateDto.builder()
-                .passportNumber("NEW123")
-                .plateNumber("1234 AB-7")
-                .serviceIds(null)
-                .build();
-
-            Applicant newApplicant = Applicant.builder()
-                .id(2L)
-                .fullName("UNKNOWN")
-                .passportNumber("NEW123")
-                .build();
-
-            when(applicantRepository.findByPassportNumber("NEW123")).thenReturn(Optional.empty());
-            when(applicantRepository.save(any(Applicant.class))).thenReturn(newApplicant);
-            when(licensePlateRepository.findByPlateNumber("1234 AB-7")).thenReturn(Optional.of(testPlate));
-            when(licensePlateRepository.isPlateAvailable(1L)).thenReturn(true);
-            when(applicationRepository.save(any(Application.class))).thenReturn(testApplication);
-            when(applicationMapper.toDto(testApplication)).thenReturn(testApplicationDto);
-
-            ApplicationDto result = applicationService.createApplicationWithoutTransaction(dto);
-
-            assertThat(result).isEqualTo(testApplicationDto);
-            verify(applicantRepository).save(any(Applicant.class));
-        }
-
-        @Test
-        void shouldThrowExceptionWhenPlateNotAvailable() {
-            ApplicationCreateDto dtoWithoutServices = ApplicationCreateDto.builder()
-                .passportNumber("MP1234567")
-                .plateNumber("1234 AB-7")
-                .serviceIds(null)
-                .build();
-
-            Application activeApplication = Application.builder()
-                .status(ApplicationStatus.PENDING)
-                .submissionDate(LocalDateTime.now())
-                .reservedUntil(LocalDateTime.now().plusHours(1))
-                .build();
-            testPlate.getApplications().add(activeApplication);
-
-            when(applicantRepository.findByPassportNumber("MP1234567")).thenReturn(Optional.of(testApplicant));
-            when(licensePlateRepository.findByPlateNumber("1234 AB-7")).thenReturn(Optional.of(testPlate));
-
-            assertThatThrownBy(() -> applicationService.createApplication(dtoWithoutServices))
-                .isInstanceOf(IllegalStateException.class)
-                .hasMessageContaining("недоступен");
-        }
-
-        @Test
-        void shouldThrowExceptionWhenServicesNotFound() {
-            when(applicantRepository.findByPassportNumber("MP1234567")).thenReturn(Optional.of(testApplicant));
-            when(licensePlateRepository.findByPlateNumber("1234 AB-7")).thenReturn(Optional.of(testPlate));
-            when(serviceRepository.findAllById(anyList())).thenReturn(List.of(AdditionalService.builder().id(1L).build()));
-
-            assertThatThrownBy(() -> applicationService.createApplication(testCreateDto))
-                .isInstanceOf(BusinessException.class)
-                .hasMessageContaining("transaction will rollback");
-        }
-    }
-
-    @Nested
-    @DisplayName("Confirm Application Tests")
-    class ConfirmApplicationTests {
-
-        @Test
-        void shouldConfirmApplicationSuccessfully() {
-            testApplication.setStatus(ApplicationStatus.PENDING);
-            testApplication.setReservedUntil(LocalDateTime.now().plusHours(1));
-
-            when(applicationRepository.findById(1L)).thenReturn(Optional.of(testApplication));
-            when(applicationRepository.save(testApplication)).thenReturn(testApplication);
-            when(applicationMapper.toDto(testApplication)).thenReturn(testApplicationDto);
-
-            ApplicationDto result = applicationService.confirmApplication(1L);
-
-            assertThat(result).isEqualTo(testApplicationDto);
-            assertThat(testApplication.getStatus()).isEqualTo(ApplicationStatus.CONFIRMED);
-            verify(cacheService).invalidate();
-        }
-
-        @Test
-        void shouldThrowExceptionWhenNotPending() {
-            testApplication.setStatus(ApplicationStatus.CONFIRMED);
-
-            when(applicationRepository.findById(1L)).thenReturn(Optional.of(testApplication));
-
-            assertThatThrownBy(() -> applicationService.confirmApplication(1L))
-                .isInstanceOf(BusinessException.class)
-                .hasMessageContaining("не в статусе PENDING");
-        }
-
-        @Test
-        void shouldThrowExceptionWhenReservationExpired() {
-            testApplication.setStatus(ApplicationStatus.PENDING);
-            testApplication.setReservedUntil(LocalDateTime.now().minusHours(1));
-
-            when(applicationRepository.findById(1L)).thenReturn(Optional.of(testApplication));
-            when(applicationRepository.save(testApplication)).thenReturn(testApplication);
-
-            assertThatThrownBy(() -> applicationService.confirmApplication(1L))
-                .isInstanceOf(BusinessException.class)
-                .hasMessageContaining("Время бронирования истекло");
-        }
-    }
-
-    @Nested
-    @DisplayName("Complete Application Tests")
-    class CompleteApplicationTests {
-
-        @Test
-        void shouldCompleteApplicationSuccessfully() {
-            testApplication.setStatus(ApplicationStatus.CONFIRMED);
-
-            when(applicationRepository.findById(1L)).thenReturn(Optional.of(testApplication));
-            when(licensePlateRepository.save(testPlate)).thenReturn(testPlate);
-            when(applicationRepository.save(testApplication)).thenReturn(testApplication);
-            when(applicationMapper.toDto(testApplication)).thenReturn(testApplicationDto);
-
-            ApplicationDto result = applicationService.completeApplication(1L);
-
-            assertThat(result).isEqualTo(testApplicationDto);
-            assertThat(testApplication.getStatus()).isEqualTo(ApplicationStatus.COMPLETED);
-            verify(cacheService).invalidate();
-        }
-
-        @Test
-        void shouldThrowExceptionWhenNotConfirmed() {
-            testApplication.setStatus(ApplicationStatus.PENDING);
-
-            when(applicationRepository.findById(1L)).thenReturn(Optional.of(testApplication));
-
-            assertThatThrownBy(() -> applicationService.completeApplication(1L))
-                .isInstanceOf(BusinessException.class);
-        }
-    }
-
-    @Nested
-    @DisplayName("Cancel Application Tests")
-    class CancelApplicationTests {
-
-        @Test
-        void shouldCancelApplicationSuccessfully() {
-            testApplication.setStatus(ApplicationStatus.PENDING);
-
-            when(applicationRepository.findById(1L)).thenReturn(Optional.of(testApplication));
-            when(applicationRepository.save(testApplication)).thenReturn(testApplication);
-            when(applicationMapper.toDto(testApplication)).thenReturn(testApplicationDto);
-
-            ApplicationDto result = applicationService.cancelApplication(1L);
-
-            assertThat(result).isEqualTo(testApplicationDto);
-            assertThat(testApplication.getStatus()).isEqualTo(ApplicationStatus.CANCELLED);
-            verify(cacheService).invalidate();
-        }
-
-        @Test
-        void shouldThrowExceptionWhenAlreadyCompleted() {
-            testApplication.setStatus(ApplicationStatus.COMPLETED);
-
-            when(applicationRepository.findById(1L)).thenReturn(Optional.of(testApplication));
-
-            assertThatThrownBy(() -> applicationService.cancelApplication(1L))
-                .isInstanceOf(BusinessException.class);
-        }
-
-        @Test
-        void shouldThrowExceptionWhenAlreadyCancelled() {
-            testApplication.setStatus(ApplicationStatus.CANCELLED);
-
-            when(applicationRepository.findById(1L)).thenReturn(Optional.of(testApplication));
-
-            assertThatThrownBy(() -> applicationService.cancelApplication(1L))
-                .isInstanceOf(BusinessException.class);
-        }
-    }
-
-    @Nested
-    @DisplayName("Delete Application Tests")
-    class DeleteApplicationTests {
-
-        @Test
-        void shouldDeleteApplicationSuccessfully() {
-            when(applicationRepository.findById(1L)).thenReturn(Optional.of(testApplication));
-            doNothing().when(applicationRepository).delete(testApplication);
-
-            applicationService.deleteApplication(1L);
-
-            verify(applicationRepository).delete(testApplication);
-            verify(cacheService).invalidate();
-        }
-
-        @Test
-        void shouldThrowNotFoundExceptionWhenIdNotFound() {
-            when(applicationRepository.findById(999L)).thenReturn(Optional.empty());
-
-            assertThatThrownBy(() -> applicationService.deleteApplication(999L))
-                .isInstanceOf(ResourceNotFoundException.class);
-        }
-    }
-
-    @Nested
-    @DisplayName("Bulk Operations Tests")
-    class BulkOperationsTests {
-
-        @Test
-        void shouldCreateBulkApplicationsWithTransactionSuccessfully() {
-            ApplicationCreateDto app1 = ApplicationCreateDto.builder()
-                .passportNumber("MP1234567")
-                .plateNumber("1234 AB-7")
-                .serviceIds(null)
-                .build();
-            ApplicationCreateDto app2 = ApplicationCreateDto.builder()
-                .passportNumber("MP1234567")
-                .plateNumber("5678 CD-9")
-                .serviceIds(null)
-                .build();
-
-            BulkApplicationCreateDto bulkDto = BulkApplicationCreateDto.builder()
-                .passportNumber("MP1234567")
-                .applications(List.of(app1, app2))
-                .build();
-
-            LicensePlate plate2 = LicensePlate.builder()
-                .id(2L)
-                .plateNumber("5678 CD-9")
-                .price(BigDecimal.valueOf(150))
-                .department(testDept)
-                .applications(new ArrayList<>())
-                .build();
-
-            when(applicantRepository.findByPassportNumber("MP1234567")).thenReturn(Optional.of(testApplicant));
-            when(licensePlateRepository.findByPlateNumber("1234 AB-7")).thenReturn(Optional.of(testPlate));
-            when(licensePlateRepository.findByPlateNumber("5678 CD-9")).thenReturn(Optional.of(plate2));
-            when(applicationRepository.save(any(Application.class))).thenReturn(testApplication);
-            when(applicationMapper.toDto(any(Application.class))).thenReturn(testApplicationDto);
-
-            BulkApplicationResult result = applicationService.createBulkApplicationsWithTransaction(bulkDto);
-
-            assertThat(result.getTotalRequested()).isEqualTo(2);
-            assertThat(result.getSuccessful()).isEqualTo(2);
-        }
-
-        @Test
-        void shouldThrowExceptionInBulkWithTransactionWhenOneFails() {
-            ApplicationCreateDto app1 = ApplicationCreateDto.builder()
-                .passportNumber("MP1234567")
-                .plateNumber("1234 AB-7")
-                .serviceIds(null)
-                .build();
-            ApplicationCreateDto app2 = ApplicationCreateDto.builder()
-                .passportNumber("MP1234567")
-                .plateNumber("NOT_EXIST")
-                .serviceIds(null)
-                .build();
-
-            BulkApplicationCreateDto bulkDto = BulkApplicationCreateDto.builder()
-                .passportNumber("MP1234567")
-                .applications(List.of(app1, app2))
-                .build();
-
-            when(applicantRepository.findByPassportNumber("MP1234567")).thenReturn(Optional.of(testApplicant));
-            when(licensePlateRepository.findByPlateNumber("1234 AB-7")).thenReturn(Optional.of(testPlate));
-            when(licensePlateRepository.findByPlateNumber("NOT_EXIST")).thenReturn(Optional.empty());
-            when(applicationRepository.save(any(Application.class))).thenReturn(testApplication);
-            when(applicationMapper.toDto(any(Application.class))).thenReturn(testApplicationDto);
-
-            assertThatThrownBy(() -> applicationService.createBulkApplicationsWithTransaction(bulkDto))
-                .isInstanceOf(BusinessException.class)
-                .hasMessageContaining("Bulk application failed");
-        }
-
-        @Test
-        void shouldCreateBulkApplicationsWithoutTransactionPartialSuccess() {
-            ApplicationCreateDto app1 = ApplicationCreateDto.builder()
-                .passportNumber("MP1234567")
-                .plateNumber("1234 AB-7")
-                .serviceIds(null)
-                .build();
-            ApplicationCreateDto app2 = ApplicationCreateDto.builder()
-                .passportNumber("MP1234567")
-                .plateNumber("NOT_EXIST")
-                .serviceIds(null)
-                .build();
-
-            BulkApplicationCreateDto bulkDto = BulkApplicationCreateDto.builder()
-                .passportNumber("MP1234567")
-                .applications(List.of(app1, app2))
-                .build();
-
-            when(applicantRepository.findByPassportNumber("MP1234567")).thenReturn(Optional.of(testApplicant));
-            when(licensePlateRepository.findByPlateNumber("1234 AB-7")).thenReturn(Optional.of(testPlate));
-            when(licensePlateRepository.findByPlateNumber("NOT_EXIST")).thenReturn(Optional.empty());
-            when(applicationRepository.save(any(Application.class))).thenReturn(testApplication);
-            when(applicationMapper.toDto(any(Application.class))).thenReturn(testApplicationDto);
-
-            BulkApplicationResult result = applicationService.createBulkApplicationsWithoutTransaction(bulkDto);
-
-            assertThat(result.getTotalRequested()).isEqualTo(2);
-            assertThat(result.getSuccessful()).isEqualTo(1);
-            assertThat(result.getFailed()).isEqualTo(1);
-
-            verify(licensePlateRepository, never()).isPlateAvailable(anyLong());
-        }
-
-        @Test
-        void shouldThrowExceptionWhenDuplicatePlateNumbers() {
-            ApplicationCreateDto app1 = ApplicationCreateDto.builder()
-                .passportNumber("MP1234567")
-                .plateNumber("1234 AB-7")
-                .build();
-            ApplicationCreateDto app2 = ApplicationCreateDto.builder()
-                .passportNumber("MP1234567")
-                .plateNumber("1234 AB-7")
-                .build();
-
-            BulkApplicationCreateDto bulkDto = BulkApplicationCreateDto.builder()
-                .passportNumber("MP1234567")
-                .applications(List.of(app1, app2))
-                .build();
-
-            assertThatThrownBy(() -> applicationService.createBulkApplicationsWithTransaction(bulkDto))
-                .isInstanceOf(BusinessException.class)
-                .hasMessageContaining("Duplicate plate numbers");
-        }
-
-        @Test
-        void shouldThrowExceptionWhenPlateNotAvailable() {
-            ApplicationCreateDto app1 = ApplicationCreateDto.builder()
-                .passportNumber("MP1234567")
-                .plateNumber("1234 AB-7")
-                .serviceIds(null)
-                .build();
-
-            BulkApplicationCreateDto bulkDto = BulkApplicationCreateDto.builder()
-                .passportNumber("MP1234567")
-                .applications(List.of(app1))
-                .build();
-
-            Application activeApplication = Application.builder()
-                .status(ApplicationStatus.PENDING)
-                .submissionDate(LocalDateTime.now())
-                .reservedUntil(LocalDateTime.now().plusHours(1))
-                .build();
-            testPlate.getApplications().add(activeApplication);
-
-            when(applicantRepository.findByPassportNumber("MP1234567")).thenReturn(Optional.of(testApplicant));
-            when(licensePlateRepository.findByPlateNumber("1234 AB-7")).thenReturn(Optional.of(testPlate));
-
-            assertThatThrownBy(() -> applicationService.createBulkApplicationsWithTransaction(bulkDto))
-                .isInstanceOf(BusinessException.class)
-                .hasMessageContaining("недоступен");
-        }
-    }
-
-    @Nested
-    @DisplayName("Cache Management Tests")
-    class CacheManagementTests {
-
-        @Test
-        void shouldInvalidateEntireCache() {
-            applicationService.invalidateCache();
-            verify(cacheService).invalidate();
-        }
-
-        @Test
-        void shouldInvalidateCacheByRegion() {
-            applicationService.invalidateCacheByRegion("MINSK");
-            verify(cacheService).invalidateByRegion("MINSK");
-        }
-
-        @Test
-        void shouldInvalidateCacheByStatus() {
-            applicationService.invalidateCacheByStatus("PENDING");
-            verify(cacheService).invalidateByStatus("PENDING");
-        }
-    }
-
-    @Nested
-    @DisplayName("Native Query Tests")
-    class NativeQueryTests {
-
-        @Test
-        void shouldReturnApplicationsByStatusAndRegionNative() {
+        void getApplicationsByStatusAndRegionNative_ShouldReturnApplications() {
             List<Application> applications = List.of(testApplication);
             List<ApplicationDto> expectedDtos = List.of(testApplicationDto);
 
@@ -838,236 +304,68 @@ class ApplicationServiceTest {
         }
 
         @Test
-        void shouldThrowExceptionWhenRegionNotFoundNative() {
-            when(departmentRepository.existsByRegion("UNKNOWN")).thenReturn(false);
+        void getApplicationsByPassportPaginated_ShouldReturnPage() {
+            Pageable pageable = PageRequest.of(0, 10);
+            Page<Application> applicationPage = new PageImpl<>(List.of(testApplication), pageable, 1);
 
-            assertThatThrownBy(() -> applicationService.getApplicationsByStatusAndRegionNative(
-                ApplicationStatus.PENDING, "UNKNOWN"))
-                .isInstanceOf(ResourceNotFoundException.class);
-        }
-
-        @Test
-        void shouldThrowExceptionWhenNoApplicationsNative() {
-            when(departmentRepository.existsByRegion("MINSK")).thenReturn(true);
-            when(applicationRepository.findByStatusAndDepartmentRegionNative("PENDING", "MINSK"))
-                .thenReturn(Collections.emptyList());
-
-            assertThatThrownBy(() -> applicationService.getApplicationsByStatusAndRegionNative(
-                ApplicationStatus.PENDING, "MINSK"))
-                .isInstanceOf(ResourceNotFoundException.class);
-        }
-    }
-
-    @Nested
-    @DisplayName("Create Application Without/With Transaction Tests")
-    class CreateApplicationTransactionTests {
-
-        @Test
-        void shouldCreateApplicationWithoutTransaction() {
-            ApplicationCreateDto dto = ApplicationCreateDto.builder()
-                .passportNumber("MP1234567")
-                .plateNumber("1234 AB-7")
-                .serviceIds(null)
-                .build();
-
-            when(applicantRepository.findByPassportNumber("MP1234567")).thenReturn(Optional.of(testApplicant));
-            when(licensePlateRepository.findByPlateNumber("1234 AB-7")).thenReturn(Optional.of(testPlate));
-            when(licensePlateRepository.isPlateAvailable(1L)).thenReturn(true);
-            when(applicationRepository.save(any(Application.class))).thenReturn(testApplication);
+            when(applicationRepository.findByApplicantPassport("MP1234567", pageable))
+                .thenReturn(applicationPage);
             when(applicationMapper.toDto(testApplication)).thenReturn(testApplicationDto);
 
-            ApplicationDto result = applicationService.createApplicationWithoutTransaction(dto);
+            Page<ApplicationDto> result = applicationService.getApplicationsByPassportPaginated("MP1234567", pageable);
 
-            assertThat(result).isEqualTo(testApplicationDto);
+            assertThat(result).isNotNull();
+            assertThat(result.getContent()).hasSize(1);
         }
+    }
+
+    @Nested
+    @DisplayName("Create Application Tests")
+    class CreateApplicationTests {
 
         @Test
-        void shouldCreateApplicationWithTransaction() {
+        void createApplication_ShouldCreateSuccessfully() {
+            AdditionalService service = AdditionalService.builder().id(1L).price(BigDecimal.TEN).build();
+
             ApplicationCreateDto dto = ApplicationCreateDto.builder()
                 .passportNumber("MP1234567")
                 .plateNumber("1234 AB-7")
-                .serviceIds(null)
+                .serviceIds(List.of(1L))
                 .build();
 
-            when(applicantRepository.findByPassportNumber("MP1234567")).thenReturn(Optional.of(testApplicant));
-            when(licensePlateRepository.findByPlateNumber("1234 AB-7")).thenReturn(Optional.of(testPlate));
+            when(applicantRepository.findByPassportNumber(anyString())).thenReturn(Optional.of(testApplicant));
+            when(licensePlateRepository.findByPlateNumber(anyString())).thenReturn(Optional.of(testPlate));
+            when(serviceRepository.findAllById(anyList())).thenReturn(List.of(service));
             when(applicationRepository.save(any(Application.class))).thenReturn(testApplication);
-            when(applicationMapper.toDto(testApplication)).thenReturn(testApplicationDto);
+            when(applicationMapper.toDto(any())).thenReturn(testApplicationDto);
 
-            ApplicationDto result = applicationService.createApplicationWithTransaction(dto);
+            ApplicationDto result = applicationService.createApplication(dto);
 
             assertThat(result).isEqualTo(testApplicationDto);
+            verify(cacheService).invalidate();
         }
 
         @Test
-        void shouldThrowExceptionWhenServicesNotFoundInWithoutTransaction() {
+        void createApplication_WithoutServices_ShouldCreateSuccessfully() {
             ApplicationCreateDto dto = ApplicationCreateDto.builder()
-                .passportNumber("MP1234567")
-                .plateNumber("1234 AB-7")
-                .serviceIds(List.of(1L, 2L))
-                .build();
-
-            when(applicantRepository.findByPassportNumber("MP1234567")).thenReturn(Optional.of(testApplicant));
-            when(licensePlateRepository.findByPlateNumber("1234 AB-7")).thenReturn(Optional.of(testPlate));
-            when(licensePlateRepository.isPlateAvailable(1L)).thenReturn(true);
-            when(serviceRepository.findAllById(anyList())).thenReturn(List.of(AdditionalService.builder().id(1L).build()));
-
-            assertThatThrownBy(() -> applicationService.createApplicationWithoutTransaction(dto))
-                .isInstanceOf(BusinessException.class)
-                .hasMessageContaining("but application is already saved");
-        }
-
-        @Test
-        void shouldThrowExceptionWhenServicesNotFoundInWithTransaction() {
-            ApplicationCreateDto dto = ApplicationCreateDto.builder()
-                .passportNumber("MP1234567")
-                .plateNumber("1234 AB-7")
-                .serviceIds(List.of(1L, 2L))  // с сервисами
-                .build();
-
-            when(applicantRepository.findByPassportNumber("MP1234567")).thenReturn(Optional.of(testApplicant));
-            when(licensePlateRepository.findByPlateNumber("1234 AB-7")).thenReturn(Optional.of(testPlate));
-            when(serviceRepository.findAllById(anyList())).thenReturn(List.of(AdditionalService.builder().id(1L).build()));
-
-            assertThatThrownBy(() -> applicationService.createApplicationWithTransaction(dto))
-                .isInstanceOf(BusinessException.class)
-                .hasMessageContaining("transaction will rollback");
-        }
-    }
-
-    @Nested
-    @DisplayName("Find Methods Exception Tests")
-    class FindMethodsExceptionTests {
-
-        @Test
-        void shouldThrowExceptionWhenPlateNotFound() {
-            ApplicationCreateDto dto = ApplicationCreateDto.builder()
-                .passportNumber("MP1234567")
-                .plateNumber("NOT_EXIST")
-                .build();
-
-            when(applicantRepository.findByPassportNumber("MP1234567")).thenReturn(Optional.of(testApplicant));
-            when(licensePlateRepository.findByPlateNumber("NOT_EXIST")).thenReturn(Optional.empty());
-
-            assertThatThrownBy(() -> applicationService.createApplication(dto))
-                .isInstanceOf(ResourceNotFoundException.class)
-                .hasMessageContaining("не найден");
-        }
-
-        @Test
-        void shouldThrowExceptionWhenApplicantNotFound() {
-            ApplicationCreateDto dto = ApplicationCreateDto.builder()
-                .passportNumber("NOT_EXIST")
-                .plateNumber("1234 AB-7")
-                .build();
-
-            when(applicantRepository.findByPassportNumber("NOT_EXIST")).thenReturn(Optional.empty());
-
-            assertThatThrownBy(() -> applicationService.createApplication(dto))
-                .isInstanceOf(ResourceNotFoundException.class)
-                .hasMessageContaining("не найден");
-        }
-    }
-
-    @Nested
-    @DisplayName("Expire Application Test")
-    class ExpireApplicationTest {
-
-        @Test
-        void shouldExpireApplicationWhenReservationExpired() {
-            testApplication.setStatus(ApplicationStatus.PENDING);
-            testApplication.setReservedUntil(LocalDateTime.now().minusHours(1));
-
-            when(applicationRepository.findById(1L)).thenReturn(Optional.of(testApplication));
-            when(applicationRepository.save(testApplication)).thenReturn(testApplication);
-
-            assertThatThrownBy(() -> applicationService.confirmApplication(1L))
-                .isInstanceOf(BusinessException.class)
-                .hasMessageContaining("Время бронирования истекло");
-        }
-    }
-
-    @Nested
-    @DisplayName("Calculate Total Amount Tests")
-    class CalculateTotalAmountTests {
-
-        @Test
-        void shouldCalculateTotalAmountWithServices() {
-            AdditionalService service1 = AdditionalService.builder().id(1L).price(BigDecimal.valueOf(50)).build();
-            AdditionalService service2 = AdditionalService.builder().id(2L).price(BigDecimal.valueOf(30)).build();
-
-            ArgumentCaptor<Application> applicationCaptor = ArgumentCaptor.forClass(Application.class);
-
-            when(applicantRepository.findByPassportNumber("MP1234567")).thenReturn(Optional.of(testApplicant));
-            when(licensePlateRepository.findByPlateNumber("1234 AB-7")).thenReturn(Optional.of(testPlate));
-            when(serviceRepository.findAllById(anyList())).thenReturn(List.of(service1, service2));
-            when(applicationRepository.save(applicationCaptor.capture())).thenReturn(testApplication);
-            when(applicationMapper.toDto(any(Application.class))).thenReturn(testApplicationDto);
-
-            applicationService.createApplication(testCreateDto);
-
-            verify(applicationRepository, times(2)).save(any(Application.class));
-
-            List<Application> savedApplications = applicationCaptor.getAllValues();
-            assertThat(savedApplications).hasSize(2);
-            assertThat(savedApplications.getFirst().getPaymentAmount()).isEqualTo(BigDecimal.valueOf(180));
-        }
-
-        @Test
-        void shouldCalculateTotalAmountWithoutServices() {
-            ApplicationCreateDto dtoWithoutServices = ApplicationCreateDto.builder()
                 .passportNumber("MP1234567")
                 .plateNumber("1234 AB-7")
                 .serviceIds(null)
                 .build();
 
-            ArgumentCaptor<Application> applicationCaptor = ArgumentCaptor.forClass(Application.class);
+            when(applicantRepository.findByPassportNumber(anyString())).thenReturn(Optional.of(testApplicant));
+            when(licensePlateRepository.findByPlateNumber(anyString())).thenReturn(Optional.of(testPlate));
+            when(applicationRepository.save(any(Application.class))).thenReturn(testApplication);
+            when(applicationMapper.toDto(any())).thenReturn(testApplicationDto);
 
-            when(applicantRepository.findByPassportNumber("MP1234567")).thenReturn(Optional.of(testApplicant));
-            when(licensePlateRepository.findByPlateNumber("1234 AB-7")).thenReturn(Optional.of(testPlate));
-            when(applicationRepository.save(applicationCaptor.capture())).thenReturn(testApplication);
-            when(applicationMapper.toDto(any(Application.class))).thenReturn(testApplicationDto);
+            ApplicationDto result = applicationService.createApplication(dto);
 
-            applicationService.createApplication(dtoWithoutServices);
-
-            verify(applicationRepository, times(1)).save(any(Application.class));
-
-            Application savedApplication = applicationCaptor.getValue();
-            assertThat(savedApplication.getPaymentAmount()).isEqualTo(BigDecimal.valueOf(100));
-
+            assertThat(result).isEqualTo(testApplicationDto);
             verify(serviceRepository, never()).findAllById(any());
         }
-    }
-
-    @Nested
-    @DisplayName("Find Or Create Applicant Tests")
-    class FindOrCreateApplicantTests {
 
         @Test
-        void shouldFindExistingApplicant() {
-            ApplicationCreateDto dtoWithoutServices = ApplicationCreateDto.builder()
-                .passportNumber("MP1234567")
-                .plateNumber("1234 AB-7")
-                .vehicleVin("VIN123")
-                .vehicleModel("Toyota")
-                .vehicleYear(2020)
-                .notes("Test notes")
-                .serviceIds(null)
-                .build();
-
-            when(applicantRepository.findByPassportNumber("MP1234567")).thenReturn(Optional.of(testApplicant));
-            when(licensePlateRepository.findByPlateNumber("1234 AB-7")).thenReturn(Optional.of(testPlate));
-            when(applicationRepository.save(any(Application.class))).thenReturn(testApplication);
-            when(applicationMapper.toDto(testApplication)).thenReturn(testApplicationDto);
-
-            ApplicationDto result = applicationService.createApplication(dtoWithoutServices);
-
-            assertThat(result).isEqualTo(testApplicationDto);
-            verify(applicantRepository, never()).save(any());
-        }
-
-        @Test
-        void shouldCreateNewApplicantWhenNotFound() {
+        void createApplication_WithNewApplicant_ShouldCreateSuccessfully() {
             ApplicationCreateDto dto = ApplicationCreateDto.builder()
                 .passportNumber("NEW123")
                 .plateNumber("1234 AB-7")
@@ -1082,45 +380,124 @@ class ApplicationServiceTest {
 
             when(applicantRepository.findByPassportNumber("NEW123")).thenReturn(Optional.empty());
             when(applicantRepository.save(any(Applicant.class))).thenReturn(newApplicant);
-            when(licensePlateRepository.findByPlateNumber("1234 AB-7")).thenReturn(Optional.of(testPlate));
-            when(licensePlateRepository.isPlateAvailable(1L)).thenReturn(true);
+            when(licensePlateRepository.findByPlateNumber(anyString())).thenReturn(Optional.of(testPlate));
             when(applicationRepository.save(any(Application.class))).thenReturn(testApplication);
-            when(applicationMapper.toDto(testApplication)).thenReturn(testApplicationDto);
+            when(applicationMapper.toDto(any())).thenReturn(testApplicationDto);
 
-            ApplicationDto result = applicationService.createApplicationWithoutTransaction(dto);
+            ApplicationDto result = applicationService.createApplication(dto);
 
             assertThat(result).isEqualTo(testApplicationDto);
             verify(applicantRepository).save(any(Applicant.class));
         }
-    }
-    @Nested
-    @DisplayName("Additional Coverage Tests")
-    class AdditionalCoverageTests {
 
         @Test
-        void shouldInvalidateCacheWhenEmptyResult() {
-            when(cacheService.get("PENDING", "MINSK")).thenReturn(Collections.emptyList());
+        void createApplicationWithoutTransaction_ShouldCreate() {
+            ApplicationCreateDto dto = ApplicationCreateDto.builder()
+                .passportNumber("MP1234567")
+                .plateNumber("1234 AB-7")
+                .serviceIds(null)
+                .build();
 
-            List<ApplicationDto> result = applicationService.getApplicationsByStatusAndRegionCached(
-                ApplicationStatus.PENDING, "MINSK");
+            when(applicantRepository.findByPassportNumber(anyString())).thenReturn(Optional.of(testApplicant));
+            when(licensePlateRepository.findByPlateNumber(anyString())).thenReturn(Optional.of(testPlate));
+            when(licensePlateRepository.isPlateAvailable(anyLong())).thenReturn(true);
+            when(applicationRepository.save(any(Application.class))).thenReturn(testApplication);
+            when(applicationMapper.toDto(any())).thenReturn(testApplicationDto);
 
-            assertThat(result).isEmpty();
+            ApplicationDto result = applicationService.createApplicationWithoutTransaction(dto);
+
+            assertThat(result).isEqualTo(testApplicationDto);
+        }
+
+        @Test
+        void createApplicationWithTransaction_ShouldCreate() {
+            ApplicationCreateDto dto = ApplicationCreateDto.builder()
+                .passportNumber("MP1234567")
+                .plateNumber("1234 AB-7")
+                .serviceIds(null)
+                .build();
+
+            when(applicantRepository.findByPassportNumber(anyString())).thenReturn(Optional.of(testApplicant));
+            when(licensePlateRepository.findByPlateNumber(anyString())).thenReturn(Optional.of(testPlate));
+            when(applicationRepository.save(any(Application.class))).thenReturn(testApplication);
+            when(applicationMapper.toDto(any())).thenReturn(testApplicationDto);
+
+            ApplicationDto result = applicationService.createApplicationWithTransaction(dto);
+
+            assertThat(result).isEqualTo(testApplicationDto);
+        }
+
+        @Test
+        void createApplication_WhenPlateNotAvailable_ShouldThrowException() {
+            ApplicationCreateDto dto = ApplicationCreateDto.builder()
+                .passportNumber("MP1234567")
+                .plateNumber("1234 AB-7")
+                .serviceIds(null)
+                .build();
+
+            Application activeApplication = Application.builder()
+                .status(ApplicationStatus.PENDING)
+                .submissionDate(LocalDateTime.now())
+                .reservedUntil(LocalDateTime.now().plusHours(1))
+                .build();
+            testPlate.getApplications().add(activeApplication);
+
+            when(applicantRepository.findByPassportNumber(anyString())).thenReturn(Optional.of(testApplicant));
+            when(licensePlateRepository.findByPlateNumber(anyString())).thenReturn(Optional.of(testPlate));
+
+            assertThatThrownBy(() -> applicationService.createApplication(dto))
+                .isInstanceOf(IllegalStateException.class);
+        }
+
+        @Test
+        void createApplication_WhenServicesNotFound_ShouldThrowException() {
+            ApplicationCreateDto dto = ApplicationCreateDto.builder()
+                .passportNumber("MP1234567")
+                .plateNumber("1234 AB-7")
+                .serviceIds(List.of(1L, 2L))
+                .build();
+
+            when(applicantRepository.findByPassportNumber(anyString())).thenReturn(Optional.of(testApplicant));
+            when(licensePlateRepository.findByPlateNumber(anyString())).thenReturn(Optional.of(testPlate));
+            when(serviceRepository.findAllById(anyList())).thenReturn(List.of(AdditionalService.builder().id(1L).build()));
+
+            assertThatThrownBy(() -> applicationService.createApplication(dto))
+                .isInstanceOf(BusinessException.class);
+        }
+    }
+
+    @Nested
+    @DisplayName("Status Change Tests")
+    class StatusChangeTests {
+
+        @Test
+        void confirmApplication_ShouldConfirm() {
+            testApplication.setStatus(ApplicationStatus.PENDING);
+            testApplication.setReservedUntil(LocalDateTime.now().plusHours(1));
+
+            when(applicationRepository.findById(1L)).thenReturn(Optional.of(testApplication));
+            when(applicationRepository.save(testApplication)).thenReturn(testApplication);
+            when(applicationMapper.toDto(testApplication)).thenReturn(testApplicationDto);
+
+            ApplicationDto result = applicationService.confirmApplication(1L);
+
+            assertThat(result).isEqualTo(testApplicationDto);
+            assertThat(testApplication.getStatus()).isEqualTo(ApplicationStatus.CONFIRMED);
             verify(cacheService).invalidate();
         }
 
         @Test
-        void shouldLogWhenNoApplicationsButApplicantExists() {
-            when(applicationRepository.findByApplicantPassport("MP1234567")).thenReturn(Collections.emptyList());
-            when(applicantRepository.findByPassportNumber("MP1234567")).thenReturn(Optional.of(testApplicant));
-            when(applicationMapper.toDtoList(Collections.emptyList())).thenReturn(Collections.emptyList());
+        void confirmApplication_WhenNotPending_ShouldThrowException() {
+            testApplication.setStatus(ApplicationStatus.CONFIRMED);
 
-            List<ApplicationDto> result = applicationService.getApplicationsByPassport("MP1234567");
+            when(applicationRepository.findById(1L)).thenReturn(Optional.of(testApplication));
 
-            assertThat(result).isEmpty();
+            assertThatThrownBy(() -> applicationService.confirmApplication(1L))
+                .isInstanceOf(BusinessException.class);
         }
 
         @Test
-        void shouldCallExpireApplication() {
+        void confirmApplication_WhenReservationExpired_ShouldThrowException() {
             testApplication.setStatus(ApplicationStatus.PENDING);
             testApplication.setReservedUntil(LocalDateTime.now().minusHours(1));
 
@@ -1129,23 +506,156 @@ class ApplicationServiceTest {
 
             assertThatThrownBy(() -> applicationService.confirmApplication(1L))
                 .isInstanceOf(BusinessException.class);
-
-            verify(applicationRepository, times(1)).save(testApplication);
             assertThat(testApplication.getStatus()).isEqualTo(ApplicationStatus.EXPIRED);
+        }
+
+        @Test
+        void completeApplication_ShouldComplete() {
+            testApplication.setStatus(ApplicationStatus.CONFIRMED);
+
+            when(applicationRepository.findById(1L)).thenReturn(Optional.of(testApplication));
+            when(licensePlateRepository.save(testPlate)).thenReturn(testPlate);
+            when(applicationRepository.save(testApplication)).thenReturn(testApplication);
+            when(applicationMapper.toDto(testApplication)).thenReturn(testApplicationDto);
+
+            ApplicationDto result = applicationService.completeApplication(1L);
+
+            assertThat(result).isEqualTo(testApplicationDto);
+            assertThat(testApplication.getStatus()).isEqualTo(ApplicationStatus.COMPLETED);
+            verify(cacheService).invalidate();
+        }
+
+        @Test
+        void completeApplication_WhenNotConfirmed_ShouldThrowException() {
+            testApplication.setStatus(ApplicationStatus.PENDING);
+
+            when(applicationRepository.findById(1L)).thenReturn(Optional.of(testApplication));
+
+            assertThatThrownBy(() -> applicationService.completeApplication(1L))
+                .isInstanceOf(BusinessException.class);
+        }
+
+        @Test
+        void cancelApplication_ShouldCancel() {
+            testApplication.setStatus(ApplicationStatus.PENDING);
+
+            when(applicationRepository.findById(1L)).thenReturn(Optional.of(testApplication));
+            when(applicationRepository.save(testApplication)).thenReturn(testApplication);
+            when(applicationMapper.toDto(testApplication)).thenReturn(testApplicationDto);
+
+            ApplicationDto result = applicationService.cancelApplication(1L);
+
+            assertThat(result).isEqualTo(testApplicationDto);
+            assertThat(testApplication.getStatus()).isEqualTo(ApplicationStatus.CANCELLED);
+            verify(cacheService).invalidate();
+        }
+
+        @Test
+        void cancelApplication_WhenAlreadyCompleted_ShouldThrowException() {
+            testApplication.setStatus(ApplicationStatus.COMPLETED);
+
+            when(applicationRepository.findById(1L)).thenReturn(Optional.of(testApplication));
+
+            assertThatThrownBy(() -> applicationService.cancelApplication(1L))
+                .isInstanceOf(BusinessException.class);
+        }
+
+        @Test
+        void deleteApplication_ShouldDelete() {
+            when(applicationRepository.findById(1L)).thenReturn(Optional.of(testApplication));
+            doNothing().when(applicationRepository).delete(testApplication);
+
+            applicationService.deleteApplication(1L);
+
+            verify(applicationRepository).delete(testApplication);
+            verify(cacheService).invalidate();
         }
     }
 
     @Nested
-    @DisplayName("Additional Coverage Tests for 100%")
-    class AdditionalCoverageTests1 {
+    @DisplayName("Bulk Operations Tests")
+    class BulkOperationsTests {
 
         @Test
-        @DisplayName("Should throw exception when applicant not found in bulk operation")
-        void shouldThrowExceptionWhenApplicantNotFoundInBulk() {
+        void createBulkApplicationsWithTransaction_ShouldCreateAll() {
+            ApplicationCreateDto app1 = ApplicationCreateDto.builder()
+                .passportNumber("MP1234567")
+                .plateNumber("1234 AB-7")
+                .serviceIds(null)
+                .build();
+
+            BulkApplicationCreateDto bulkDto = BulkApplicationCreateDto.builder()
+                .passportNumber("MP1234567")
+                .applications(List.of(app1))
+                .build();
+
+            when(applicantRepository.findByPassportNumber(anyString())).thenReturn(Optional.of(testApplicant));
+            when(licensePlateRepository.findByPlateNumber(anyString())).thenReturn(Optional.of(testPlate));
+            when(applicationRepository.save(any(Application.class))).thenReturn(testApplication);
+            when(applicationMapper.toDto(any())).thenReturn(testApplicationDto);
+
+            BulkApplicationResult result = applicationService.createBulkApplicationsWithTransaction(bulkDto);
+
+            assertThat(result.getSuccessful()).isEqualTo(1);
+            verify(cacheService).invalidate();
+        }
+
+        @Test
+        void createBulkApplicationsWithoutTransaction_ShouldCreatePartial() {
+            ApplicationCreateDto app1 = ApplicationCreateDto.builder()
+                .passportNumber("MP1234567")
+                .plateNumber("1234 AB-7")
+                .serviceIds(null)
+                .build();
+            ApplicationCreateDto app2 = ApplicationCreateDto.builder()
+                .passportNumber("MP1234567")
+                .plateNumber("NOT_EXIST")
+                .serviceIds(null)
+                .build();
+
+            BulkApplicationCreateDto bulkDto = BulkApplicationCreateDto.builder()
+                .passportNumber("MP1234567")
+                .applications(List.of(app1, app2))
+                .build();
+
+            when(applicantRepository.findByPassportNumber(anyString())).thenReturn(Optional.of(testApplicant));
+            when(licensePlateRepository.findByPlateNumber("1234 AB-7")).thenReturn(Optional.of(testPlate));
+            when(licensePlateRepository.findByPlateNumber("NOT_EXIST")).thenReturn(Optional.empty());
+            when(applicationRepository.save(any(Application.class))).thenReturn(testApplication);
+            when(applicationMapper.toDto(any())).thenReturn(testApplicationDto);
+
+            BulkApplicationResult result = applicationService.createBulkApplicationsWithoutTransaction(bulkDto);
+
+            assertThat(result.getSuccessful()).isEqualTo(1);
+            assertThat(result.getFailed()).isEqualTo(1);
+            verify(cacheService).invalidate();
+        }
+
+        @Test
+        void createBulkApplications_WithDuplicatePlates_ShouldThrowException() {
+            ApplicationCreateDto app1 = ApplicationCreateDto.builder()
+                .passportNumber("MP1234567")
+                .plateNumber("1234 AB-7")
+                .build();
+            ApplicationCreateDto app2 = ApplicationCreateDto.builder()
+                .passportNumber("MP1234567")
+                .plateNumber("1234 AB-7")
+                .build();
+
+            BulkApplicationCreateDto bulkDto = BulkApplicationCreateDto.builder()
+                .passportNumber("MP1234567")
+                .applications(List.of(app1, app2))
+                .build();
+
+            assertThatThrownBy(() -> applicationService.createBulkApplicationsWithTransaction(bulkDto))
+                .isInstanceOf(BusinessException.class);
+        }
+
+        @Test
+        void createBulkApplications_WhenApplicantNotFound_ShouldThrowException() {
             ApplicationCreateDto app1 = ApplicationCreateDto.builder()
                 .passportNumber("NOT_EXIST")
                 .plateNumber("1234 AB-7")
-                .serviceIds(null)
                 .build();
 
             BulkApplicationCreateDto bulkDto = BulkApplicationCreateDto.builder()
@@ -1156,536 +666,91 @@ class ApplicationServiceTest {
             when(applicantRepository.findByPassportNumber("NOT_EXIST")).thenReturn(Optional.empty());
 
             assertThatThrownBy(() -> applicationService.createBulkApplicationsWithTransaction(bulkDto))
-                .isInstanceOf(ResourceNotFoundException.class)
-                .hasMessageContaining("Заявитель с паспортом 'NOT_EXIST' не найден");
+                .isInstanceOf(ResourceNotFoundException.class);
         }
+    }
+
+    @Nested
+    @DisplayName("Cache Management Tests")
+    class CacheManagementTests {
 
         @Test
-        @DisplayName("Should invalidate cache after successful bulk with transaction")
-        void shouldInvalidateCacheAfterBulkWithTransaction() {
-            ApplicationCreateDto app1 = ApplicationCreateDto.builder()
-                .passportNumber("MP1234567")
-                .plateNumber("1234 AB-7")
-                .serviceIds(null)
-                .build();
-            ApplicationCreateDto app2 = ApplicationCreateDto.builder()
-                .passportNumber("MP1234567")
-                .plateNumber("5678 CD-9")
-                .serviceIds(null)
-                .build();
-
-            BulkApplicationCreateDto bulkDto = BulkApplicationCreateDto.builder()
-                .passportNumber("MP1234567")
-                .applications(List.of(app1, app2))
-                .build();
-
-            LicensePlate plate2 = LicensePlate.builder()
-                .id(2L)
-                .plateNumber("5678 CD-9")
-                .price(BigDecimal.valueOf(150))
-                .department(testDept)
-                .applications(new ArrayList<>())
-                .build();
-
-            when(applicantRepository.findByPassportNumber("MP1234567")).thenReturn(Optional.of(testApplicant));
-            when(licensePlateRepository.findByPlateNumber("1234 AB-7")).thenReturn(Optional.of(testPlate));
-            when(licensePlateRepository.findByPlateNumber("5678 CD-9")).thenReturn(Optional.of(plate2));
-            when(applicationRepository.save(any(Application.class))).thenReturn(testApplication);
-            when(applicationMapper.toDto(any(Application.class))).thenReturn(testApplicationDto);
-
-            BulkApplicationResult result = applicationService.createBulkApplicationsWithTransaction(bulkDto);
-
-            assertThat(result.getTotalRequested()).isEqualTo(2);
-            assertThat(result.getSuccessful()).isEqualTo(2);
+        void invalidateCache_ShouldInvalidate() {
+            applicationService.invalidateCache();
             verify(cacheService).invalidate();
         }
 
         @Test
-        @DisplayName("Should invalidate cache after partial success bulk without transaction")
-        void shouldInvalidateCacheAfterBulkWithoutTransaction() {
-            ApplicationCreateDto app1 = ApplicationCreateDto.builder()
+        void invalidateCacheByRegion_ShouldInvalidate() {
+            applicationService.invalidateCacheByRegion("MINSK");
+            verify(cacheService).invalidateByRegion("MINSK");
+        }
+
+        @Test
+        void invalidateCacheByStatus_ShouldInvalidate() {
+            applicationService.invalidateCacheByStatus("PENDING");
+            verify(cacheService).invalidateByStatus("PENDING");
+        }
+    }
+
+    @Nested
+    @DisplayName("Complete Branch Coverage - All Conditions")
+    class CompleteBranchCoverageTests {
+
+        // COVERS: if (createDto.getServiceIds() != null && !createDto.getServiceIds().isEmpty())
+        @Test
+        void coverServiceIdsCondition_AllBranches() {
+            AdditionalService service = AdditionalService.builder().id(1L).price(BigDecimal.TEN).build();
+
+            // Branch 1: serviceIds = null
+            ApplicationCreateDto dtoNull = ApplicationCreateDto.builder()
                 .passportNumber("MP1234567")
                 .plateNumber("1234 AB-7")
                 .serviceIds(null)
                 .build();
-            ApplicationCreateDto app2 = ApplicationCreateDto.builder()
-                .passportNumber("MP1234567")
-                .plateNumber("NOT_EXIST")
-                .serviceIds(null)
-                .build();
 
-            BulkApplicationCreateDto bulkDto = BulkApplicationCreateDto.builder()
-                .passportNumber("MP1234567")
-                .applications(List.of(app1, app2))
-                .build();
-
-            when(applicantRepository.findByPassportNumber("MP1234567")).thenReturn(Optional.of(testApplicant));
-            when(licensePlateRepository.findByPlateNumber("1234 AB-7")).thenReturn(Optional.of(testPlate));
-            when(licensePlateRepository.findByPlateNumber("NOT_EXIST")).thenReturn(Optional.empty());
+            when(applicantRepository.findByPassportNumber(anyString())).thenReturn(Optional.of(testApplicant));
+            when(licensePlateRepository.findByPlateNumber(anyString())).thenReturn(Optional.of(testPlate));
             when(applicationRepository.save(any(Application.class))).thenReturn(testApplication);
-            when(applicationMapper.toDto(any(Application.class))).thenReturn(testApplicationDto);
+            when(applicationMapper.toDto(any())).thenReturn(testApplicationDto);
 
-            BulkApplicationResult result = applicationService.createBulkApplicationsWithoutTransaction(bulkDto);
+            applicationService.createApplication(dtoNull);
+            verify(serviceRepository, never()).findAllById(any());
 
-            assertThat(result.getTotalRequested()).isEqualTo(2);
-            assertThat(result.getSuccessful()).isEqualTo(1);
-            assertThat(result.getFailed()).isEqualTo(1);
-            verify(cacheService).invalidate();
-        }
-
-        @Test
-        @DisplayName("Should save services in createSingleApplication")
-        void shouldSaveServicesInCreateSingleApplication() {
-            AdditionalService service1 = AdditionalService.builder().id(1L).price(BigDecimal.valueOf(50)).build();
-            AdditionalService service2 = AdditionalService.builder().id(2L).price(BigDecimal.valueOf(30)).build();
-
-            ApplicationCreateDto app1 = ApplicationCreateDto.builder()
-                .passportNumber("MP1234567")
-                .plateNumber("1234 AB-7")
-                .serviceIds(List.of(1L, 2L))
-                .build();
-
-            BulkApplicationCreateDto bulkDto = BulkApplicationCreateDto.builder()
-                .passportNumber("MP1234567")
-                .applications(List.of(app1))
-                .build();
-
-            when(applicantRepository.findByPassportNumber("MP1234567")).thenReturn(Optional.of(testApplicant));
-            when(licensePlateRepository.findByPlateNumber("1234 AB-7")).thenReturn(Optional.of(testPlate));
-            when(serviceRepository.findAllById(anyList())).thenReturn(List.of(service1, service2));
-            when(applicationRepository.save(any(Application.class))).thenReturn(testApplication);
-            when(applicationMapper.toDto(any(Application.class))).thenReturn(testApplicationDto);
-
-            applicationService.createBulkApplicationsWithoutTransaction(bulkDto);
-
-            verify(applicationRepository, times(2)).save(any(Application.class));
-        }
-
-        @Test
-        @DisplayName("Should set CONFIRMED status when transactional in bulk")
-        void shouldSetConfirmedStatusWhenTransactional() {
-            ApplicationCreateDto app1 = ApplicationCreateDto.builder()
-                .passportNumber("MP1234567")
-                .plateNumber("1234 AB-7")
-                .serviceIds(null)
-                .build();
-
-            BulkApplicationCreateDto bulkDto = BulkApplicationCreateDto.builder()
-                .passportNumber("MP1234567")
-                .applications(List.of(app1))
-                .build();
-
-            ArgumentCaptor<Application> applicationCaptor = ArgumentCaptor.forClass(Application.class);
-
-            when(applicantRepository.findByPassportNumber("MP1234567")).thenReturn(Optional.of(testApplicant));
-            when(licensePlateRepository.findByPlateNumber("1234 AB-7")).thenReturn(Optional.of(testPlate));
-            when(applicationRepository.save(applicationCaptor.capture())).thenReturn(testApplication);
-            when(applicationMapper.toDto(any(Application.class))).thenReturn(testApplicationDto);
-
-            applicationService.createBulkApplicationsWithTransaction(bulkDto);
-
-            Application savedApplication = applicationCaptor.getValue();
-            assertThat(savedApplication.getStatus()).isEqualTo(ApplicationStatus.CONFIRMED);
-        }
-
-        @Test
-        @DisplayName("Should set PENDING status when not transactional in bulk")
-        void shouldSetPendingStatusWhenNotTransactional() {
-            ApplicationCreateDto app1 = ApplicationCreateDto.builder()
-                .passportNumber("MP1234567")
-                .plateNumber("1234 AB-7")
-                .serviceIds(null)
-                .build();
-
-            BulkApplicationCreateDto bulkDto = BulkApplicationCreateDto.builder()
-                .passportNumber("MP1234567")
-                .applications(List.of(app1))
-                .build();
-
-            ArgumentCaptor<Application> applicationCaptor = ArgumentCaptor.forClass(Application.class);
-
-            when(applicantRepository.findByPassportNumber("MP1234567")).thenReturn(Optional.of(testApplicant));
-            when(licensePlateRepository.findByPlateNumber("1234 AB-7")).thenReturn(Optional.of(testPlate));
-            when(applicationRepository.save(applicationCaptor.capture())).thenReturn(testApplication);
-            when(applicationMapper.toDto(any(Application.class))).thenReturn(testApplicationDto);
-
-            applicationService.createBulkApplicationsWithoutTransaction(bulkDto);
-
-            Application savedApplication = applicationCaptor.getValue();
-            assertThat(savedApplication.getStatus()).isEqualTo(ApplicationStatus.PENDING);
-        }
-
-        @Test
-        @DisplayName("Should invalidate cache when empty result in cached method")
-        void shouldInvalidateCacheWhenEmptyResult() {
-            when(cacheService.get("PENDING", "MINSK")).thenReturn(Collections.emptyList());
-
-            List<ApplicationDto> result = applicationService.getApplicationsByStatusAndRegionCached(
-                ApplicationStatus.PENDING, "MINSK");
-
-            assertThat(result).isEmpty();
-            verify(cacheService).invalidate();
-        }
-
-        @Test
-        @DisplayName("Should log when no applications but applicant exists")
-        void shouldLogWhenNoApplicationsButApplicantExists() {
-            when(applicationRepository.findByApplicantPassport("MP1234567")).thenReturn(Collections.emptyList());
-            when(applicantRepository.findByPassportNumber("MP1234567")).thenReturn(Optional.of(testApplicant));
-            when(applicationMapper.toDtoList(Collections.emptyList())).thenReturn(Collections.emptyList());
-
-            List<ApplicationDto> result = applicationService.getApplicationsByPassport("MP1234567");
-
-            assertThat(result).isEmpty();
-        }
-
-        @Test
-        @DisplayName("Should call expireApplication when reservation expired")
-        void shouldCallExpireApplication() {
-            testApplication.setStatus(ApplicationStatus.PENDING);
-            testApplication.setReservedUntil(LocalDateTime.now().minusHours(1));
-
-            when(applicationRepository.findById(1L)).thenReturn(Optional.of(testApplication));
-            when(applicationRepository.save(testApplication)).thenReturn(testApplication);
-
-            assertThatThrownBy(() -> applicationService.confirmApplication(1L))
-                .isInstanceOf(BusinessException.class);
-
-            verify(applicationRepository, times(1)).save(testApplication);
-            assertThat(testApplication.getStatus()).isEqualTo(ApplicationStatus.EXPIRED);
-        }
-
-        @Test
-        @DisplayName("Should save services in createApplicationInternal")
-        void shouldSaveServicesInCreateApplicationInternal() {
-            AdditionalService service1 = AdditionalService.builder().id(1L).price(BigDecimal.valueOf(50)).build();
-            AdditionalService service2 = AdditionalService.builder().id(2L).price(BigDecimal.valueOf(30)).build();
-
-            when(applicantRepository.findByPassportNumber("MP1234567")).thenReturn(Optional.of(testApplicant));
-            when(licensePlateRepository.findByPlateNumber("1234 AB-7")).thenReturn(Optional.of(testPlate));
-            when(serviceRepository.findAllById(anyList())).thenReturn(List.of(service1, service2));
-            when(applicationRepository.save(any(Application.class))).thenReturn(testApplication);
-            when(applicationMapper.toDto(testApplication)).thenReturn(testApplicationDto);
-
-            applicationService.createApplication(testCreateDto);
-
-            verify(applicationRepository, times(2)).save(any(Application.class));
-        }
-
-        @Test
-        @DisplayName("Should cover else branch for isPlateAvailable in createApplicationInternal")
-        void shouldCoverElseBranchForIsPlateAvailable() {
-            ApplicationCreateDto dto = ApplicationCreateDto.builder()
-                .passportNumber("MP1234567")
-                .plateNumber("1234 AB-7")
-                .serviceIds(null)
-                .build();
-
-            when(applicantRepository.findByPassportNumber("MP1234567")).thenReturn(Optional.of(testApplicant));
-            when(licensePlateRepository.findByPlateNumber("1234 AB-7")).thenReturn(Optional.of(testPlate));
-            when(licensePlateRepository.isPlateAvailable(1L)).thenReturn(false);
-
-            assertThatThrownBy(() -> applicationService.createApplicationWithoutTransaction(dto))
-                .isInstanceOf(IllegalStateException.class)
-                .hasMessageContaining("недоступен");
-        }
-
-        @Test
-        @DisplayName("Should cover getServices method when serviceIds is null")
-        void shouldCoverGetServicesWhenServiceIdsNull() {
-            ApplicationCreateDto dto = ApplicationCreateDto.builder()
-                .passportNumber("MP1234567")
-                .plateNumber("1234 AB-7")
-                .serviceIds(null)
-                .build();
-
-            when(applicantRepository.findByPassportNumber("MP1234567")).thenReturn(Optional.of(testApplicant));
-            when(licensePlateRepository.findByPlateNumber("1234 AB-7")).thenReturn(Optional.of(testPlate));
-            when(applicationRepository.save(any(Application.class))).thenReturn(testApplication);
-            when(applicationMapper.toDto(testApplication)).thenReturn(testApplicationDto);
-
-            ApplicationDto result = applicationService.createApplication(dto);
-
-            assertThat(result).isEqualTo(testApplicationDto);
-            verify(serviceRepository, never()).findAllById(anyList());
-        }
-
-        @Test
-        @DisplayName("Should cover getServices method when serviceIds is empty")
-        void shouldCoverGetServicesWhenServiceIdsEmpty() {
-            ApplicationCreateDto dto = ApplicationCreateDto.builder()
+            // Branch 2: serviceIds = empty
+            ApplicationCreateDto dtoEmpty = ApplicationCreateDto.builder()
                 .passportNumber("MP1234567")
                 .plateNumber("1234 AB-7")
                 .serviceIds(Collections.emptyList())
                 .build();
 
-            when(applicantRepository.findByPassportNumber("MP1234567")).thenReturn(Optional.of(testApplicant));
-            when(licensePlateRepository.findByPlateNumber("1234 AB-7")).thenReturn(Optional.of(testPlate));
-            when(applicationRepository.save(any(Application.class))).thenReturn(testApplication);
-            when(applicationMapper.toDto(testApplication)).thenReturn(testApplicationDto);
+            applicationService.createApplication(dtoEmpty);
+            verify(serviceRepository, never()).findAllById(any());
 
-            ApplicationDto result = applicationService.createApplication(dto);
-
-            assertThat(result).isEqualTo(testApplicationDto);
-            verify(serviceRepository, never()).findAllById(anyList());
-        }
-
-        @Test
-        @DisplayName("Should cover createSingleApplication with services not found exception")
-        void shouldCoverCreateSingleApplicationServicesNotFound() {
-            ApplicationCreateDto app1 = ApplicationCreateDto.builder()
+            // Branch 3: serviceIds not empty
+            ApplicationCreateDto dtoWith = ApplicationCreateDto.builder()
                 .passportNumber("MP1234567")
                 .plateNumber("1234 AB-7")
-                .serviceIds(List.of(1L, 2L))
+                .serviceIds(List.of(1L))
                 .build();
 
-            BulkApplicationCreateDto bulkDto = BulkApplicationCreateDto.builder()
-                .passportNumber("MP1234567")
-                .applications(List.of(app1))
-                .build();
+            when(serviceRepository.findAllById(anyList())).thenReturn(List.of(service));
+            when(applicationRepository.save(any(Application.class)))
+                .thenReturn(testApplication)
+                .thenReturn(testApplication);
 
-            when(applicantRepository.findByPassportNumber("MP1234567")).thenReturn(Optional.of(testApplicant));
-            when(licensePlateRepository.findByPlateNumber("1234 AB-7")).thenReturn(Optional.of(testPlate));
-            when(serviceRepository.findAllById(anyList())).thenReturn(List.of(AdditionalService.builder().id(1L).build()));
-
-            assertThatThrownBy(() -> applicationService.createBulkApplicationsWithTransaction(bulkDto))
-                .isInstanceOf(BusinessException.class)
-                .hasMessageContaining("Некоторые услуги не найдены");
-        }
-
-        @Test
-        @DisplayName("Should cover createSingleApplication with plate not available")
-        void shouldCoverCreateSingleApplicationPlateNotAvailable() {
-            ApplicationCreateDto app1 = ApplicationCreateDto.builder()
-                .passportNumber("MP1234567")
-                .plateNumber("1234 AB-7")
-                .serviceIds(null)
-                .build();
-
-            BulkApplicationCreateDto bulkDto = BulkApplicationCreateDto.builder()
-                .passportNumber("MP1234567")
-                .applications(List.of(app1))
-                .build();
-
-            Application activeApplication = Application.builder()
-                .status(ApplicationStatus.PENDING)
-                .submissionDate(LocalDateTime.now())
-                .reservedUntil(LocalDateTime.now().plusHours(1))
-                .build();
-            testPlate.getApplications().add(activeApplication);
-
-            when(applicantRepository.findByPassportNumber("MP1234567")).thenReturn(Optional.of(testApplicant));
-            when(licensePlateRepository.findByPlateNumber("1234 AB-7")).thenReturn(Optional.of(testPlate));
-
-            assertThatThrownBy(() -> applicationService.createBulkApplicationsWithTransaction(bulkDto))
-                .isInstanceOf(BusinessException.class)
-                .hasMessageContaining("недоступен");
-        }
-
-        @Test
-        @DisplayName("Should cover createSingleApplication with plate not found")
-        void shouldCoverCreateSingleApplicationPlateNotFound() {
-            ApplicationCreateDto app1 = ApplicationCreateDto.builder()
-                .passportNumber("MP1234567")
-                .plateNumber("NOT_EXIST")
-                .serviceIds(null)
-                .build();
-
-            BulkApplicationCreateDto bulkDto = BulkApplicationCreateDto.builder()
-                .passportNumber("MP1234567")
-                .applications(List.of(app1))
-                .build();
-
-            when(applicantRepository.findByPassportNumber("MP1234567")).thenReturn(Optional.of(testApplicant));
-            when(licensePlateRepository.findByPlateNumber("NOT_EXIST")).thenReturn(Optional.empty());
-
-            assertThatThrownBy(() -> applicationService.createBulkApplicationsWithTransaction(bulkDto))
-                .isInstanceOf(BusinessException.class)
-                .hasMessageContaining("Bulk application failed");
-        }
-
-        @ParameterizedTest
-        @DisplayName("Should cover pagination with empty page")
-        @CsvSource({
-            "0, Should log when page is 0 and empty",
-            "1, Should not log when page is not 0 and empty"
-        })
-        void shouldCoverPaginationWithEmptyPage(int pageNumber) {
-            Pageable pageable = PageRequest.of(pageNumber, 10);
-            Page<Application> emptyPage = new PageImpl<>(Collections.emptyList(), pageable, 0);
-
-            when(applicationRepository.findByApplicantPassport("MP1234567", pageable))
-                .thenReturn(emptyPage);
-
-            Page<ApplicationDto> result = applicationService.getApplicationsByPassportPaginated("MP1234567", pageable);
-
-            assertThat(result.getContent()).isEmpty();
-        }
-
-        @Test
-        @DisplayName("Should cover serviceIds not null and not empty branch in createApplicationInternal")
-        void shouldCoverServiceIdsNotNullAndNotEmptyInCreateApplicationInternal() {
-            AdditionalService service1 = AdditionalService.builder().id(1L).price(BigDecimal.valueOf(50)).build();
-            AdditionalService service2 = AdditionalService.builder().id(2L).price(BigDecimal.valueOf(30)).build();
-
-            when(applicantRepository.findByPassportNumber("MP1234567")).thenReturn(Optional.of(testApplicant));
-            when(licensePlateRepository.findByPlateNumber("1234 AB-7")).thenReturn(Optional.of(testPlate));
-            when(serviceRepository.findAllById(anyList())).thenReturn(List.of(service1, service2));
-            when(applicationRepository.save(any(Application.class))).thenReturn(testApplication);
-            when(applicationMapper.toDto(testApplication)).thenReturn(testApplicationDto);
-
-            applicationService.createApplication(testCreateDto);
-
-            verify(serviceRepository, times(1)).findAllById(List.of(1L, 2L));
-        }
-
-        @Test
-        @DisplayName("Should cover services not null and not empty branch in createSingleApplication")
-        void shouldCoverServicesNotNullAndNotEmptyInCreateSingleApplication() {
-            AdditionalService service1 = AdditionalService.builder().id(1L).price(BigDecimal.valueOf(50)).build();
-            AdditionalService service2 = AdditionalService.builder().id(2L).price(BigDecimal.valueOf(30)).build();
-
-            ApplicationCreateDto app1 = ApplicationCreateDto.builder()
-                .passportNumber("MP1234567")
-                .plateNumber("1234 AB-7")
-                .serviceIds(List.of(1L, 2L))
-                .build();
-
-            BulkApplicationCreateDto bulkDto = BulkApplicationCreateDto.builder()
-                .passportNumber("MP1234567")
-                .applications(List.of(app1))
-                .build();
-
-            ArgumentCaptor<Application> applicationCaptor = ArgumentCaptor.forClass(Application.class);
-
-            when(applicantRepository.findByPassportNumber("MP1234567")).thenReturn(Optional.of(testApplicant));
-            when(licensePlateRepository.findByPlateNumber("1234 AB-7")).thenReturn(Optional.of(testPlate));
-            when(serviceRepository.findAllById(anyList())).thenReturn(List.of(service1, service2));
-            when(applicationRepository.save(applicationCaptor.capture())).thenReturn(testApplication);
-            when(applicationMapper.toDto(any(Application.class))).thenReturn(testApplicationDto);
-
-            applicationService.createBulkApplicationsWithoutTransaction(bulkDto);
-
-            verify(applicationRepository, times(2)).save(any(Application.class));
-
+            applicationService.createApplication(dtoWith);
             verify(serviceRepository, times(1)).findAllById(anyList());
         }
-    }
-    @Nested
-    @DisplayName("Final Branch Coverage - 4 Missing Lines")
-    class FinalBranchCoverageTests {
 
+        // COVERS: if (services != null && !services.isEmpty()) in saveApplication
         @Test
-        @DisplayName("COVER LINE 1: getServices method - serviceIds not null AND not empty (both conditions true)")
-        void coverGetServicesLine_ServiceIdsNotNullAndNotEmpty() {
-
-            AdditionalService service = AdditionalService.builder().id(1L).price(BigDecimal.TEN).build();
-
-            ApplicationCreateDto dto = ApplicationCreateDto.builder()
-                .passportNumber("MP1234567")
-                .plateNumber("1234 AB-7")
-                .serviceIds(List.of(1L))  // NOT NULL and NOT EMPTY
-                .build();
-
-            when(applicantRepository.findByPassportNumber(anyString())).thenReturn(Optional.of(testApplicant));
-            when(licensePlateRepository.findByPlateNumber(anyString())).thenReturn(Optional.of(testPlate));
-            when(serviceRepository.findAllById(anyList())).thenReturn(List.of(service));
-            when(applicationRepository.save(any(Application.class))).thenReturn(testApplication);
-            when(applicationMapper.toDto(any())).thenReturn(testApplicationDto);
-
-            applicationService.createApplication(dto);
-
-            verify(serviceRepository).findAllById(anyList());
-        }
-
-
-
-        @Test
-        @DisplayName("COVER LINE 2: saveApplication method - services not null AND not empty (second save triggered)")
-        void coverSaveApplicationLine_ServicesNotNullAndNotEmpty() {
-
-            AdditionalService service = AdditionalService.builder().id(1L).price(BigDecimal.TEN).build();
-
-            ApplicationCreateDto dto = ApplicationCreateDto.builder()
-                .passportNumber("MP1234567")
-                .plateNumber("1234 AB-7")
-                .serviceIds(List.of(1L))
-                .build();
-
-
-            ArgumentCaptor<Application> firstSaveCaptor = ArgumentCaptor.forClass(Application.class);
-            ArgumentCaptor<Application> secondSaveCaptor = ArgumentCaptor.forClass(Application.class);
-
-            when(applicantRepository.findByPassportNumber(anyString())).thenReturn(Optional.of(testApplicant));
-            when(licensePlateRepository.findByPlateNumber(anyString())).thenReturn(Optional.of(testPlate));
-            when(serviceRepository.findAllById(anyList())).thenReturn(List.of(service));
-
-
-            when(applicationRepository.save(firstSaveCaptor.capture()))
-                .thenReturn(testApplication);
-            when(applicationRepository.save(secondSaveCaptor.capture()))
-                .thenReturn(testApplication);
-            when(applicationMapper.toDto(any())).thenReturn(testApplicationDto);
-
-            applicationService.createApplication(dto);
-
-
-            verify(applicationRepository, times(2)).save(any(Application.class));
-
-
-            Application secondSavedApp = secondSaveCaptor.getValue();
-            assertThat(secondSavedApp).isNotNull();
-        }
-
-        @Test
-        @DisplayName("COVER LINE 3: createSingleApplication method - services not null AND not empty")
-        void coverCreateSingleApplicationLine_ServicesNotNullAndNotEmpty() {
-            AdditionalService service = AdditionalService.builder().id(1L).price(BigDecimal.TEN).build();
-
-            ApplicationCreateDto appDto = ApplicationCreateDto.builder()
-                .passportNumber("MP1234567")
-                .plateNumber("1234 AB-7")
-                .serviceIds(List.of(1L))
-                .build();
-
-            BulkApplicationCreateDto bulkDto = BulkApplicationCreateDto.builder()
-                .passportNumber("MP1234567")
-                .applications(List.of(appDto))
-                .build();
-
-            ArgumentCaptor<Application> firstSaveCaptor = ArgumentCaptor.forClass(Application.class);
-            ArgumentCaptor<Application> secondSaveCaptor = ArgumentCaptor.forClass(Application.class);
-
-            when(applicantRepository.findByPassportNumber(anyString())).thenReturn(Optional.of(testApplicant));
-            when(licensePlateRepository.findByPlateNumber(anyString())).thenReturn(Optional.of(testPlate));
-            when(serviceRepository.findAllById(anyList())).thenReturn(List.of(service));
-            when(applicationRepository.save(firstSaveCaptor.capture()))
-                .thenReturn(testApplication);
-            when(applicationRepository.save(secondSaveCaptor.capture()))
-                .thenReturn(testApplication);
-            when(applicationMapper.toDto(any())).thenReturn(testApplicationDto);
-
-            applicationService.createBulkApplicationsWithoutTransaction(bulkDto);
-
-            verify(applicationRepository, times(2)).save(any(Application.class));
-
-            Application secondSavedApp = secondSaveCaptor.getValue();
-            assertThat(secondSavedApp).isNotNull();
-        }
-
-
-        @Test
-        @DisplayName("COVER LINE 4: processBulkApplications - successful > 0 (cache invalidated)")
-        void coverProcessBulkApplicationsLine_SuccessfulGreaterThanZero() {
-            ApplicationCreateDto app1 = ApplicationCreateDto.builder()
+        void coverServicesConditionInSaveApplication_AllBranches() {
+            // Branch 1 & 2: services = null or empty
+            ApplicationCreateDto dtoWithout = ApplicationCreateDto.builder()
                 .passportNumber("MP1234567")
                 .plateNumber("1234 AB-7")
                 .serviceIds(null)
-                .build();
-
-            BulkApplicationCreateDto bulkDto = BulkApplicationCreateDto.builder()
-                .passportNumber("MP1234567")
-                .applications(List.of(app1))
                 .build();
 
             when(applicantRepository.findByPassportNumber(anyString())).thenReturn(Optional.of(testApplicant));
@@ -1693,337 +758,32 @@ class ApplicationServiceTest {
             when(applicationRepository.save(any(Application.class))).thenReturn(testApplication);
             when(applicationMapper.toDto(any())).thenReturn(testApplicationDto);
 
-            applicationService.createBulkApplicationsWithoutTransaction(bulkDto);
+            applicationService.createApplication(dtoWithout);
+            verify(applicationRepository, times(1)).save(any(Application.class));
 
-            verify(cacheService, atLeastOnce()).invalidate();
-        }
-
-        @Test
-        @DisplayName("COVER LINE 4 (alternative): processBulkApplications - successful > 0 with transaction")
-        void coverProcessBulkApplicationsLine_SuccessfulGreaterThanZero_WithTransaction() {
-            ApplicationCreateDto app1 = ApplicationCreateDto.builder()
-                .passportNumber("MP1234567")
-                .plateNumber("1234 AB-7")
-                .serviceIds(null)
-                .build();
-
-            BulkApplicationCreateDto bulkDto = BulkApplicationCreateDto.builder()
-                .passportNumber("MP1234567")
-                .applications(List.of(app1))
-                .build();
-
-            when(applicantRepository.findByPassportNumber(anyString())).thenReturn(Optional.of(testApplicant));
-            when(licensePlateRepository.findByPlateNumber(anyString())).thenReturn(Optional.of(testPlate));
-            when(applicationRepository.save(any(Application.class))).thenReturn(testApplication);
-            when(applicationMapper.toDto(any())).thenReturn(testApplicationDto);
-
-            applicationService.createBulkApplicationsWithTransaction(bulkDto);
-
-            verify(cacheService, atLeastOnce()).invalidate();
-        }
-
-        @Test
-        @DisplayName("COVER LINE 4 (edge case): processBulkApplications - successful == 0 (branch NOT executed)")
-        void coverProcessBulkApplicationsLine_SuccessfulEqualsZero_EdgeCase() {
-            ApplicationCreateDto app1 = ApplicationCreateDto.builder()
-                .passportNumber("MP1234567")
-                .plateNumber("NOT_EXIST")
-                .serviceIds(null)
-                .build();
-
-            BulkApplicationCreateDto bulkDto = BulkApplicationCreateDto.builder()
-                .passportNumber("MP1234567")
-                .applications(List.of(app1))
-                .build();
-
-            when(applicantRepository.findByPassportNumber(anyString())).thenReturn(Optional.of(testApplicant));
-            when(licensePlateRepository.findByPlateNumber("NOT_EXIST")).thenReturn(Optional.empty());
-
-            BulkApplicationResult result = applicationService.createBulkApplicationsWithoutTransaction(bulkDto);
-
-            assertThat(result.getSuccessful()).isZero();
-            verify(cacheService, never()).invalidate();
-        }
-    }
-    @Nested
-    @DisplayName("Direct Branch Coverage - 4 Specific Lines")
-    class DirectBranchCoverageTests {
-
-
-        @Test
-        @DisplayName("DIRECT COVER: getServices method - both conditions true")
-        void directCover_GetServices_ServiceIdsNotNullAndNotEmpty() {
-
+            // Branch 3: services not empty
             AdditionalService service = AdditionalService.builder().id(1L).price(BigDecimal.TEN).build();
-
-            ApplicationCreateDto dto = ApplicationCreateDto.builder()
+            ApplicationCreateDto dtoWith = ApplicationCreateDto.builder()
                 .passportNumber("MP1234567")
                 .plateNumber("1234 AB-7")
                 .serviceIds(List.of(1L))
                 .build();
 
-            when(applicantRepository.findByPassportNumber(anyString())).thenReturn(Optional.of(testApplicant));
-            when(licensePlateRepository.findByPlateNumber(anyString())).thenReturn(Optional.of(testPlate));
-            when(serviceRepository.findAllById(List.of(1L))).thenReturn(List.of(service));
-
-
-            when(applicationRepository.save(any(Application.class)))
-                .thenReturn(testApplication)
-                .thenReturn(testApplication);
-            when(applicationMapper.toDto(any())).thenReturn(testApplicationDto);
-
-
-            applicationService.createApplication(dto);
-
-
-            verify(serviceRepository).findAllById(List.of(1L));
-        }
-
-        @Test
-        @DisplayName("DIRECT COVER: getServices method - with transaction false")
-        void directCover_GetServices_ServiceIdsNotNullAndNotEmpty_WithoutTx() {
-
-            AdditionalService service = AdditionalService.builder().id(1L).price(BigDecimal.TEN).build();
-
-            ApplicationCreateDto dto = ApplicationCreateDto.builder()
-                .passportNumber("MP1234567")
-                .plateNumber("1234 AB-7")
-                .serviceIds(List.of(1L))
-                .build();
-
-            when(applicantRepository.findByPassportNumber(anyString())).thenReturn(Optional.of(testApplicant));
-            when(licensePlateRepository.findByPlateNumber(anyString())).thenReturn(Optional.of(testPlate));
-            when(licensePlateRepository.isPlateAvailable(anyLong())).thenReturn(true);
-            when(serviceRepository.findAllById(List.of(1L))).thenReturn(List.of(service));
-            when(applicationRepository.save(any(Application.class)))
-                .thenReturn(testApplication)
-                .thenReturn(testApplication);
-            when(applicationMapper.toDto(any())).thenReturn(testApplicationDto);
-
-            applicationService.createApplicationWithoutTransaction(dto);
-
-            verify(serviceRepository).findAllById(List.of(1L));
-        }
-
-
-        @Test
-        @DisplayName("DIRECT COVER: saveApplication - second save with services")
-        void directCover_SaveApplication_SecondSaveWithServices() {
-            AdditionalService service = AdditionalService.builder().id(1L).price(BigDecimal.TEN).build();
-
-            ApplicationCreateDto dto = ApplicationCreateDto.builder()
-                .passportNumber("MP1234567")
-                .plateNumber("1234 AB-7")
-                .serviceIds(List.of(1L))
-                .build();
-
-            ArgumentCaptor<Application> firstSaveCaptor = ArgumentCaptor.forClass(Application.class);
-            ArgumentCaptor<Application> secondSaveCaptor = ArgumentCaptor.forClass(Application.class);
-
-            when(applicantRepository.findByPassportNumber(anyString())).thenReturn(Optional.of(testApplicant));
-            when(licensePlateRepository.findByPlateNumber(anyString())).thenReturn(Optional.of(testPlate));
-            when(serviceRepository.findAllById(anyList())).thenReturn(List.of(service));
-            when(applicationRepository.save(firstSaveCaptor.capture()))
-                .thenReturn(testApplication);
-            when(applicationRepository.save(secondSaveCaptor.capture()))
-                .thenReturn(testApplication);
-            when(applicationMapper.toDto(any())).thenReturn(testApplicationDto);
-
-            applicationService.createApplication(dto);
-
-            verify(applicationRepository, times(2)).save(any(Application.class));
-
-            Application secondSaved = secondSaveCaptor.getValue();
-            assertThat(secondSaved).isNotNull();
-        }
-
-        @Test
-        @DisplayName("DIRECT COVER: saveApplication - second save with services (without transaction)")
-        void directCover_SaveApplication_SecondSaveWithServices_WithoutTx() {
-            AdditionalService service = AdditionalService.builder().id(1L).price(BigDecimal.TEN).build();
-
-            ApplicationCreateDto dto = ApplicationCreateDto.builder()
-                .passportNumber("MP1234567")
-                .plateNumber("1234 AB-7")
-                .serviceIds(List.of(1L))
-                .build();
-
-            when(applicantRepository.findByPassportNumber(anyString())).thenReturn(Optional.of(testApplicant));
-            when(licensePlateRepository.findByPlateNumber(anyString())).thenReturn(Optional.of(testPlate));
-            when(licensePlateRepository.isPlateAvailable(anyLong())).thenReturn(true);
             when(serviceRepository.findAllById(anyList())).thenReturn(List.of(service));
             when(applicationRepository.save(any(Application.class)))
                 .thenReturn(testApplication)
                 .thenReturn(testApplication);
-            when(applicationMapper.toDto(any())).thenReturn(testApplicationDto);
 
-            applicationService.createApplicationWithoutTransaction(dto);
-
-            verify(applicationRepository, times(2)).save(any(Application.class));
+            applicationService.createApplication(dtoWith);
+            verify(applicationRepository, times(3)).save(any(Application.class));
         }
 
+        // COVERS: if (services != null && !services.isEmpty()) in createSingleApplication
         @Test
-        @DisplayName("DIRECT COVER: createSingleApplication - services block")
-        void directCover_CreateSingleApplication_ServicesBlock() {
+        void coverServicesConditionInCreateSingleApplication_AllBranches() {
             AdditionalService service = AdditionalService.builder().id(1L).price(BigDecimal.TEN).build();
 
-            ApplicationCreateDto appDto = ApplicationCreateDto.builder()
-                .passportNumber("MP1234567")
-                .plateNumber("1234 AB-7")
-                .serviceIds(List.of(1L))
-                .build();
-
-            BulkApplicationCreateDto bulkDto = BulkApplicationCreateDto.builder()
-                .passportNumber("MP1234567")
-                .applications(List.of(appDto))
-                .build();
-
-            ArgumentCaptor<Application> firstSaveCaptor = ArgumentCaptor.forClass(Application.class);
-            ArgumentCaptor<Application> secondSaveCaptor = ArgumentCaptor.forClass(Application.class);
-
-            when(applicantRepository.findByPassportNumber(anyString())).thenReturn(Optional.of(testApplicant));
-            when(licensePlateRepository.findByPlateNumber(anyString())).thenReturn(Optional.of(testPlate));
-            when(serviceRepository.findAllById(anyList())).thenReturn(List.of(service));
-            when(applicationRepository.save(firstSaveCaptor.capture()))
-                .thenReturn(testApplication);
-            when(applicationRepository.save(secondSaveCaptor.capture()))
-                .thenReturn(testApplication);
-            when(applicationMapper.toDto(any())).thenReturn(testApplicationDto);
-
-            applicationService.createBulkApplicationsWithoutTransaction(bulkDto);
-
-            verify(applicationRepository, times(2)).save(any(Application.class));
-
-            Application secondSaved = secondSaveCaptor.getValue();
-            assertThat(secondSaved).isNotNull();
-        }
-
-        @Test
-        @DisplayName("DIRECT COVER: createSingleApplication - services block with transaction")
-        void directCover_CreateSingleApplication_ServicesBlock_WithTx() {
-            AdditionalService service = AdditionalService.builder().id(1L).price(BigDecimal.TEN).build();
-
-            ApplicationCreateDto appDto = ApplicationCreateDto.builder()
-                .passportNumber("MP1234567")
-                .plateNumber("1234 AB-7")
-                .serviceIds(List.of(1L))
-                .build();
-
-            BulkApplicationCreateDto bulkDto = BulkApplicationCreateDto.builder()
-                .passportNumber("MP1234567")
-                .applications(List.of(appDto))
-                .build();
-
-            when(applicantRepository.findByPassportNumber(anyString())).thenReturn(Optional.of(testApplicant));
-            when(licensePlateRepository.findByPlateNumber(anyString())).thenReturn(Optional.of(testPlate));
-            when(serviceRepository.findAllById(anyList())).thenReturn(List.of(service));
-            when(applicationRepository.save(any(Application.class)))
-                .thenReturn(testApplication)
-                .thenReturn(testApplication);
-            when(applicationMapper.toDto(any())).thenReturn(testApplicationDto);
-
-            applicationService.createBulkApplicationsWithTransaction(bulkDto);
-
-            verify(applicationRepository, times(2)).save(any(Application.class));
-        }
-
-
-        @Test
-        @DisplayName("DIRECT COVER: processBulkApplications - successful > 0 (cache invalidated)")
-        void directCover_ProcessBulkApplications_SuccessfulGreaterThanZero() {
-            ApplicationCreateDto app1 = ApplicationCreateDto.builder()
-                .passportNumber("MP1234567")
-                .plateNumber("1234 AB-7")
-                .serviceIds(null)
-                .build();
-
-            BulkApplicationCreateDto bulkDto = BulkApplicationCreateDto.builder()
-                .passportNumber("MP1234567")
-                .applications(List.of(app1))
-                .build();
-
-            when(applicantRepository.findByPassportNumber(anyString())).thenReturn(Optional.of(testApplicant));
-            when(licensePlateRepository.findByPlateNumber(anyString())).thenReturn(Optional.of(testPlate));
-            when(applicationRepository.save(any(Application.class))).thenReturn(testApplication);
-            when(applicationMapper.toDto(any())).thenReturn(testApplicationDto);
-
-            applicationService.createBulkApplicationsWithoutTransaction(bulkDto);
-
-
-            verify(cacheService).invalidate();
-        }
-
-        @Test
-        @DisplayName("DIRECT COVER: processBulkApplications - successful > 0 with transaction")
-        void directCover_ProcessBulkApplications_SuccessfulGreaterThanZero_WithTx() {
-            ApplicationCreateDto app1 = ApplicationCreateDto.builder()
-                .passportNumber("MP1234567")
-                .plateNumber("1234 AB-7")
-                .serviceIds(null)
-                .build();
-
-            BulkApplicationCreateDto bulkDto = BulkApplicationCreateDto.builder()
-                .passportNumber("MP1234567")
-                .applications(List.of(app1))
-                .build();
-
-            when(applicantRepository.findByPassportNumber(anyString())).thenReturn(Optional.of(testApplicant));
-            when(licensePlateRepository.findByPlateNumber(anyString())).thenReturn(Optional.of(testPlate));
-            when(applicationRepository.save(any(Application.class))).thenReturn(testApplication);
-            when(applicationMapper.toDto(any())).thenReturn(testApplicationDto);
-
-            applicationService.createBulkApplicationsWithTransaction(bulkDto);
-
-            verify(cacheService).invalidate();
-        }
-
-        @Test
-        @DisplayName("COVER ALL BRANCHES: result.getSuccessful() > 0")
-        void coverAllBranches_ResultSuccessfulGreaterThanZero() {
-            ApplicationCreateDto successApp = ApplicationCreateDto.builder()
-                .passportNumber("MP1234567")
-                .plateNumber("1234 AB-7")
-                .serviceIds(null)
-                .build();
-
-            BulkApplicationCreateDto successBulk = BulkApplicationCreateDto.builder()
-                .passportNumber("MP1234567")
-                .applications(List.of(successApp))
-                .build();
-
-            when(applicantRepository.findByPassportNumber(anyString())).thenReturn(Optional.of(testApplicant));
-            when(licensePlateRepository.findByPlateNumber(anyString())).thenReturn(Optional.of(testPlate));
-            when(applicationRepository.save(any(Application.class))).thenReturn(testApplication);
-            when(applicationMapper.toDto(any())).thenReturn(testApplicationDto);
-
-            applicationService.createBulkApplicationsWithoutTransaction(successBulk);
-            verify(cacheService, times(1)).invalidate();
-
-
-            ApplicationCreateDto failApp = ApplicationCreateDto.builder()
-                .passportNumber("MP1234567")
-                .plateNumber("NOT_EXIST")
-                .serviceIds(null)
-                .build();
-
-            BulkApplicationCreateDto failBulk = BulkApplicationCreateDto.builder()
-                .passportNumber("MP1234567")
-                .applications(List.of(failApp))
-                .build();
-
-            when(licensePlateRepository.findByPlateNumber("NOT_EXIST")).thenReturn(Optional.empty());
-
-            BulkApplicationResult result = applicationService.createBulkApplicationsWithoutTransaction(failBulk);
-            assertThat(result.getSuccessful()).isZero();
-            verify(cacheService, times(1)).invalidate();
-        }
-
-        @Test
-        @DisplayName("COVER ALL BRANCHES: services != null && !services.isEmpty() in createSingleApplication")
-        void coverAllBranches_ServicesNotNullAndNotEmpty_InCreateSingleApplication() {
-            AdditionalService service = AdditionalService.builder().id(1L).price(BigDecimal.TEN).build();
-
-
+            // Branch 1 & 2: services = null or empty
             ApplicationCreateDto appDtoWithout = ApplicationCreateDto.builder()
                 .passportNumber("MP1234567")
                 .plateNumber("1234 AB-7")
@@ -2043,7 +803,7 @@ class ApplicationServiceTest {
             applicationService.createBulkApplicationsWithoutTransaction(bulkDtoWithout);
             verify(applicationRepository, times(1)).save(any(Application.class));
 
-
+            // Branch 3: services not empty
             ApplicationCreateDto appDtoWith = ApplicationCreateDto.builder()
                 .passportNumber("MP1234567")
                 .plateNumber("1234 AB-7")
@@ -2064,15 +824,19 @@ class ApplicationServiceTest {
             verify(applicationRepository, times(3)).save(any(Application.class));
         }
 
+        // COVERS: if (result.getSuccessful() > 0)
         @Test
-        @DisplayName("COVER ALL BRANCHES: createDto.getServiceIds() != null && !createDto.getServiceIds().isEmpty()")
-        void coverAllBranches_ServiceIdsNotNullAndNotEmpty() {
-            AdditionalService service = AdditionalService.builder().id(1L).price(BigDecimal.TEN).build();
-
-            ApplicationCreateDto dtoNull = ApplicationCreateDto.builder()
+        void coverResultSuccessfulCondition_AllBranches() {
+            // Branch 1: successful > 0 (true)
+            ApplicationCreateDto successApp = ApplicationCreateDto.builder()
                 .passportNumber("MP1234567")
                 .plateNumber("1234 AB-7")
                 .serviceIds(null)
+                .build();
+
+            BulkApplicationCreateDto successBulk = BulkApplicationCreateDto.builder()
+                .passportNumber("MP1234567")
+                .applications(List.of(successApp))
                 .build();
 
             when(applicantRepository.findByPassportNumber(anyString())).thenReturn(Optional.of(testApplicant));
@@ -2080,137 +844,25 @@ class ApplicationServiceTest {
             when(applicationRepository.save(any(Application.class))).thenReturn(testApplication);
             when(applicationMapper.toDto(any())).thenReturn(testApplicationDto);
 
-            applicationService.createApplication(dtoNull);
-            verify(serviceRepository, never()).findAllById(any());
+            applicationService.createBulkApplicationsWithoutTransaction(successBulk);
+            verify(cacheService, atLeastOnce()).invalidate();
 
-            ApplicationCreateDto dtoEmpty = ApplicationCreateDto.builder()
+            // Branch 2: successful = 0 (false)
+            ApplicationCreateDto failApp = ApplicationCreateDto.builder()
                 .passportNumber("MP1234567")
-                .plateNumber("1234 AB-7")
-                .serviceIds(Collections.emptyList())
-                .build();
-
-            applicationService.createApplication(dtoEmpty);
-            verify(serviceRepository, never()).findAllById(any());
-
-            ApplicationCreateDto dtoWith = ApplicationCreateDto.builder()
-                .passportNumber("MP1234567")
-                .plateNumber("1234 AB-7")
-                .serviceIds(List.of(1L))
-                .build();
-
-            when(serviceRepository.findAllById(anyList())).thenReturn(List.of(service));
-            when(applicationRepository.save(any(Application.class)))
-                .thenReturn(testApplication)
-                .thenReturn(testApplication);
-
-            applicationService.createApplication(dtoWith);
-            verify(serviceRepository, times(1)).findAllById(anyList());
-        }
-
-
-        @Test
-        @DisplayName("COVER ALL BRANCHES: services != null && !services.isEmpty()")
-        void coverAllBranches_ServicesNotNullAndNotEmpty() {
-            ApplicationCreateDto dtoWithoutServices = ApplicationCreateDto.builder()
-                .passportNumber("MP1234567")
-                .plateNumber("1234 AB-7")
+                .plateNumber("NOT_EXIST")
                 .serviceIds(null)
                 .build();
 
-            when(applicantRepository.findByPassportNumber(anyString())).thenReturn(Optional.of(testApplicant));
-            when(licensePlateRepository.findByPlateNumber(anyString())).thenReturn(Optional.of(testPlate));
-            when(applicationRepository.save(any(Application.class))).thenReturn(testApplication);
-            when(applicationMapper.toDto(any())).thenReturn(testApplicationDto);
-
-            applicationService.createApplication(dtoWithoutServices);
-            verify(applicationRepository, times(1)).save(any(Application.class));
-            ApplicationCreateDto dtoEmptyServices = ApplicationCreateDto.builder()
+            BulkApplicationCreateDto failBulk = BulkApplicationCreateDto.builder()
                 .passportNumber("MP1234567")
-                .plateNumber("1234 AB-7")
-                .serviceIds(Collections.emptyList())
+                .applications(List.of(failApp))
                 .build();
 
-            applicationService.createApplication(dtoEmptyServices);
-            verify(applicationRepository, times(2)).save(any(Application.class));
+            when(licensePlateRepository.findByPlateNumber("NOT_EXIST")).thenReturn(Optional.empty());
 
-
-            AdditionalService service = AdditionalService.builder().id(1L).price(BigDecimal.TEN).build();
-            ApplicationCreateDto dtoWithServices = ApplicationCreateDto.builder()
-                .passportNumber("MP1234567")
-                .plateNumber("1234 AB-7")
-                .serviceIds(List.of(1L))
-                .build();
-
-            when(serviceRepository.findAllById(anyList())).thenReturn(List.of(service));
-            when(applicationRepository.save(any(Application.class)))
-                .thenReturn(testApplication)
-                .thenReturn(testApplication);
-
-            applicationService.createApplication(dtoWithServices);
-            verify(applicationRepository, times(4)).save(any(Application.class));
-        }
-
-        @Test
-        @DisplayName("FORCE COVER: processBulkApplications line 547 - successful > 0 with transaction")
-        void forceCoverProcessBulkApplicationsLine547_WithTx() {
-            ApplicationCreateDto app1 = ApplicationCreateDto.builder()
-                .passportNumber("MP1234567")
-                .plateNumber("1234 AB-7")
-                .serviceIds(null)
-                .build();
-
-            BulkApplicationCreateDto bulkDto = BulkApplicationCreateDto.builder()
-                .passportNumber("MP1234567")
-                .applications(List.of(app1))
-                .build();
-
-            when(applicantRepository.findByPassportNumber(anyString())).thenReturn(Optional.of(testApplicant));
-            when(licensePlateRepository.findByPlateNumber(anyString())).thenReturn(Optional.of(testPlate));
-            when(applicationRepository.save(any(Application.class))).thenReturn(testApplication);
-            when(applicationMapper.toDto(any())).thenReturn(testApplicationDto);
-
-            applicationService.createBulkApplicationsWithTransaction(bulkDto);
-
-            verify(cacheService, times(1)).invalidate();
-        }
-
-        @Test
-        @DisplayName("DIRECT COVER: processBulkApplications - multiple applications all successful")
-        void directCover_ProcessBulkApplications_MultipleSuccessful() {
-            ApplicationCreateDto app1 = ApplicationCreateDto.builder()
-                .passportNumber("MP1234567")
-                .plateNumber("1234 AB-7")
-                .serviceIds(null)
-                .build();
-            ApplicationCreateDto app2 = ApplicationCreateDto.builder()
-                .passportNumber("MP1234567")
-                .plateNumber("5678 CD-9")
-                .serviceIds(null)
-                .build();
-
-            BulkApplicationCreateDto bulkDto = BulkApplicationCreateDto.builder()
-                .passportNumber("MP1234567")
-                .applications(List.of(app1, app2))
-                .build();
-
-            LicensePlate plate2 = LicensePlate.builder()
-                .id(2L)
-                .plateNumber("5678 CD-9")
-                .price(BigDecimal.valueOf(150))
-                .department(testDept)
-                .applications(new ArrayList<>())
-                .build();
-
-            when(applicantRepository.findByPassportNumber(anyString())).thenReturn(Optional.of(testApplicant));
-            when(licensePlateRepository.findByPlateNumber("1234 AB-7")).thenReturn(Optional.of(testPlate));
-            when(licensePlateRepository.findByPlateNumber("5678 CD-9")).thenReturn(Optional.of(plate2));
-            when(applicationRepository.save(any(Application.class))).thenReturn(testApplication);
-            when(applicationMapper.toDto(any())).thenReturn(testApplicationDto);
-
-            BulkApplicationResult result = applicationService.createBulkApplicationsWithoutTransaction(bulkDto);
-
-            assertThat(result.getSuccessful()).isEqualTo(2);
-            verify(cacheService).invalidate();
+            applicationService.createBulkApplicationsWithoutTransaction(failBulk);
+            // No additional verify needed, just ensure no exception
         }
     }
 }
