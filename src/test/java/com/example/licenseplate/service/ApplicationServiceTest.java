@@ -1897,6 +1897,71 @@ class ApplicationServiceTest {
         }
 
         @Test
+        @DisplayName("Cover saveApplication services not empty branch in createSingleApplication")
+        void shouldCoverSaveApplicationServicesNotEmptyBranch() {
+            AdditionalService service1 = AdditionalService.builder().id(1L).price(BigDecimal.valueOf(50)).build();
+            AdditionalService service2 = AdditionalService.builder().id(2L).price(BigDecimal.valueOf(30)).build();
+            List<Long> serviceIds = List.of(1L, 2L);
+
+            ApplicationCreateDto appDto = ApplicationCreateDto.builder()
+                .passportNumber("MP1234567")
+                .plateNumber("1234 AB-7")
+                .serviceIds(serviceIds)
+                .build();
+
+            BulkApplicationCreateDto bulkDto = BulkApplicationCreateDto.builder()
+                .passportNumber("MP1234567")
+                .applications(List.of(appDto))
+                .build();
+
+            LicensePlate availablePlate = LicensePlate.builder()
+                .id(1L)
+                .plateNumber("1234 AB-7")
+                .price(BigDecimal.valueOf(100))
+                .department(testDept)
+                .applications(new ArrayList<>())
+                .build();
+
+            when(applicantRepository.findByPassportNumber("MP1234567")).thenReturn(Optional.of(testApplicant));
+            when(licensePlateRepository.findByPlateNumber("1234 AB-7")).thenReturn(Optional.of(availablePlate));
+            when(serviceRepository.findAllById(serviceIds)).thenReturn(List.of(service1, service2));
+
+
+            when(applicationRepository.save(any(Application.class)))
+                .thenAnswer(invocation -> {
+                    Application app = invocation.getArgument(0);
+                    app.setId(1L);
+
+                    if (app.getAdditionalServices() != null && !app.getAdditionalServices().isEmpty()) {
+                        // Это второй save, возвращаем как есть
+                        return app;
+                    }
+
+                    return app;
+                });
+            when(applicationMapper.toDto(any(Application.class))).thenReturn(testApplicationDto);
+
+            BulkApplicationResult result = applicationService.createBulkApplicationsWithTransaction(bulkDto);
+
+            assertThat(result.getTotalRequested()).isEqualTo(1);
+            assertThat(result.getSuccessful()).isEqualTo(1);
+
+            verify(serviceRepository).findAllById(serviceIds);
+
+            verify(applicationRepository, times(2)).save(any(Application.class));
+
+
+            ArgumentCaptor<Application> appCaptor = ArgumentCaptor.forClass(Application.class);
+            verify(applicationRepository, times(2)).save(appCaptor.capture());
+
+            List<Application> savedApps = appCaptor.getAllValues();
+
+            Application secondSave = savedApps.get(1);
+            assertThat(secondSave.getAdditionalServices()).isNotNull();
+            assertThat(secondSave.getAdditionalServices()).hasSize(2);
+        }
+
+        @Test
         @DisplayName("Should cover createSingleApplication with serviceIds empty in transactional mode")
         void shouldCoverCreateSingleApplicationServiceIdsEmptyTransactional() {
             ApplicationCreateDto app1 = ApplicationCreateDto.builder()
