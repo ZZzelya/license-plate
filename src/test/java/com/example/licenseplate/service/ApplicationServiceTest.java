@@ -2073,6 +2073,7 @@ class ApplicationServiceTest {
             verify(applicationRepository, times(2)).save(any(Application.class));
         }
 
+
         @Test
         @DisplayName("FORCE COVER: processBulkApplications line 547 - successful > 0")
         void forceCoverProcessBulkApplicationsLine547() {
