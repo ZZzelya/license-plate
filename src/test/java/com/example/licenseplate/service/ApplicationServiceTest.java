@@ -34,6 +34,8 @@ import org.springframework.data.domain.Page;
 import org.springframework.data.domain.PageImpl;
 import org.springframework.data.domain.PageRequest;
 import org.springframework.data.domain.Pageable;
+import static org.mockito.Mockito.times;
+import static org.mockito.Mockito.verify;
 
 import java.math.BigDecimal;
 import java.time.LocalDateTime;
@@ -1007,7 +1009,7 @@ class ApplicationServiceTest {
 
             List<Application> savedApplications = applicationCaptor.getAllValues();
             assertThat(savedApplications).hasSize(2);
-            assertThat(savedApplications.get(0).getPaymentAmount()).isEqualTo(BigDecimal.valueOf(180));
+            assertThat(savedApplications.getFirst().getPaymentAmount()).isEqualTo(BigDecimal.valueOf(180));
         }
 
         @Test
@@ -1507,7 +1509,7 @@ class ApplicationServiceTest {
             "0, Should log when page is 0 and empty",
             "1, Should not log when page is not 0 and empty"
         })
-        void shouldCoverPaginationWithEmptyPage(int pageNumber, String description) {
+        void shouldCoverPaginationWithEmptyPage(int pageNumber) {
             Pageable pageable = PageRequest.of(pageNumber, 10);
             Page<Application> emptyPage = new PageImpl<>(Collections.emptyList(), pageable, 0);
 
@@ -1517,6 +1519,77 @@ class ApplicationServiceTest {
             Page<ApplicationDto> result = applicationService.getApplicationsByPassportPaginated("MP1234567", pageable);
 
             assertThat(result.getContent()).isEmpty();
+        }
+        @Test
+        @DisplayName("Should cover services not null and not empty branch in createApplicationInternal")
+        void shouldCoverServicesNotNullAndNotEmptyInCreateApplicationInternal() {
+            AdditionalService service1 = AdditionalService.builder().id(1L).price(BigDecimal.valueOf(50)).build();
+            AdditionalService service2 = AdditionalService.builder().id(2L).price(BigDecimal.valueOf(30)).build();
+
+            ArgumentCaptor<Application> applicationCaptor = ArgumentCaptor.forClass(Application.class);
+
+            when(applicantRepository.findByPassportNumber("MP1234567")).thenReturn(Optional.of(testApplicant));
+            when(licensePlateRepository.findByPlateNumber("1234 AB-7")).thenReturn(Optional.of(testPlate));
+            when(serviceRepository.findAllById(anyList())).thenReturn(List.of(service1, service2));
+            when(applicationRepository.save(applicationCaptor.capture())).thenReturn(testApplication);
+            when(applicationMapper.toDto(testApplication)).thenReturn(testApplicationDto);
+
+            applicationService.createApplication(testCreateDto);
+
+            verify(applicationRepository, times(2)).save(any(Application.class));
+
+            Application capturedApplication = applicationCaptor.getAllValues().getFirst();
+            assertThat(capturedApplication.getAdditionalServices()).isNotEmpty();
+        }
+
+        @Test
+        @DisplayName("Should cover serviceIds not null and not empty branch in createApplicationInternal")
+        void shouldCoverServiceIdsNotNullAndNotEmptyInCreateApplicationInternal() {
+            AdditionalService service1 = AdditionalService.builder().id(1L).price(BigDecimal.valueOf(50)).build();
+            AdditionalService service2 = AdditionalService.builder().id(2L).price(BigDecimal.valueOf(30)).build();
+
+            when(applicantRepository.findByPassportNumber("MP1234567")).thenReturn(Optional.of(testApplicant));
+            when(licensePlateRepository.findByPlateNumber("1234 AB-7")).thenReturn(Optional.of(testPlate));
+            when(serviceRepository.findAllById(anyList())).thenReturn(List.of(service1, service2));
+            when(applicationRepository.save(any(Application.class))).thenReturn(testApplication);
+            when(applicationMapper.toDto(testApplication)).thenReturn(testApplicationDto);
+
+            applicationService.createApplication(testCreateDto);
+
+            // Проверяем что findAllById был вызван с правильными ID
+            verify(serviceRepository, times(1)).findAllById(List.of(1L, 2L));
+        }
+
+        @Test
+        @DisplayName("Should cover services not null and not empty branch in createSingleApplication")
+        void shouldCoverServicesNotNullAndNotEmptyInCreateSingleApplication() {
+            AdditionalService service1 = AdditionalService.builder().id(1L).price(BigDecimal.valueOf(50)).build();
+            AdditionalService service2 = AdditionalService.builder().id(2L).price(BigDecimal.valueOf(30)).build();
+
+            ApplicationCreateDto app1 = ApplicationCreateDto.builder()
+                .passportNumber("MP1234567")
+                .plateNumber("1234 AB-7")
+                .serviceIds(List.of(1L, 2L))
+                .build();
+
+            BulkApplicationCreateDto bulkDto = BulkApplicationCreateDto.builder()
+                .passportNumber("MP1234567")
+                .applications(List.of(app1))
+                .build();
+
+            ArgumentCaptor<Application> applicationCaptor = ArgumentCaptor.forClass(Application.class);
+
+            when(applicantRepository.findByPassportNumber("MP1234567")).thenReturn(Optional.of(testApplicant));
+            when(licensePlateRepository.findByPlateNumber("1234 AB-7")).thenReturn(Optional.of(testPlate));
+            when(serviceRepository.findAllById(anyList())).thenReturn(List.of(service1, service2));
+            when(applicationRepository.save(applicationCaptor.capture())).thenReturn(testApplication);
+            when(applicationMapper.toDto(any(Application.class))).thenReturn(testApplicationDto);
+
+            applicationService.createBulkApplicationsWithoutTransaction(bulkDto);
+
+                        verify(applicationRepository, times(2)).save(any(Application.class));
+
+            verify(serviceRepository, times(1)).findAllById(anyList());
         }
     }
 }
