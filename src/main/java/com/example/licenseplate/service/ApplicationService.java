@@ -55,7 +55,7 @@ public class ApplicationService {
     private static final String INVALID_STATUS = "Заявление не в статусе PENDING: %s";
     private static final String RESERVATION_EXPIRED = "Время бронирования истекло";
     private static final String CANNOT_CANCEL = "Нельзя отменить заявление в статусе: %s";
-    private static final String NOT_IN_CONFIRMED_STATUS = "Application is not in CONFIRMED status: {}";
+    private static final String NOT_IN_CONFIRMED_STATUS = "Application is not in CONFIRMED status: %s";
 
     @Transactional(readOnly = true)
     public List<ApplicationDto> getAllApplications() {

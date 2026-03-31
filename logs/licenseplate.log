@@ -1,35 +1,214 @@
-2026-03-31 05:53:02.878 [tomcat-shutdown] INFO  o.s.boot.tomcat.GracefulShutdown - Graceful shutdown complete
-2026-03-31 05:53:02.887 [SpringApplicationShutdownHook] INFO  o.s.o.j.LocalContainerEntityManagerFactoryBean - Closing JPA EntityManagerFactory for persistence unit 'default'
-2026-03-31 05:53:02.895 [SpringApplicationShutdownHook] INFO  com.zaxxer.hikari.HikariDataSource - HikariPool-1 - Shutdown initiated...
-2026-03-31 05:53:02.898 [SpringApplicationShutdownHook] INFO  com.zaxxer.hikari.HikariDataSource - HikariPool-1 - Shutdown completed.
-2026-03-31 07:01:05.230 [restartedMain] INFO  c.e.l.LicensePlateApplication - Starting LicensePlateApplication using Java 21.0.10 with PID 6668 (D:\projectJava\license-plate\target\classes started by user in D:\projectJava\license-plate)
-2026-03-31 07:01:05.234 [restartedMain] DEBUG c.e.l.LicensePlateApplication - Running with Spring Boot v3.4.4, Spring v6.2.5
-2026-03-31 07:01:05.235 [restartedMain] INFO  c.e.l.LicensePlateApplication - No active profile set, falling back to 1 default profile: "default"
-2026-03-31 07:01:05.282 [restartedMain] INFO  o.s.b.d.e.DevToolsPropertyDefaultsPostProcessor - Devtools property defaults active! Set 'spring.devtools.add-properties' to 'false' to disable
-2026-03-31 07:01:05.282 [restartedMain] INFO  o.s.b.d.e.DevToolsPropertyDefaultsPostProcessor - For additional web related logging consider setting the 'logging.level.web' property to 'DEBUG'
-2026-03-31 07:01:06.240 [restartedMain] INFO  o.s.d.r.c.RepositoryConfigurationDelegate - Bootstrapping Spring Data JPA repositories in DEFAULT mode.
-2026-03-31 07:01:06.295 [restartedMain] INFO  o.s.d.r.c.RepositoryConfigurationDelegate - Finished Spring Data repository scanning in 45 ms. Found 5 JPA repository interfaces.
-2026-03-31 07:01:06.981 [restartedMain] INFO  o.s.b.w.e.tomcat.TomcatWebServer - Tomcat initialized with port 8080 (http)
-2026-03-31 07:01:06.993 [restartedMain] INFO  o.a.coyote.http11.Http11NioProtocol - Initializing ProtocolHandler ["http-nio-8080"]
-2026-03-31 07:01:06.995 [restartedMain] INFO  o.a.catalina.core.StandardService - Starting service [Tomcat]
-2026-03-31 07:01:06.995 [restartedMain] INFO  o.a.catalina.core.StandardEngine - Starting Servlet engine: [Apache Tomcat/10.1.39]
-2026-03-31 07:01:07.046 [restartedMain] INFO  o.a.c.c.C.[Tomcat].[localhost].[/] - Initializing Spring embedded WebApplicationContext
-2026-03-31 07:01:07.047 [restartedMain] INFO  o.s.b.w.s.c.ServletWebServerApplicationContext - Root WebApplicationContext: initialization completed in 1765 ms
-2026-03-31 07:01:07.522 [restartedMain] INFO  o.s.o.j.p.SpringPersistenceUnitInfo - No LoadTimeWeaver setup: ignoring JPA class transformer
-2026-03-31 07:01:07.546 [restartedMain] INFO  com.zaxxer.hikari.HikariDataSource - HikariPool-1 - Starting...
-2026-03-31 07:01:07.674 [restartedMain] INFO  com.zaxxer.hikari.pool.HikariPool - HikariPool-1 - Added connection org.postgresql.jdbc.PgConnection@4604b612
-2026-03-31 07:01:07.676 [restartedMain] INFO  com.zaxxer.hikari.HikariDataSource - HikariPool-1 - Start completed.
-2026-03-31 07:01:07.701 [restartedMain] WARN  org.hibernate.orm.deprecation - HHH90000025: PostgreSQLDialect does not need to be specified explicitly using 'hibernate.dialect' (remove the property setting and it will be selected by default)
-2026-03-31 07:01:08.589 [restartedMain] INFO  o.s.o.j.LocalContainerEntityManagerFactoryBean - Initialized JPA EntityManagerFactory for persistence unit 'default'
-2026-03-31 07:01:08.912 [restartedMain] INFO  o.s.d.j.r.query.QueryEnhancerFactory - Hibernate is in classpath; If applicable, HQL parser will be used.
-2026-03-31 07:01:09.758 [restartedMain] WARN  o.s.b.a.o.j.JpaBaseConfiguration$JpaWebConfiguration - spring.jpa.open-in-view is enabled by default. Therefore, database queries may be performed during view rendering. Explicitly configure spring.jpa.open-in-view to disable this warning
-2026-03-31 07:01:10.410 [restartedMain] INFO  o.s.b.a.h.H2ConsoleAutoConfiguration - H2 console available at '/h2-console'. Database available at 'jdbc:postgresql://localhost:5432/license_plate_db'
-2026-03-31 07:01:10.453 [restartedMain] INFO  o.s.b.d.a.OptionalLiveReloadServer - LiveReload server is running on port 35729
-2026-03-31 07:01:10.463 [restartedMain] INFO  o.s.b.a.e.web.EndpointLinksResolver - Exposing 3 endpoints beneath base path '/actuator'
-2026-03-31 07:01:10.507 [restartedMain] INFO  o.a.coyote.http11.Http11NioProtocol - Starting ProtocolHandler ["http-nio-8080"]
-2026-03-31 07:01:10.518 [restartedMain] INFO  o.s.b.w.e.tomcat.TomcatWebServer - Tomcat started on port 8080 (http) with context path '/'
-2026-03-31 07:01:10.529 [restartedMain] INFO  c.e.l.LicensePlateApplication - Started LicensePlateApplication in 5.93 seconds (process running for 7.047)
-2026-03-31 07:01:10.574 [scheduling-1] DEBUG org.hibernate.SQL - 
+2026-03-31 15:18:00.604 [http-nio-8080-exec-1] DEBUG org.hibernate.SQL - 
+    select
+        a1_0.license_plate_id,
+        a1_0.id,
+        a1_0.applicant_id,
+        a1_0.confirmation_date,
+        a1_0.confirmed_date,
+        a1_0.dept_id,
+        a1_0.notes,
+        a1_0.payment_amount,
+        a1_0.reserved_until,
+        a1_0.status,
+        a1_0.submission_date,
+        a1_0.updated_at,
+        a1_0.vehicle_model,
+        a1_0.vehicle_vin,
+        a1_0.vehicle_year 
+    from
+        applications a1_0 
+    where
+        a1_0.license_plate_id=?
+2026-03-31 15:18:00.604 [http-nio-8080-exec-1] ERROR c.e.l.service.ApplicationService - Failed to create application for plate 5678 CD-9: Номерной знак '5678 CD-9' недоступен
+2026-03-31 15:18:00.611 [http-nio-8080-exec-1] INFO  c.e.l.service.ApplicationService - Bulk application completed: total=2, success=0, failed=2
+2026-03-31 15:18:00.611 [http-nio-8080-exec-1] INFO  c.e.l.aspect.LoggingAspect - ApplicationService.createBulkApplicationsWithoutTransaction executed in 18 ms
+2026-03-31 15:18:47.941 [http-nio-8080-exec-4] DEBUG c.e.l.aspect.LoggingAspect - Executing ApplicationService.deleteApplication with args: [53]
+2026-03-31 15:18:47.942 [http-nio-8080-exec-4] DEBUG org.hibernate.SQL - 
+    select
+        a1_0.id,
+        a1_0.applicant_id,
+        a1_0.confirmation_date,
+        a1_0.confirmed_date,
+        a1_0.dept_id,
+        a1_0.license_plate_id,
+        a1_0.notes,
+        a1_0.payment_amount,
+        a1_0.reserved_until,
+        a1_0.status,
+        a1_0.submission_date,
+        a1_0.updated_at,
+        a1_0.vehicle_model,
+        a1_0.vehicle_vin,
+        a1_0.vehicle_year 
+    from
+        applications a1_0 
+    where
+        a1_0.id=?
+2026-03-31 15:18:47.946 [http-nio-8080-exec-4] INFO  c.e.l.service.ApplicationService - Deleted application with id: 53
+2026-03-31 15:18:47.946 [http-nio-8080-exec-4] INFO  c.e.l.cache.ApplicationCacheService - Cache fully invalidated.
+2026-03-31 15:18:47.946 [http-nio-8080-exec-4] INFO  c.e.l.aspect.LoggingAspect - ApplicationService.deleteApplication executed in 5 ms
+2026-03-31 15:18:47.948 [http-nio-8080-exec-4] DEBUG org.hibernate.SQL - 
+    delete 
+    from
+        application_services 
+    where
+        application_id=?
+2026-03-31 15:18:47.956 [http-nio-8080-exec-4] DEBUG org.hibernate.SQL - 
+    delete 
+    from
+        applications 
+    where
+        id=?
+2026-03-31 15:18:50.350 [http-nio-8080-exec-8] DEBUG c.e.l.aspect.LoggingAspect - Executing ApplicationService.deleteApplication with args: [54]
+2026-03-31 15:18:50.351 [http-nio-8080-exec-8] DEBUG org.hibernate.SQL - 
+    select
+        a1_0.id,
+        a1_0.applicant_id,
+        a1_0.confirmation_date,
+        a1_0.confirmed_date,
+        a1_0.dept_id,
+        a1_0.license_plate_id,
+        a1_0.notes,
+        a1_0.payment_amount,
+        a1_0.reserved_until,
+        a1_0.status,
+        a1_0.submission_date,
+        a1_0.updated_at,
+        a1_0.vehicle_model,
+        a1_0.vehicle_vin,
+        a1_0.vehicle_year 
+    from
+        applications a1_0 
+    where
+        a1_0.id=?
+2026-03-31 15:18:50.352 [http-nio-8080-exec-8] INFO  c.e.l.service.ApplicationService - Deleted application with id: 54
+2026-03-31 15:18:50.352 [http-nio-8080-exec-8] INFO  c.e.l.cache.ApplicationCacheService - Cache fully invalidated.
+2026-03-31 15:18:50.352 [http-nio-8080-exec-8] INFO  c.e.l.aspect.LoggingAspect - ApplicationService.deleteApplication executed in 1 ms
+2026-03-31 15:18:50.352 [http-nio-8080-exec-8] DEBUG org.hibernate.SQL - 
+    delete 
+    from
+        application_services 
+    where
+        application_id=?
+2026-03-31 15:18:50.353 [http-nio-8080-exec-8] DEBUG org.hibernate.SQL - 
+    delete 
+    from
+        applications 
+    where
+        id=?
+2026-03-31 15:19:06.611 [http-nio-8080-exec-3] DEBUG c.e.l.aspect.LoggingAspect - Executing ApplicationService.createBulkApplicationsWithoutTransaction with args: [BulkApplicationCreateDto(passportNumber=MP1234567, applications=[ApplicationCreateDto(passportNumber=MP1234567, plateNumber=1234 AB-7, vehicleVin=VIN123456, vehicleModel=Toyota Camry, vehicleYear=2020, serviceIds=null, notes=Первое заявление), ApplicationCreateDto(passportNumber=MP1234567, plateNumber=5678 CD-9, vehicleVin=VIN789012, vehicleModel=BMW X5, vehicleYear=2021, serviceIds=null, notes=Второе заявление)])]
+2026-03-31 15:19:06.611 [http-nio-8080-exec-3] INFO  c.e.l.service.ApplicationService - === Creating bulk applications WITHOUT @Transactional ===
+2026-03-31 15:19:06.612 [http-nio-8080-exec-3] DEBUG org.hibernate.SQL - 
+    select
+        a1_0.id,
+        a1_0.address,
+        a1_0.email,
+        a1_0.full_name,
+        a1_0.passport_number,
+        a1_0.phone_number 
+    from
+        applicants a1_0 
+    where
+        a1_0.passport_number=?
+2026-03-31 15:19:06.614 [http-nio-8080-exec-3] DEBUG org.hibernate.SQL - 
+    select
+        lp1_0.id,
+        lp1_0.dept_id,
+        lp1_0.expiry_date,
+        lp1_0.issue_date,
+        lp1_0.plate_number,
+        lp1_0.price,
+        lp1_0.series 
+    from
+        license_plates lp1_0 
+    where
+        lp1_0.plate_number=?
+2026-03-31 15:19:06.615 [http-nio-8080-exec-3] DEBUG org.hibernate.SQL - 
+    select
+        a1_0.license_plate_id,
+        a1_0.id,
+        a1_0.applicant_id,
+        a1_0.confirmation_date,
+        a1_0.confirmed_date,
+        a1_0.dept_id,
+        a1_0.notes,
+        a1_0.payment_amount,
+        a1_0.reserved_until,
+        a1_0.status,
+        a1_0.submission_date,
+        a1_0.updated_at,
+        a1_0.vehicle_model,
+        a1_0.vehicle_vin,
+        a1_0.vehicle_year 
+    from
+        applications a1_0 
+    where
+        a1_0.license_plate_id=?
+2026-03-31 15:19:06.615 [http-nio-8080-exec-3] DEBUG org.hibernate.SQL - 
+    insert 
+    into
+        applications
+        (applicant_id, confirmation_date, confirmed_date, dept_id, license_plate_id, notes, payment_amount, reserved_until, status, submission_date, updated_at, vehicle_model, vehicle_vin, vehicle_year) 
+    values
+        (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
+2026-03-31 15:19:06.622 [http-nio-8080-exec-3] INFO  c.e.l.service.ApplicationService - Application saved with id: 55
+2026-03-31 15:19:06.623 [http-nio-8080-exec-3] DEBUG org.hibernate.SQL - 
+    select
+        rd1_0.id,
+        rd1_0.address,
+        rd1_0.name,
+        rd1_0.phone_number,
+        rd1_0.region 
+    from
+        registration_depts rd1_0 
+    where
+        rd1_0.id=?
+2026-03-31 15:19:06.623 [http-nio-8080-exec-3] DEBUG org.hibernate.SQL - 
+    select
+        lp1_0.id,
+        lp1_0.dept_id,
+        lp1_0.expiry_date,
+        lp1_0.issue_date,
+        lp1_0.plate_number,
+        lp1_0.price,
+        lp1_0.series 
+    from
+        license_plates lp1_0 
+    where
+        lp1_0.plate_number=?
+2026-03-31 15:19:06.623 [http-nio-8080-exec-3] DEBUG org.hibernate.SQL - 
+    select
+        a1_0.license_plate_id,
+        a1_0.id,
+        a1_0.applicant_id,
+        a1_0.confirmation_date,
+        a1_0.confirmed_date,
+        a1_0.dept_id,
+        a1_0.notes,
+        a1_0.payment_amount,
+        a1_0.reserved_until,
+        a1_0.status,
+        a1_0.submission_date,
+        a1_0.updated_at,
+        a1_0.vehicle_model,
+        a1_0.vehicle_vin,
+        a1_0.vehicle_year 
+    from
+        applications a1_0 
+    where
+        a1_0.license_plate_id=?
+2026-03-31 15:19:06.623 [http-nio-8080-exec-3] DEBUG org.hibernate.SQL - 
+    insert 
+    into
+        applications
+        (applicant_id, confirmation_date, confirmed_date, dept_id, license_plate_id, notes, payment_amount, reserved_until, status, submission_date, updated_at, vehicle_model, vehicle_vin, vehicle_year) 
+    values
+        (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
+2026-03-31 15:19:06.629 [http-nio-8080-exec-3] INFO  c.e.l.service.ApplicationService - Application saved with id: 56
+2026-03-31 15:19:06.629 [http-nio-8080-exec-3] INFO  c.e.l.service.ApplicationService - Bulk application completed: total=2, success=2, failed=0
+2026-03-31 15:19:06.629 [http-nio-8080-exec-3] INFO  c.e.l.cache.ApplicationCacheService - Cache fully invalidated.
+2026-03-31 15:19:06.629 [http-nio-8080-exec-3] INFO  c.e.l.aspect.LoggingAspect - ApplicationService.createBulkApplicationsWithoutTransaction executed in 19 ms
+2026-03-31 15:19:53.129 [scheduling-1] DEBUG org.hibernate.SQL - 
     select
         a1_0.id,
         a1_0.applicant_id,
@@ -51,89 +230,8 @@
     where
         a1_0.status=? 
         and a1_0.reserved_until<?
-2026-03-31 07:01:11.129 [RMI TCP Connection(3)-172.20.10.6] INFO  o.a.c.c.C.[Tomcat].[localhost].[/] - Initializing Spring DispatcherServlet 'dispatcherServlet'
-2026-03-31 07:01:11.130 [RMI TCP Connection(3)-172.20.10.6] INFO  o.s.web.servlet.DispatcherServlet - Initializing Servlet 'dispatcherServlet'
-2026-03-31 07:01:11.131 [RMI TCP Connection(3)-172.20.10.6] INFO  o.s.web.servlet.DispatcherServlet - Completed initialization in 1 ms
-2026-03-31 07:01:15.547 [http-nio-8080-exec-4] INFO  o.s.api.AbstractOpenApiResource - Init duration for springdoc-openapi is: 701 ms
-2026-03-31 07:01:25.324 [http-nio-8080-exec-7] DEBUG c.e.l.aspect.LoggingAspect - Executing ApplicantService.getAllApplicants with args: []
-2026-03-31 07:01:25.338 [http-nio-8080-exec-7] DEBUG org.hibernate.SQL - 
-    select
-        a1_0.id,
-        a1_0.address,
-        a1_0.email,
-        a1_0.full_name,
-        a1_0.passport_number,
-        a1_0.phone_number 
-    from
-        applicants a1_0
-2026-03-31 07:01:25.358 [http-nio-8080-exec-7] DEBUG c.e.l.aspect.LoggingAspect - Executing ApplicantMapper.toDtoList with args: [[Applicant(id=1, fullName=Зелень Алесандр Иванович, passportNumber=MP1234567, phoneNumber=+375 (29) 367-45-67, email=zelenaleksandr4@gmail.com, address=г.Минск, ул.Янки Купалы, 15-25), Applicant(id=7, fullName=UNKNOWN, passportNumber=MH1543675, phoneNumber=null, email=null, address=null), Applicant(id=8, fullName=UNKNOWN, passportNumber=MP9999999, phoneNumber=null, email=null, address=null)]]
-2026-03-31 07:01:25.360 [http-nio-8080-exec-7] DEBUG org.hibernate.SQL - 
-    select
-        a1_0.applicant_id,
-        a1_0.id,
-        a1_0.confirmation_date,
-        a1_0.confirmed_date,
-        a1_0.dept_id,
-        a1_0.license_plate_id,
-        a1_0.notes,
-        a1_0.payment_amount,
-        a1_0.reserved_until,
-        a1_0.status,
-        a1_0.submission_date,
-        a1_0.updated_at,
-        a1_0.vehicle_model,
-        a1_0.vehicle_vin,
-        a1_0.vehicle_year 
-    from
-        applications a1_0 
-    where
-        a1_0.applicant_id=?
-2026-03-31 07:01:25.373 [http-nio-8080-exec-7] DEBUG org.hibernate.SQL - 
-    select
-        a1_0.applicant_id,
-        a1_0.id,
-        a1_0.confirmation_date,
-        a1_0.confirmed_date,
-        a1_0.dept_id,
-        a1_0.license_plate_id,
-        a1_0.notes,
-        a1_0.payment_amount,
-        a1_0.reserved_until,
-        a1_0.status,
-        a1_0.submission_date,
-        a1_0.updated_at,
-        a1_0.vehicle_model,
-        a1_0.vehicle_vin,
-        a1_0.vehicle_year 
-    from
-        applications a1_0 
-    where
-        a1_0.applicant_id=?
-2026-03-31 07:01:25.374 [http-nio-8080-exec-7] DEBUG org.hibernate.SQL - 
-    select
-        a1_0.applicant_id,
-        a1_0.id,
-        a1_0.confirmation_date,
-        a1_0.confirmed_date,
-        a1_0.dept_id,
-        a1_0.license_plate_id,
-        a1_0.notes,
-        a1_0.payment_amount,
-        a1_0.reserved_until,
-        a1_0.status,
-        a1_0.submission_date,
-        a1_0.updated_at,
-        a1_0.vehicle_model,
-        a1_0.vehicle_vin,
-        a1_0.vehicle_year 
-    from
-        applications a1_0 
-    where
-        a1_0.applicant_id=?
-2026-03-31 07:01:25.375 [http-nio-8080-exec-7] INFO  c.e.l.aspect.LoggingAspect - ApplicantMapper.toDtoList executed in 17 ms
-2026-03-31 07:01:25.375 [http-nio-8080-exec-7] INFO  c.e.l.aspect.LoggingAspect - ApplicantService.getAllApplicants executed in 52 ms
-2026-03-31 07:01:37.578 [SpringApplicationShutdownHook] INFO  o.s.b.w.e.tomcat.GracefulShutdown - Commencing graceful shutdown. Waiting for active requests to complete
-2026-03-31 07:01:37.589 [tomcat-shutdown] INFO  o.s.b.w.e.tomcat.GracefulShutdown - Graceful shutdown complete
-2026-03-31 07:01:37.594 [SpringApplicationShutdownHook] INFO  o.s.o.j.LocalContainerEntityManagerFactoryBean - Closing JPA EntityManagerFactory for persistence unit 'default'
-2026-03-31 07:01:37.596 [SpringApplicationShutdownHook] INFO  com.zaxxer.hikari.HikariDataSource - HikariPool-1 - Shutdown initiated...
-2026-03-31 07:01:37.598 [SpringApplicationShutdownHook] INFO  com.zaxxer.hikari.HikariDataSource - HikariPool-1 - Shutdown completed.
+2026-03-31 15:21:50.530 [SpringApplicationShutdownHook] INFO  o.s.b.w.e.tomcat.GracefulShutdown - Commencing graceful shutdown. Waiting for active requests to complete
+2026-03-31 15:21:50.530 [tomcat-shutdown] INFO  o.s.b.w.e.tomcat.GracefulShutdown - Graceful shutdown complete
+2026-03-31 15:21:50.530 [SpringApplicationShutdownHook] INFO  o.s.o.j.LocalContainerEntityManagerFactoryBean - Closing JPA EntityManagerFactory for persistence unit 'default'
+2026-03-31 15:21:50.530 [SpringApplicationShutdownHook] INFO  com.zaxxer.hikari.HikariDataSource - HikariPool-1 - Shutdown initiated...
+2026-03-31 15:21:50.546 [SpringApplicationShutdownHook] INFO  com.zaxxer.hikari.HikariDataSource - HikariPool-1 - Shutdown completed.
