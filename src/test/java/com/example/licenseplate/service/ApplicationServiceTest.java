@@ -35,6 +35,7 @@ import org.springframework.data.domain.PageImpl;
 import org.springframework.data.domain.PageRequest;
 import org.springframework.data.domain.Pageable;
 
+import static org.junit.jupiter.api.Assertions.assertThrows;
 import static org.mockito.Mockito.times;
 import static org.mockito.Mockito.verify;
 
@@ -1606,6 +1607,30 @@ class ApplicationServiceTest {
         }
 
         @Test
+        @DisplayName("Cancel: Покрытие условия с CANCELLED статусом")
+        void cancelApplication_ShouldThrow_WhenAlreadyCancelled() {
+            Application app = new Application();
+            app.setStatus(ApplicationStatus.CANCELLED);
+            when(applicationRepository.findById(1L)).thenReturn(Optional.of(app));
+
+            assertThrows(BusinessException.class, () -> applicationService.cancelApplication(1L));
+        }
+
+        @Test
+        @DisplayName("Cache: Покрытие ветки с пустым списком в кэше")
+        void getApplicationsCached_ShouldInvalidate_WhenCacheReturnsEmptyList() {
+            String region = "Brest";
+            ApplicationStatus status = ApplicationStatus.PENDING;
+
+            when(cacheService.get(status.name(), region)).thenReturn(Collections.emptyList());
+            when(applicationRepository.findByStatusAndDepartmentRegion(status, region)).thenReturn(Collections.emptyList());
+
+            applicationService.getApplicationsByStatusAndRegionCached(status, region);
+
+            verify(cacheService).invalidate(); // Покрывает ту самую красную ветку
+        }
+
+        @Test
         @DisplayName("Should cover services not null and not empty branch in createSingleApplication")
         void shouldCoverServicesNotNullAndNotEmptyInCreateSingleApplication() {
             AdditionalService service1 = AdditionalService.builder().id(1L).price(BigDecimal.valueOf(50)).build();
@@ -1637,4 +1662,6 @@ class ApplicationServiceTest {
             verify(serviceRepository, times(1)).findAllById(anyList());
         }
     }
+
+
 }
