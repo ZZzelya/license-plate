@@ -1,11 +1,13 @@
 package com.example.licenseplate.service;
 
+import com.example.licenseplate.cache.ApplicationCacheService;
 import com.example.licenseplate.dto.request.ApplicationCreateDto;
 import com.example.licenseplate.dto.request.BulkApplicationCreateDto;
 import com.example.licenseplate.dto.response.ApplicationDto;
 import com.example.licenseplate.dto.response.BulkApplicationResult;
 import com.example.licenseplate.exception.BusinessException;
 import com.example.licenseplate.exception.ResourceNotFoundException;
+import com.example.licenseplate.mapper.ApplicationMapper;
 import com.example.licenseplate.model.entity.AdditionalService;
 import com.example.licenseplate.model.entity.Applicant;
 import com.example.licenseplate.model.entity.Application;
@@ -17,15 +19,11 @@ import com.example.licenseplate.repository.ApplicationRepository;
 import com.example.licenseplate.repository.DepartmentRepository;
 import com.example.licenseplate.repository.LicensePlateRepository;
 import com.example.licenseplate.repository.ServiceRepository;
-import com.example.licenseplate.cache.ApplicationCacheService;
-import com.example.licenseplate.mapper.ApplicationMapper;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Nested;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
-import org.junit.jupiter.params.ParameterizedTest;
-import org.junit.jupiter.params.provider.CsvSource;
 import org.mockito.ArgumentCaptor;
 import org.mockito.InjectMocks;
 import org.mockito.Mock;
@@ -37,7 +35,6 @@ import org.springframework.data.domain.Pageable;
 
 import java.math.BigDecimal;
 import java.time.LocalDateTime;
-import java.util.ArrayList;
 import java.util.Collections;
 import java.util.List;
 import java.util.Optional;
@@ -45,8 +42,11 @@ import java.util.Optional;
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.assertj.core.api.Assertions.assertThatThrownBy;
 import static org.mockito.ArgumentMatchers.any;
-import static org.mockito.ArgumentMatchers.anyList;
-import static org.mockito.Mockito.*;
+import static org.mockito.ArgumentMatchers.anyString;
+import static org.mockito.Mockito.doNothing;
+import static org.mockito.Mockito.never;
+import static org.mockito.Mockito.verify;
+import static org.mockito.Mockito.when;
 
 @ExtendWith(MockitoExtension.class)
 @DisplayName("ApplicationService Tests")
@@ -77,73 +77,79 @@ class ApplicationServiceTest {
     private ApplicationService applicationService;
 
     private Applicant testApplicant;
-    private LicensePlate testPlate;
-    private RegistrationDept testDept;
+    private LicensePlate testLicensePlate;
     private Application testApplication;
     private ApplicationDto testApplicationDto;
     private ApplicationCreateDto testCreateDto;
+    private AdditionalService testService;
 
     @BeforeEach
     void setUp() {
-        testDept = RegistrationDept.builder()
+        RegistrationDept testDepartment = RegistrationDept.builder()
             .id(1L)
-            .name("МРЭО ГАИ")
+            .name("Test Department")
             .region("MINSK")
             .build();
 
         testApplicant = Applicant.builder()
             .id(1L)
-            .fullName("Иванов Иван")
+            .fullName("John Doe")
             .passportNumber("MP1234567")
-            .applications(new ArrayList<>())
             .build();
 
-        testPlate = LicensePlate.builder()
+        testLicensePlate = LicensePlate.builder()
             .id(1L)
             .plateNumber("1234 AB-7")
-            .price(BigDecimal.valueOf(100))
-            .department(testDept)
-            .applications(new ArrayList<>())
+            .price(BigDecimal.valueOf(1000))
+            .department(testDepartment)
+            .applications(Collections.emptyList())
+            .build();
+
+        testService = AdditionalService.builder()
+            .id(1L)
+            .name("Express Service")
+            .price(BigDecimal.valueOf(500))
+            .isAvailable(true)
             .build();
 
         testApplication = Application.builder()
             .id(1L)
+            .applicant(testApplicant)
+            .licensePlate(testLicensePlate)
+            .department(testDepartment)
             .status(ApplicationStatus.PENDING)
             .submissionDate(LocalDateTime.now())
             .reservedUntil(LocalDateTime.now().plusHours(1))
-            .applicant(testApplicant)
-            .licensePlate(testPlate)
-            .department(testDept)
-            .paymentAmount(BigDecimal.valueOf(100))
-            .additionalServices(new ArrayList<>())
+            .paymentAmount(BigDecimal.valueOf(1500))
             .build();
 
         testApplicationDto = ApplicationDto.builder()
             .id(1L)
             .status("PENDING")
+            .paymentAmount(BigDecimal.valueOf(1500))
             .applicantId(1L)
-            .applicantName("Иванов Иван")
+            .applicantName("John Doe")
             .licensePlateNumber("1234 AB-7")
-            .departmentId(1L)
-            .paymentAmount(BigDecimal.valueOf(100))
             .build();
 
         testCreateDto = ApplicationCreateDto.builder()
             .passportNumber("MP1234567")
             .plateNumber("1234 AB-7")
-            .vehicleVin("VIN123")
-            .vehicleModel("Toyota")
-            .vehicleYear(2020)
+            .vehicleVin("1HGCM82633A123456")
+            .vehicleModel("Honda Accord")
+            .vehicleYear(2023)
+            .serviceIds(List.of(1L))
             .notes("Test notes")
-            .serviceIds(List.of(1L, 2L))
             .build();
     }
 
     @Nested
-    @DisplayName("Get All Applications Tests")
+    @DisplayName("getAllApplications() Tests")
     class GetAllApplicationsTests {
+
         @Test
-        void shouldReturnListOfApplications() {
+        @DisplayName("Should return list of application DTOs when applications exist")
+        void shouldReturnListOfApplicationDtosWhenApplicationsExist() {
             List<Application> applications = List.of(testApplication);
             List<ApplicationDto> expectedDtos = List.of(testApplicationDto);
 
@@ -152,69 +158,92 @@ class ApplicationServiceTest {
 
             List<ApplicationDto> result = applicationService.getAllApplications();
 
-            assertThat(result).isEqualTo(expectedDtos);
+            assertThat(result)
+                .isNotNull()
+                .hasSize(1)
+                .isEqualTo(expectedDtos);
+
+            verify(applicationRepository).findAll();
+            verify(applicationMapper).toDtoList(applications);
         }
 
         @Test
-        void shouldReturnEmptyListWhenNoApplications() {
+        @DisplayName("Should return empty list when no applications exist")
+        void shouldReturnEmptyListWhenNoApplicationsExist() {
             when(applicationRepository.findAll()).thenReturn(Collections.emptyList());
             when(applicationMapper.toDtoList(Collections.emptyList())).thenReturn(Collections.emptyList());
 
             List<ApplicationDto> result = applicationService.getAllApplications();
 
             assertThat(result).isEmpty();
+            verify(applicationRepository).findAll();
         }
     }
 
     @Nested
-    @DisplayName("Get Application By ID Tests")
+    @DisplayName("getApplicationById() Tests")
     class GetApplicationByIdTests {
+
         @Test
-        void shouldReturnApplicationWhenIdExists() {
+        @DisplayName("Should return application DTO when application exists")
+        void shouldReturnApplicationDtoWhenApplicationExists() {
             when(applicationRepository.findById(1L)).thenReturn(Optional.of(testApplication));
             when(applicationMapper.toDto(testApplication)).thenReturn(testApplicationDto);
 
             ApplicationDto result = applicationService.getApplicationById(1L);
 
             assertThat(result).isEqualTo(testApplicationDto);
+            verify(applicationRepository).findById(1L);
         }
 
         @Test
-        void shouldThrowNotFoundExceptionWhenIdNotFound() {
-            when(applicationRepository.findById(999L)).thenReturn(Optional.empty());
+        @DisplayName("Should throw ResourceNotFoundException when application does not exist")
+        void shouldThrowResourceNotFoundExceptionWhenApplicationDoesNotExist() {
+            when(applicationRepository.findById(99L)).thenReturn(Optional.empty());
 
-            assertThatThrownBy(() -> applicationService.getApplicationById(999L))
-                .isInstanceOf(ResourceNotFoundException.class);
+            assertThatThrownBy(() -> applicationService.getApplicationById(99L))
+                .isInstanceOf(ResourceNotFoundException.class)
+                .hasMessageContaining("Заявление не найдено с id: 99");
+
+            verify(applicationRepository).findById(99L);
+            verify(applicationMapper, never()).toDto(any());
         }
     }
 
     @Nested
-    @DisplayName("Get Application With Details Tests")
+    @DisplayName("getApplicationWithDetails() Tests")
     class GetApplicationWithDetailsTests {
+
         @Test
-        void shouldReturnApplicationWithDetails() {
+        @DisplayName("Should return application DTO with details when application exists")
+        void shouldReturnApplicationDtoWithDetailsWhenApplicationExists() {
             when(applicationRepository.findByIdWithDetails(1L)).thenReturn(Optional.of(testApplication));
             when(applicationMapper.toDto(testApplication)).thenReturn(testApplicationDto);
 
             ApplicationDto result = applicationService.getApplicationWithDetails(1L);
 
             assertThat(result).isEqualTo(testApplicationDto);
+            verify(applicationRepository).findByIdWithDetails(1L);
         }
 
         @Test
-        void shouldThrowNotFoundExceptionWhenIdNotFound() {
-            when(applicationRepository.findByIdWithDetails(999L)).thenReturn(Optional.empty());
+        @DisplayName("Should throw ResourceNotFoundException when application does not exist")
+        void shouldThrowResourceNotFoundExceptionWhenApplicationDoesNotExist() {
+            when(applicationRepository.findByIdWithDetails(99L)).thenReturn(Optional.empty());
 
-            assertThatThrownBy(() -> applicationService.getApplicationWithDetails(999L))
-                .isInstanceOf(ResourceNotFoundException.class);
+            assertThatThrownBy(() -> applicationService.getApplicationWithDetails(99L))
+                .isInstanceOf(ResourceNotFoundException.class)
+                .hasMessageContaining("Заявление не найдено с id: 99");
         }
     }
 
     @Nested
-    @DisplayName("Get Applications By Passport Tests")
+    @DisplayName("getApplicationsByPassport() Tests")
     class GetApplicationsByPassportTests {
+
         @Test
-        void shouldReturnApplicationsWhenPassportExists() {
+        @DisplayName("Should return list of applications when applications exist")
+        void shouldReturnListOfApplicationsWhenApplicationsExist() {
             List<Application> applications = List.of(testApplication);
             List<ApplicationDto> expectedDtos = List.of(testApplicationDto);
 
@@ -224,19 +253,13 @@ class ApplicationServiceTest {
             List<ApplicationDto> result = applicationService.getApplicationsByPassport("MP1234567");
 
             assertThat(result).isEqualTo(expectedDtos);
+            verify(applicationRepository).findByApplicantPassport("MP1234567");
+            verify(applicantRepository, never()).findByPassportNumber(anyString());
         }
 
         @Test
-        void shouldThrowNotFoundExceptionWhenPassportNotFound() {
-            when(applicationRepository.findByApplicantPassport("NOT_EXIST")).thenReturn(Collections.emptyList());
-            when(applicantRepository.findByPassportNumber("NOT_EXIST")).thenReturn(Optional.empty());
-
-            assertThatThrownBy(() -> applicationService.getApplicationsByPassport("NOT_EXIST"))
-                .isInstanceOf(ResourceNotFoundException.class);
-        }
-
-        @Test
-        void shouldReturnEmptyListWhenNoApplications() {
+        @DisplayName("Should return empty list when no applications but applicant exists")
+        void shouldReturnEmptyListWhenNoApplicationsButApplicantExists() {
             when(applicationRepository.findByApplicantPassport("MP1234567")).thenReturn(Collections.emptyList());
             when(applicantRepository.findByPassportNumber("MP1234567")).thenReturn(Optional.of(testApplicant));
             when(applicationMapper.toDtoList(Collections.emptyList())).thenReturn(Collections.emptyList());
@@ -244,14 +267,29 @@ class ApplicationServiceTest {
             List<ApplicationDto> result = applicationService.getApplicationsByPassport("MP1234567");
 
             assertThat(result).isEmpty();
+            verify(applicationRepository).findByApplicantPassport("MP1234567");
+            verify(applicantRepository).findByPassportNumber("MP1234567");
+        }
+
+        @Test
+        @DisplayName("Should throw ResourceNotFoundException when applicant does not exist")
+        void shouldThrowResourceNotFoundExceptionWhenApplicantDoesNotExist() {
+            when(applicationRepository.findByApplicantPassport("INVALID")).thenReturn(Collections.emptyList());
+            when(applicantRepository.findByPassportNumber("INVALID")).thenReturn(Optional.empty());
+
+            assertThatThrownBy(() -> applicationService.getApplicationsByPassport("INVALID"))
+                .isInstanceOf(ResourceNotFoundException.class)
+                .hasMessageContaining("Заявитель с паспортом 'INVALID' не найден");
         }
     }
 
     @Nested
-    @DisplayName("Get Applications By Status And Region Tests")
+    @DisplayName("getApplicationsByStatusAndRegion() Tests")
     class GetApplicationsByStatusAndRegionTests {
+
         @Test
-        void shouldReturnApplicationsByStatusAndRegion() {
+        @DisplayName("Should return list of applications when applications exist")
+        void shouldReturnListOfApplicationsWhenApplicationsExist() {
             List<Application> applications = List.of(testApplication);
             List<ApplicationDto> expectedDtos = List.of(testApplicationDto);
 
@@ -264,34 +302,64 @@ class ApplicationServiceTest {
                 ApplicationStatus.PENDING, "MINSK");
 
             assertThat(result).isEqualTo(expectedDtos);
+            verify(departmentRepository).existsByRegion("MINSK");
         }
 
         @Test
-        void shouldThrowNotFoundExceptionWhenRegionNotFound() {
-            when(departmentRepository.existsByRegion("UNKNOWN")).thenReturn(false);
+        @DisplayName("Should throw ResourceNotFoundException when region does not exist")
+        void shouldThrowResourceNotFoundExceptionWhenRegionDoesNotExist() {
+            when(departmentRepository.existsByRegion("INVALID")).thenReturn(false);
 
             assertThatThrownBy(() -> applicationService.getApplicationsByStatusAndRegion(
-                ApplicationStatus.PENDING, "UNKNOWN"))
-                .isInstanceOf(ResourceNotFoundException.class);
+                ApplicationStatus.PENDING, "INVALID"))
+                .isInstanceOf(ResourceNotFoundException.class)
+                .hasMessageContaining("Регион 'INVALID' не найден");
         }
 
         @Test
-        void shouldThrowNotFoundExceptionWhenNoApplications() {
+        @DisplayName("Should throw ResourceNotFoundException when no applications found")
+        void shouldThrowResourceNotFoundExceptionWhenNoApplicationsFound() {
             when(departmentRepository.existsByRegion("MINSK")).thenReturn(true);
             when(applicationRepository.findByStatusAndDepartmentRegion(ApplicationStatus.PENDING, "MINSK"))
                 .thenReturn(Collections.emptyList());
 
             assertThatThrownBy(() -> applicationService.getApplicationsByStatusAndRegion(
                 ApplicationStatus.PENDING, "MINSK"))
-                .isInstanceOf(ResourceNotFoundException.class);
+                .isInstanceOf(ResourceNotFoundException.class)
+                .hasMessageContaining("Заявки со статусом 'PENDING' в регионе 'MINSK' не найдены");
         }
     }
 
     @Nested
-    @DisplayName("Get Applications By Status And Region Cached Tests")
-    class GetApplicationsByStatusAndRegionCachedTests {
+    @DisplayName("getApplicationsByStatusAndRegionNative() Tests")
+    class GetApplicationsByStatusAndRegionNativeTests {
+
         @Test
-        void shouldReturnCachedResult() {
+        @DisplayName("Should return list of applications using native query")
+        void shouldReturnListOfApplicationsUsingNativeQuery() {
+            List<Application> applications = List.of(testApplication);
+            List<ApplicationDto> expectedDtos = List.of(testApplicationDto);
+
+            when(departmentRepository.existsByRegion("MINSK")).thenReturn(true);
+            when(applicationRepository.findByStatusAndDepartmentRegionNative("PENDING", "MINSK"))
+                .thenReturn(applications);
+            when(applicationMapper.toDtoList(applications)).thenReturn(expectedDtos);
+
+            List<ApplicationDto> result = applicationService.getApplicationsByStatusAndRegionNative(
+                ApplicationStatus.PENDING, "MINSK");
+
+            assertThat(result).isEqualTo(expectedDtos);
+            verify(applicationRepository).findByStatusAndDepartmentRegionNative("PENDING", "MINSK");
+        }
+    }
+
+    @Nested
+    @DisplayName("getApplicationsByStatusAndRegionCached() Tests")
+    class GetApplicationsByStatusAndRegionCachedTests {
+
+        @Test
+        @DisplayName("Should return cached result when cache hit")
+        void shouldReturnCachedResultWhenCacheHit() {
             List<ApplicationDto> cachedResult = List.of(testApplicationDto);
 
             when(cacheService.get("PENDING", "MINSK")).thenReturn(cachedResult);
@@ -300,10 +368,13 @@ class ApplicationServiceTest {
                 ApplicationStatus.PENDING, "MINSK");
 
             assertThat(result).isEqualTo(cachedResult);
+            verify(cacheService).get("PENDING", "MINSK");
+            verify(applicationRepository, never()).findByStatusAndDepartmentRegion(any(), any());
         }
 
         @Test
-        void shouldFetchFromDbAndCacheWhenCacheMiss() {
+        @DisplayName("Should fetch from database and cache when cache miss")
+        void shouldFetchFromDatabaseAndCacheWhenCacheMiss() {
             List<Application> applications = List.of(testApplication);
             List<ApplicationDto> expectedDtos = List.of(testApplicationDto);
 
@@ -320,198 +391,154 @@ class ApplicationServiceTest {
         }
 
         @Test
-        void shouldInvalidateCacheWhenEmptyResult() {
+        @DisplayName("Should invalidate cache when empty cached result")
+        void shouldInvalidateCacheWhenEmptyCachedResult() {
             when(cacheService.get("PENDING", "MINSK")).thenReturn(Collections.emptyList());
+
+            List<Application> applications = List.of(testApplication);
+            List<ApplicationDto> expectedDtos = List.of(testApplicationDto);
+
+            when(applicationRepository.findByStatusAndDepartmentRegion(ApplicationStatus.PENDING, "MINSK"))
+                .thenReturn(applications);
+            when(applicationMapper.toDtoList(applications)).thenReturn(expectedDtos);
 
             List<ApplicationDto> result = applicationService.getApplicationsByStatusAndRegionCached(
                 ApplicationStatus.PENDING, "MINSK");
 
-            assertThat(result).isEmpty();
+            assertThat(result).isEqualTo(expectedDtos);
             verify(cacheService).invalidate();
+            verify(cacheService).put("PENDING", "MINSK", expectedDtos);
         }
     }
 
     @Nested
-    @DisplayName("Get Applications By Passport Paginated Tests")
+    @DisplayName("getApplicationsByPassportPaginated() Tests")
     class GetApplicationsByPassportPaginatedTests {
+
         @Test
-        void shouldReturnPaginatedResults() {
+        @DisplayName("Should return paginated applications")
+        void shouldReturnPaginatedApplications() {
             Pageable pageable = PageRequest.of(0, 10);
             Page<Application> applicationPage = new PageImpl<>(List.of(testApplication), pageable, 1);
 
-            when(applicationRepository.findByApplicantPassport("MP1234567", pageable))
-                .thenReturn(applicationPage);
-            when(applicationMapper.toDto(testApplication)).thenReturn(testApplicationDto);
+            when(applicationRepository.findByApplicantPassport("MP1234567", pageable)).thenReturn(applicationPage);
 
             Page<ApplicationDto> result = applicationService.getApplicationsByPassportPaginated("MP1234567", pageable);
 
             assertThat(result).isNotNull();
             assertThat(result.getContent()).hasSize(1);
-        }
-
-        @Test
-        void shouldReturnEmptyPageWhenNoResults() {
-            Pageable pageable = PageRequest.of(0, 10);
-            Page<Application> emptyPage = new PageImpl<>(Collections.emptyList(), pageable, 0);
-
-            when(applicationRepository.findByApplicantPassport("MP1234567", pageable))
-                .thenReturn(emptyPage);
-
-            Page<ApplicationDto> result = applicationService.getApplicationsByPassportPaginated("MP1234567", pageable);
-
-            assertThat(result.getContent()).isEmpty();
+            verify(applicationRepository).findByApplicantPassport("MP1234567", pageable);
         }
     }
 
     @Nested
-    @DisplayName("Native Query Tests")
-    class NativeQueryTests {
+    @DisplayName("Cache Invalidation Tests")
+    class CacheInvalidationTests {
+
         @Test
-        void shouldReturnApplicationsByStatusAndRegionNative() {
-            List<Application> applications = List.of(testApplication);
-            List<ApplicationDto> expectedDtos = List.of(testApplicationDto);
+        @DisplayName("Should invalidate entire cache")
+        void shouldInvalidateEntireCache() {
+            doNothing().when(cacheService).invalidate();
 
-            when(departmentRepository.existsByRegion("MINSK")).thenReturn(true);
-            when(applicationRepository.findByStatusAndDepartmentRegionNative("PENDING", "MINSK"))
-                .thenReturn(applications);
-            when(applicationMapper.toDtoList(applications)).thenReturn(expectedDtos);
+            applicationService.invalidateCache();
 
-            List<ApplicationDto> result = applicationService.getApplicationsByStatusAndRegionNative(
-                ApplicationStatus.PENDING, "MINSK");
-
-            assertThat(result).isEqualTo(expectedDtos);
+            verify(cacheService).invalidate();
         }
 
         @Test
-        void shouldThrowExceptionWhenRegionNotFoundNative() {
-            when(departmentRepository.existsByRegion("UNKNOWN")).thenReturn(false);
+        @DisplayName("Should invalidate cache by region")
+        void shouldInvalidateCacheByRegion() {
+            doNothing().when(cacheService).invalidateByRegion("MINSK");
 
-            assertThatThrownBy(() -> applicationService.getApplicationsByStatusAndRegionNative(
-                ApplicationStatus.PENDING, "UNKNOWN"))
-                .isInstanceOf(ResourceNotFoundException.class);
+            applicationService.invalidateCacheByRegion("MINSK");
+
+            verify(cacheService).invalidateByRegion("MINSK");
         }
 
         @Test
-        void shouldThrowExceptionWhenNoApplicationsNative() {
-            when(departmentRepository.existsByRegion("MINSK")).thenReturn(true);
-            when(applicationRepository.findByStatusAndDepartmentRegionNative("PENDING", "MINSK"))
-                .thenReturn(Collections.emptyList());
+        @DisplayName("Should invalidate cache by status")
+        void shouldInvalidateCacheByStatus() {
+            doNothing().when(cacheService).invalidateByStatus("PENDING");
 
-            assertThatThrownBy(() -> applicationService.getApplicationsByStatusAndRegionNative(
-                ApplicationStatus.PENDING, "MINSK"))
-                .isInstanceOf(ResourceNotFoundException.class);
+            applicationService.invalidateCacheByStatus("PENDING");
+
+            verify(cacheService).invalidateByStatus("PENDING");
         }
     }
 
     @Nested
-    @DisplayName("Create Application Tests")
+    @DisplayName("createApplication() Tests")
     class CreateApplicationTests {
-        @Test
-        void shouldCreateApplicationSuccessfully() {
-            AdditionalService service1 = AdditionalService.builder().id(1L).price(BigDecimal.valueOf(50)).build();
-            AdditionalService service2 = AdditionalService.builder().id(2L).price(BigDecimal.valueOf(30)).build();
 
+        @Test
+        @DisplayName("Should create application successfully")
+        void shouldCreateApplicationSuccessfully() {
             when(applicantRepository.findByPassportNumber("MP1234567")).thenReturn(Optional.of(testApplicant));
-            when(licensePlateRepository.findByPlateNumber("1234 AB-7")).thenReturn(Optional.of(testPlate));
-            when(serviceRepository.findAllById(anyList())).thenReturn(List.of(service1, service2));
+            when(licensePlateRepository.findByPlateNumber("1234 AB-7")).thenReturn(Optional.of(testLicensePlate));
+            when(serviceRepository.findAllById(List.of(1L))).thenReturn(List.of(testService));
             when(applicationRepository.save(any(Application.class))).thenReturn(testApplication);
             when(applicationMapper.toDto(testApplication)).thenReturn(testApplicationDto);
 
             ApplicationDto result = applicationService.createApplication(testCreateDto);
 
             assertThat(result).isEqualTo(testApplicationDto);
+            verify(applicationRepository).save(any(Application.class));
             verify(cacheService).invalidate();
         }
 
         @Test
-        void shouldCreateApplicationWithoutServices() {
-            ApplicationCreateDto dtoWithoutServices = ApplicationCreateDto.builder()
-                .passportNumber("MP1234567")
-                .plateNumber("1234 AB-7")
-                .serviceIds(null)
+        @DisplayName("Should throw exception when plate not available")
+        void shouldThrowExceptionWhenPlateNotAvailable() {
+            Application activeApplication = Application.builder()
+                .id(2L)
+                .status(ApplicationStatus.PENDING)
+                .licensePlate(testLicensePlate)
                 .build();
 
-            when(applicantRepository.findByPassportNumber("MP1234567")).thenReturn(Optional.of(testApplicant));
-            when(licensePlateRepository.findByPlateNumber("1234 AB-7")).thenReturn(Optional.of(testPlate));
-            when(applicationRepository.save(any(Application.class))).thenReturn(testApplication);
-            when(applicationMapper.toDto(testApplication)).thenReturn(testApplicationDto);
-
-            ApplicationDto result = applicationService.createApplication(dtoWithoutServices);
-
-            assertThat(result).isEqualTo(testApplicationDto);
-            verify(serviceRepository, never()).findAllById(any());
-        }
-    }
-
-    @Nested
-    @DisplayName("Create Application Without/With Transaction Tests")
-    class CreateApplicationTransactionTests {
-        @Test
-        void shouldCreateApplicationWithoutTransaction() {
-            ApplicationCreateDto dto = ApplicationCreateDto.builder()
-                .passportNumber("MP1234567")
-                .plateNumber("1234 AB-7")
-                .serviceIds(null)
-                .build();
+            testLicensePlate.setApplications(List.of(activeApplication));
 
             when(applicantRepository.findByPassportNumber("MP1234567")).thenReturn(Optional.of(testApplicant));
-            when(licensePlateRepository.findByPlateNumber("1234 AB-7")).thenReturn(Optional.of(testPlate));
-            when(licensePlateRepository.isPlateAvailable(1L)).thenReturn(true);
-            when(applicationRepository.save(any(Application.class))).thenReturn(testApplication);
-            when(applicationMapper.toDto(testApplication)).thenReturn(testApplicationDto);
+            when(licensePlateRepository.findByPlateNumber("1234 AB-7")).thenReturn(Optional.of(testLicensePlate));
 
-            ApplicationDto result = applicationService.createApplicationWithoutTransaction(dto);
+            assertThatThrownBy(() -> applicationService.createApplication(testCreateDto))
+                .isInstanceOf(IllegalStateException.class)
+                .hasMessageContaining("Номерной знак '1234 AB-7' недоступен");
 
-            assertThat(result).isEqualTo(testApplicationDto);
+            verify(applicationRepository, never()).save(any());
         }
 
         @Test
-        void shouldCreateApplicationWithTransaction() {
-            ApplicationCreateDto dto = ApplicationCreateDto.builder()
-                .passportNumber("MP1234567")
-                .plateNumber("1234 AB-7")
-                .serviceIds(null)
-                .build();
-
+        @DisplayName("Should throw exception when plate not found")
+        void shouldThrowExceptionWhenPlateNotFound() {
             when(applicantRepository.findByPassportNumber("MP1234567")).thenReturn(Optional.of(testApplicant));
-            when(licensePlateRepository.findByPlateNumber("1234 AB-7")).thenReturn(Optional.of(testPlate));
-            when(applicationRepository.save(any(Application.class))).thenReturn(testApplication);
-            when(applicationMapper.toDto(testApplication)).thenReturn(testApplicationDto);
+            when(licensePlateRepository.findByPlateNumber("1234 AB-7")).thenReturn(Optional.empty());
 
-            ApplicationDto result = applicationService.createApplicationWithTransaction(dto);
-
-            assertThat(result).isEqualTo(testApplicationDto);
-        }
-    }
-
-    @Nested
-    @DisplayName("Create Application Internal Tests")
-    class CreateApplicationInternalTests {
-        @Test
-        void shouldCreateWithExistingApplicant() {
-            ApplicationCreateDto dtoWithoutServices = ApplicationCreateDto.builder()
-                .passportNumber("MP1234567")
-                .plateNumber("1234 AB-7")
-                .serviceIds(null)
-                .build();
-
-            when(applicantRepository.findByPassportNumber("MP1234567")).thenReturn(Optional.of(testApplicant));
-            when(licensePlateRepository.findByPlateNumber("1234 AB-7")).thenReturn(Optional.of(testPlate));
-            when(applicationRepository.save(any(Application.class))).thenReturn(testApplication);
-            when(applicationMapper.toDto(testApplication)).thenReturn(testApplicationDto);
-
-            ApplicationDto result = applicationService.createApplication(dtoWithoutServices);
-
-            assertThat(result).isEqualTo(testApplicationDto);
-            verify(applicantRepository, never()).save(any());
+            assertThatThrownBy(() -> applicationService.createApplication(testCreateDto))
+                .isInstanceOf(ResourceNotFoundException.class)
+                .hasMessageContaining("Номерной знак '1234 AB-7' не найден");
         }
 
         @Test
-        void shouldCreateNewApplicantWhenNotExists() {
-            ApplicationCreateDto dto = ApplicationCreateDto.builder()
+        @DisplayName("Should throw exception when services not found")
+        void shouldThrowExceptionWhenServicesNotFound() {
+            when(applicantRepository.findByPassportNumber("MP1234567")).thenReturn(Optional.of(testApplicant));
+            when(licensePlateRepository.findByPlateNumber("1234 AB-7")).thenReturn(Optional.of(testLicensePlate));
+            when(serviceRepository.findAllById(List.of(1L))).thenReturn(Collections.emptyList());
+
+            assertThatThrownBy(() -> applicationService.createApplication(testCreateDto))
+                .isInstanceOf(BusinessException.class)
+                .hasMessageContaining("Некоторые услуги не найдены");
+
+            verify(applicationRepository, never()).save(any());
+        }
+
+        @Test
+        @DisplayName("Should create new applicant when not found - using createApplicationWithoutTransaction")
+        void shouldCreateNewApplicantWhenNotFound() {
+            // Используем createApplicationWithoutTransaction, который вызывает findOrCreateApplicant
+            ApplicationCreateDto newApplicantDto = ApplicationCreateDto.builder()
                 .passportNumber("NEW123")
                 .plateNumber("1234 AB-7")
-                .serviceIds(null)
                 .build();
 
             Applicant newApplicant = Applicant.builder()
@@ -522,170 +549,219 @@ class ApplicationServiceTest {
 
             when(applicantRepository.findByPassportNumber("NEW123")).thenReturn(Optional.empty());
             when(applicantRepository.save(any(Applicant.class))).thenReturn(newApplicant);
-            when(licensePlateRepository.findByPlateNumber("1234 AB-7")).thenReturn(Optional.of(testPlate));
-            when(licensePlateRepository.isPlateAvailable(1L)).thenReturn(true);
+            when(licensePlateRepository.findByPlateNumber("1234 AB-7")).thenReturn(Optional.of(testLicensePlate));
+            when(licensePlateRepository.isPlateAvailable(testLicensePlate.getId())).thenReturn(true);
             when(applicationRepository.save(any(Application.class))).thenReturn(testApplication);
             when(applicationMapper.toDto(testApplication)).thenReturn(testApplicationDto);
 
-            ApplicationDto result = applicationService.createApplicationWithoutTransaction(dto);
+            ApplicationDto result = applicationService.createApplicationWithoutTransaction(newApplicantDto);
 
             assertThat(result).isEqualTo(testApplicationDto);
             verify(applicantRepository).save(any(Applicant.class));
         }
 
         @Test
-        void shouldThrowExceptionWhenPlateNotAvailableWithTransactionalCheck() {
-            ApplicationCreateDto dtoWithoutServices = ApplicationCreateDto.builder()
-                .passportNumber("MP1234567")
-                .plateNumber("1234 AB-7")
-                .serviceIds(null)
-                .build();
-
-            Application activeApplication = Application.builder()
-                .status(ApplicationStatus.PENDING)
-                .submissionDate(LocalDateTime.now())
-                .reservedUntil(LocalDateTime.now().plusHours(1))
-                .build();
-            testPlate.getApplications().add(activeApplication);
+        @DisplayName("Should calculate total amount correctly with services")
+        void shouldCalculateTotalAmountCorrectlyWithServices() {
+            ArgumentCaptor<Application> applicationCaptor = ArgumentCaptor.forClass(Application.class);
 
             when(applicantRepository.findByPassportNumber("MP1234567")).thenReturn(Optional.of(testApplicant));
-            when(licensePlateRepository.findByPlateNumber("1234 AB-7")).thenReturn(Optional.of(testPlate));
+            when(licensePlateRepository.findByPlateNumber("1234 AB-7")).thenReturn(Optional.of
+                (testLicensePlate));
+            when(serviceRepository.findAllById(List.of(1L))).thenReturn(List.of(testService));
+            when(applicationRepository.save(applicationCaptor.capture())).thenReturn(testApplication);
+            when(applicationMapper.toDto(any(Application.class))).thenReturn(testApplicationDto);
 
-            assertThatThrownBy(() -> applicationService.createApplication(dtoWithoutServices))
-                .isInstanceOf(IllegalStateException.class)
-                .hasMessageContaining("недоступен");
+            applicationService.createApplication(testCreateDto);
+
+            Application savedApplication = applicationCaptor.getValue();
+            assertThat(savedApplication.getPaymentAmount())
+                .isEqualByComparingTo(BigDecimal.valueOf(1500));
         }
 
         @Test
-        void shouldThrowExceptionWhenPlateNotAvailableWithoutTransactionalCheck() {
-            ApplicationCreateDto dtoWithoutServices = ApplicationCreateDto.builder()
+        @DisplayName("Should calculate total amount correctly without services")
+        void shouldCalculateTotalAmountCorrectlyWithoutServices() {
+            ApplicationCreateDto createDtoWithoutServices = ApplicationCreateDto.builder()
                 .passportNumber("MP1234567")
                 .plateNumber("1234 AB-7")
-                .serviceIds(null)
+                .serviceIds(Collections.emptyList())
                 .build();
 
-            when(applicantRepository.findByPassportNumber("MP1234567")).thenReturn(Optional.of(testApplicant));
-            when(licensePlateRepository.findByPlateNumber("1234 AB-7")).thenReturn(Optional.of(testPlate));
-            when(licensePlateRepository.isPlateAvailable(1L)).thenReturn(false);
-
-            assertThatThrownBy(() -> applicationService.createApplicationWithoutTransaction(dtoWithoutServices))
-                .isInstanceOf(IllegalStateException.class)
-                .hasMessageContaining("недоступен");
-        }
-
-        @Test
-        void shouldThrowExceptionWhenServicesNotFoundWithTransactionalCheck() {
-            when(applicantRepository.findByPassportNumber("MP1234567")).thenReturn(Optional.of(testApplicant));
-            when(licensePlateRepository.findByPlateNumber("1234 AB-7")).thenReturn(Optional.of(testPlate));
-            when(serviceRepository.findAllById(anyList())).thenReturn(List.of(AdditionalService.builder().id(1L).build()));
-
-            assertThatThrownBy(() -> applicationService.createApplication(testCreateDto))
-                .isInstanceOf(BusinessException.class)
-                .hasMessageContaining("transaction will rollback");
-        }
-
-        @Test
-        void shouldThrowExceptionWhenServicesNotFoundWithoutTransactionalCheck() {
-            ApplicationCreateDto dto = ApplicationCreateDto.builder()
-                .passportNumber("MP1234567")
-                .plateNumber("1234 AB-7")
-                .serviceIds(List.of(1L, 2L))
-                .build();
+            ArgumentCaptor<Application> applicationCaptor = ArgumentCaptor.forClass(Application.class);
 
             when(applicantRepository.findByPassportNumber("MP1234567")).thenReturn(Optional.of(testApplicant));
-            when(licensePlateRepository.findByPlateNumber("1234 AB-7")).thenReturn(Optional.of(testPlate));
-            when(licensePlateRepository.isPlateAvailable(1L)).thenReturn(true);
-            when(serviceRepository.findAllById(anyList())).thenReturn(List.of(AdditionalService.builder().id(1L).build()));
+            when(licensePlateRepository.findByPlateNumber("1234 AB-7")).thenReturn(Optional.of(testLicensePlate));
+            when(applicationRepository.save(applicationCaptor.capture())).thenReturn(testApplication);
+            when(applicationMapper.toDto(any(Application.class))).thenReturn(testApplicationDto);
 
-            assertThatThrownBy(() -> applicationService.createApplicationWithoutTransaction(dto))
-                .isInstanceOf(BusinessException.class)
-                .hasMessageContaining("but application is already saved");
+            applicationService.createApplication(createDtoWithoutServices);
+
+            Application savedApplication = applicationCaptor.getValue();
+            assertThat(savedApplication.getPaymentAmount())
+                .isEqualByComparingTo(BigDecimal.valueOf(1000));
+
+            verify(serviceRepository, never()).findAllById(any());
         }
     }
 
     @Nested
-    @DisplayName("Confirm Application Tests")
-    class ConfirmApplicationTests {
+    @DisplayName("createApplicationWithoutTransaction() Tests")
+    class CreateApplicationWithoutTransactionTests {
+
         @Test
-        void shouldConfirmApplicationSuccessfully() {
+        @DisplayName("Should create application without transaction check")
+        void shouldCreateApplicationWithoutTransactionCheck() {
+            when(applicantRepository.findByPassportNumber("MP1234567")).thenReturn(Optional.of(testApplicant));
+            when(licensePlateRepository.findByPlateNumber("1234 AB-7")).thenReturn(Optional.of(testLicensePlate));
+            when(licensePlateRepository.isPlateAvailable(testLicensePlate.getId())).thenReturn(true);
+            when(serviceRepository.findAllById(List.of(1L))).thenReturn(List.of(testService));
+            when(applicationRepository.save(any(Application.class))).thenReturn(testApplication);
+            when(applicationMapper.toDto(testApplication)).thenReturn(testApplicationDto);
+
+            ApplicationDto result = applicationService.createApplicationWithoutTransaction(testCreateDto);
+
+            assertThat(result).isEqualTo(testApplicationDto);
+            verify(licensePlateRepository).isPlateAvailable(testLicensePlate.getId());
+        }
+
+        @Test
+        @DisplayName("Should throw exception when plate not available in without transaction")
+        void shouldThrowExceptionWhenPlateNotAvailableWithoutTransaction() {
+            when(applicantRepository.findByPassportNumber("MP1234567")).thenReturn(Optional.of(testApplicant));
+            when(licensePlateRepository.findByPlateNumber("1234 AB-7")).thenReturn(Optional.of(testLicensePlate));
+            when(licensePlateRepository.isPlateAvailable(testLicensePlate.getId())).thenReturn(false);
+
+            assertThatThrownBy(() -> applicationService.createApplicationWithoutTransaction(testCreateDto))
+                .isInstanceOf(IllegalStateException.class)
+                .hasMessageContaining("Номерной знак '1234 AB-7' недоступен");
+        }
+    }
+
+    @Nested
+    @DisplayName("createApplicationWithTransaction() Tests")
+    class CreateApplicationWithTransactionTests {
+
+        @Test
+        @DisplayName("Should create application with transaction check")
+        void shouldCreateApplicationWithTransactionCheck() {
+            when(applicantRepository.findByPassportNumber("MP1234567")).thenReturn(Optional.of(testApplicant));
+            when(licensePlateRepository.findByPlateNumber("1234 AB-7")).thenReturn(Optional.of(testLicensePlate));
+            when(serviceRepository.findAllById(List.of(1L))).thenReturn(List.of(testService));
+            when(applicationRepository.save(any(Application.class))).thenReturn(testApplication);
+            when(applicationMapper.toDto(testApplication)).thenReturn(testApplicationDto);
+
+            ApplicationDto result = applicationService.createApplicationWithTransaction(testCreateDto);
+
+            assertThat(result).isEqualTo(testApplicationDto);
+            verify(applicantRepository, never()).save(any());
+        }
+    }
+
+    @Nested
+    @DisplayName("confirmApplication() Tests")
+    class ConfirmApplicationTests {
+
+        @Test
+        @DisplayName("Should confirm application when status is PENDING and not expired")
+        void shouldConfirmApplicationWhenStatusPendingAndNotExpired() {
             testApplication.setStatus(ApplicationStatus.PENDING);
             testApplication.setReservedUntil(LocalDateTime.now().plusHours(1));
 
             when(applicationRepository.findById(1L)).thenReturn(Optional.of(testApplication));
-            when(applicationRepository.save(testApplication)).thenReturn(testApplication);
+            when(applicationRepository.save(any(Application.class))).thenReturn(testApplication);
             when(applicationMapper.toDto(testApplication)).thenReturn(testApplicationDto);
 
             ApplicationDto result = applicationService.confirmApplication(1L);
 
             assertThat(result).isEqualTo(testApplicationDto);
             assertThat(testApplication.getStatus()).isEqualTo(ApplicationStatus.CONFIRMED);
+            assertThat(testApplication.getConfirmationDate()).isNotNull();
             verify(cacheService).invalidate();
         }
 
         @Test
-        void shouldThrowExceptionWhenNotPending() {
+        @DisplayName("Should throw exception when status is not PENDING")
+        void shouldThrowExceptionWhenStatusIsNotPending() {
             testApplication.setStatus(ApplicationStatus.CONFIRMED);
 
             when(applicationRepository.findById(1L)).thenReturn(Optional.of(testApplication));
 
             assertThatThrownBy(() -> applicationService.confirmApplication(1L))
                 .isInstanceOf(BusinessException.class)
-                .hasMessageContaining("не в статусе PENDING");
+                .hasMessageContaining("Заявление не в статусе PENDING: CONFIRMED");
+
+            verify(applicationRepository, never()).save(any());
         }
 
         @Test
+        @DisplayName("Should throw exception when reservation expired")
         void shouldThrowExceptionWhenReservationExpired() {
             testApplication.setStatus(ApplicationStatus.PENDING);
             testApplication.setReservedUntil(LocalDateTime.now().minusHours(1));
 
             when(applicationRepository.findById(1L)).thenReturn(Optional.of(testApplication));
-            when(applicationRepository.save(testApplication)).thenReturn(testApplication);
+            when(applicationRepository.save(any(Application.class))).thenReturn(testApplication);
 
             assertThatThrownBy(() -> applicationService.confirmApplication(1L))
                 .isInstanceOf(BusinessException.class)
                 .hasMessageContaining("Время бронирования истекло");
+
+            assertThat(testApplication.getStatus()).isEqualTo(ApplicationStatus.EXPIRED);
+            verify(applicationRepository).save(testApplication);
         }
     }
 
     @Nested
-    @DisplayName("Complete Application Tests")
+    @DisplayName("completeApplication() Tests")
     class CompleteApplicationTests {
+
         @Test
-        void shouldCompleteApplicationSuccessfully() {
+        @DisplayName("Should complete application when status is CONFIRMED")
+        void shouldCompleteApplicationWhenStatusIsConfirmed() {
             testApplication.setStatus(ApplicationStatus.CONFIRMED);
 
             when(applicationRepository.findById(1L)).thenReturn(Optional.of(testApplication));
-            when(licensePlateRepository.save(testPlate)).thenReturn(testPlate);
-            when(applicationRepository.save(testApplication)).thenReturn(testApplication);
+            when(licensePlateRepository.save(any(LicensePlate.class))).thenReturn(testLicensePlate);
+            when(applicationRepository.save(any(Application.class))).thenReturn(testApplication);
             when(applicationMapper.toDto(testApplication)).thenReturn(testApplicationDto);
 
             ApplicationDto result = applicationService.completeApplication(1L);
 
             assertThat(result).isEqualTo(testApplicationDto);
             assertThat(testApplication.getStatus()).isEqualTo(ApplicationStatus.COMPLETED);
+            assertThat(testLicensePlate.getIssueDate()).isNotNull();
+            assertThat(testLicensePlate.getExpiryDate()).isNotNull();
+            verify(licensePlateRepository).save(testLicensePlate);
             verify(cacheService).invalidate();
         }
 
         @Test
-        void shouldThrowExceptionWhenNotConfirmed() {
+        @DisplayName("Should throw exception when status is not CONFIRMED")
+        void shouldThrowExceptionWhenStatusIsNotConfirmed() {
             testApplication.setStatus(ApplicationStatus.PENDING);
 
             when(applicationRepository.findById(1L)).thenReturn(Optional.of(testApplication));
 
             assertThatThrownBy(() -> applicationService.completeApplication(1L))
-                .isInstanceOf(BusinessException.class);
+                .isInstanceOf(BusinessException.class)
+                .hasMessageContaining("Application is not in CONFIRMED status");
+
+            verify(licensePlateRepository, never()).save(any());
         }
     }
 
     @Nested
-    @DisplayName("Cancel Application Tests")
+    @DisplayName("cancelApplication() Tests")
     class CancelApplicationTests {
+
         @Test
-        void shouldCancelApplicationSuccessfully() {
+        @DisplayName("Should cancel application when status is PENDING")
+        void shouldCancelApplicationWhenStatusIsPending() {
             testApplication.setStatus(ApplicationStatus.PENDING);
 
             when(applicationRepository.findById(1L)).thenReturn(Optional.of(testApplication));
-            when(applicationRepository.save(testApplication)).thenReturn(testApplication);
+            when(applicationRepository.save(any(Application.class))).thenReturn(testApplication);
             when(applicationMapper.toDto(testApplication)).thenReturn(testApplicationDto);
 
             ApplicationDto result = applicationService.cancelApplication(1L);
@@ -696,31 +772,54 @@ class ApplicationServiceTest {
         }
 
         @Test
-        void shouldThrowExceptionWhenAlreadyCompleted() {
+        @DisplayName("Should cancel application when status is CONFIRMED")
+        void shouldCancelApplicationWhenStatusIsConfirmed() {
+            testApplication.setStatus(ApplicationStatus.CONFIRMED);
+
+            when(applicationRepository.findById(1L)).thenReturn(Optional.of(testApplication));
+            when(applicationRepository.save(any(Application.class))).thenReturn(testApplication);
+            when(applicationMapper.toDto(testApplication)).thenReturn(testApplicationDto);
+
+            ApplicationDto result = applicationService.cancelApplication(1L);
+
+            assertThat(result).isEqualTo(testApplicationDto);
+            assertThat(testApplication.getStatus()).isEqualTo(ApplicationStatus.CANCELLED);
+        }
+
+        @Test
+        @DisplayName("Should throw exception when status is COMPLETED")
+        void shouldThrowExceptionWhenStatusIsCompleted() {
             testApplication.setStatus(ApplicationStatus.COMPLETED);
 
             when(applicationRepository.findById(1L)).thenReturn(Optional.of(testApplication));
 
             assertThatThrownBy(() -> applicationService.cancelApplication(1L))
-                .isInstanceOf(BusinessException.class);
+                .isInstanceOf(BusinessException.class)
+                .hasMessageContaining("Нельзя отменить заявление в статусе: COMPLETED");
+
+            verify(applicationRepository, never()).save(any());
         }
 
         @Test
-        void shouldThrowExceptionWhenAlreadyCancelled() {
+        @DisplayName("Should throw exception when status is CANCELLED")
+        void shouldThrowExceptionWhenStatusIsCancelled() {
             testApplication.setStatus(ApplicationStatus.CANCELLED);
 
             when(applicationRepository.findById(1L)).thenReturn(Optional.of(testApplication));
 
             assertThatThrownBy(() -> applicationService.cancelApplication(1L))
-                .isInstanceOf(BusinessException.class);
+                .isInstanceOf(BusinessException.class)
+                .hasMessageContaining("Нельзя отменить заявление в статусе: CANCELLED");
         }
     }
 
     @Nested
-    @DisplayName("Delete Application Tests")
+    @DisplayName("deleteApplication() Tests")
     class DeleteApplicationTests {
+
         @Test
-        void shouldDeleteApplicationSuccessfully() {
+        @DisplayName("Should delete application when exists")
+        void shouldDeleteApplicationWhenExists() {
             when(applicationRepository.findById(1L)).thenReturn(Optional.of(testApplication));
             doNothing().when(applicationRepository).delete(testApplication);
 
@@ -731,366 +830,100 @@ class ApplicationServiceTest {
         }
 
         @Test
-        void shouldThrowNotFoundExceptionWhenIdNotFound() {
-            when(applicationRepository.findById(999L)).thenReturn(Optional.empty());
+        @DisplayName("Should throw exception when application does not exist")
+        void shouldThrowExceptionWhenApplicationDoesNotExist() {
+            when(applicationRepository.findById(99L)).thenReturn(Optional.empty());
 
-            assertThatThrownBy(() -> applicationService.deleteApplication(999L))
-                .isInstanceOf(ResourceNotFoundException.class);
+            assertThatThrownBy(() -> applicationService.deleteApplication(99L))
+                .isInstanceOf(ResourceNotFoundException.class)
+                .hasMessageContaining("Заявление не найдено с id: 99");
+
+            verify(applicationRepository, never()).delete(any());
         }
     }
 
     @Nested
-    @DisplayName("Bulk Operations Tests")
-    class BulkOperationsTests {
-        @Test
-        void shouldCreateBulkApplicationsWithTransactionSuccessfully() {
-            ApplicationCreateDto app1 = ApplicationCreateDto.builder()
-                .passportNumber("MP1234567")
-                .plateNumber("1234 AB-7")
-                .serviceIds(null)
-                .build();
-            ApplicationCreateDto app2 = ApplicationCreateDto.builder()
-                .passportNumber("MP1234567")
-                .plateNumber("5678 CD-9")
-                .serviceIds(null)
-                .build();
+    @DisplayName("createBulkApplications() Tests")
+    class CreateBulkApplicationsTests {
 
+        @Test
+        @DisplayName("Should create all applications with transaction")
+        void shouldCreateAllApplicationsWithTransaction() {
             BulkApplicationCreateDto bulkDto = BulkApplicationCreateDto.builder()
                 .passportNumber("MP1234567")
-                .applications(List.of(app1, app2))
-                .build();
-
-            LicensePlate plate2 = LicensePlate.builder()
-                .id(2L)
-                .plateNumber("5678 CD-9")
-                .price(BigDecimal.valueOf(150))
-                .department(testDept)
-                .applications(new ArrayList<>())
+                .applications(List.of(testCreateDto))
                 .build();
 
             when(applicantRepository.findByPassportNumber("MP1234567")).thenReturn(Optional.of(testApplicant));
-            when(licensePlateRepository.findByPlateNumber("1234 AB-7")).thenReturn(Optional.of(testPlate));
-            when(licensePlateRepository.findByPlateNumber("5678 CD-9")).thenReturn(Optional.of(plate2));
+            when(licensePlateRepository.findByPlateNumber("1234 AB-7")).thenReturn(Optional.of(testLicensePlate));
+            when(serviceRepository.findAllById(List.of(1L))).thenReturn(List.of(testService));
             when(applicationRepository.save(any(Application.class))).thenReturn(testApplication);
-            when(applicationMapper.toDto(any(Application.class))).thenReturn(testApplicationDto);
+            when(applicationMapper.toDto(testApplication)).thenReturn(testApplicationDto);
 
             BulkApplicationResult result = applicationService.createBulkApplicationsWithTransaction(bulkDto);
 
-            assertThat(result.getTotalRequested()).isEqualTo(2);
-            assertThat(result.getSuccessful()).isEqualTo(2);
+            assertThat(result.getTotalRequested()).isEqualTo(1);
+            assertThat(result.getSuccessful()).isEqualTo(1);
+            assertThat(result.getFailed()).isZero();
+            assertThat(result.getSuccessfulApplications()).hasSize(1);
+            assertThat(result.getErrors()).isEmpty();
         }
 
         @Test
-        void shouldThrowExceptionInBulkWithTransactionWhenOneFails() {
-            ApplicationCreateDto app1 = ApplicationCreateDto.builder()
-                .passportNumber("MP1234567")
-                .plateNumber("1234 AB-7")
-                .serviceIds(null)
-                .build();
-            ApplicationCreateDto app2 = ApplicationCreateDto.builder()
-                .passportNumber("MP1234567")
-                .plateNumber("NOT_EXIST")
-                .serviceIds(null)
-                .build();
-
+        @DisplayName("Should throw exception when duplicate plates in bulk request")
+        void shouldThrowExceptionWhenDuplicatePlatesInBulkRequest() {
             BulkApplicationCreateDto bulkDto = BulkApplicationCreateDto.builder()
                 .passportNumber("MP1234567")
-                .applications(List.of(app1, app2))
+                .applications(List.of(testCreateDto, testCreateDto))
                 .build();
-
-            when(applicantRepository.findByPassportNumber("MP1234567")).thenReturn(Optional.of(testApplicant));
-            when(licensePlateRepository.findByPlateNumber("1234 AB-7")).thenReturn(Optional.of(testPlate));
-            when(licensePlateRepository.findByPlateNumber("NOT_EXIST")).thenReturn(Optional.empty());
-            when(applicationRepository.save(any(Application.class))).thenReturn(testApplication);
-            when(applicationMapper.toDto(any(Application.class))).thenReturn(testApplicationDto);
 
             assertThatThrownBy(() -> applicationService.createBulkApplicationsWithTransaction(bulkDto))
                 .isInstanceOf(BusinessException.class)
-                .hasMessageContaining("Bulk application failed");
+                .hasMessageContaining("Duplicate plate numbers in bulk request");
         }
 
         @Test
-        void shouldCreateBulkApplicationsWithoutTransactionPartialSuccess() {
-            ApplicationCreateDto app1 = ApplicationCreateDto.builder()
+        @DisplayName("Should create partial applications without transaction")
+        void shouldCreatePartialApplicationsWithoutTransaction() {
+            ApplicationCreateDto failingCreateDto = ApplicationCreateDto.builder()
                 .passportNumber("MP1234567")
-                .plateNumber("1234 AB-7")
-                .serviceIds(null)
-                .build();
-            ApplicationCreateDto app2 = ApplicationCreateDto.builder()
-                .passportNumber("MP1234567")
-                .plateNumber("NOT_EXIST")
-                .serviceIds(null)
+                .plateNumber("INVALID")
                 .build();
 
             BulkApplicationCreateDto bulkDto = BulkApplicationCreateDto.builder()
                 .passportNumber("MP1234567")
-                .applications(List.of(app1, app2))
+                .applications(List.of(testCreateDto, failingCreateDto))
                 .build();
 
             when(applicantRepository.findByPassportNumber("MP1234567")).thenReturn(Optional.of(testApplicant));
-            when(licensePlateRepository.findByPlateNumber("1234 AB-7")).thenReturn(Optional.of(testPlate));
-            when(licensePlateRepository.findByPlateNumber("NOT_EXIST")).thenReturn(Optional.empty());
+            when(licensePlateRepository.findByPlateNumber("1234 AB-7")).thenReturn(Optional.of(testLicensePlate));
+            when(licensePlateRepository.findByPlateNumber("INVALID")).thenReturn(Optional.empty());
+            when(serviceRepository.findAllById(List.of(1L))).thenReturn(List.of(testService));
             when(applicationRepository.save(any(Application.class))).thenReturn(testApplication);
-            when(applicationMapper.toDto(any(Application.class))).thenReturn(testApplicationDto);
+            when(applicationMapper.toDto(testApplication)).thenReturn(testApplicationDto);
 
             BulkApplicationResult result = applicationService.createBulkApplicationsWithoutTransaction(bulkDto);
 
             assertThat(result.getTotalRequested()).isEqualTo(2);
             assertThat(result.getSuccessful()).isEqualTo(1);
             assertThat(result.getFailed()).isEqualTo(1);
+            assertThat(result.getSuccessfulApplications()).hasSize(1);
+            assertThat(result.getErrors()).hasSize(1);
         }
 
         @Test
-        void shouldThrowExceptionWhenDuplicatePlateNumbers() {
-            ApplicationCreateDto app1 = ApplicationCreateDto.builder()
-                .passportNumber("MP1234567")
-                .plateNumber("1234 AB-7")
-                .build();
-            ApplicationCreateDto app2 = ApplicationCreateDto.builder()
-                .passportNumber("MP1234567")
-                .plateNumber("1234 AB-7")
-                .build();
-
-            BulkApplicationCreateDto bulkDto = BulkApplicationCreateDto.builder()
-                .passportNumber("MP1234567")
-                .applications(List.of(app1, app2))
-                .build();
-
-            assertThatThrownBy(() -> applicationService.createBulkApplicationsWithTransaction(bulkDto))
-                .isInstanceOf(BusinessException.class)
-                .hasMessageContaining("Duplicate plate numbers");
-        }
-
-        @Test
-        void shouldThrowExceptionWhenPlateNotAvailableInBulk() {
-            ApplicationCreateDto app1 = ApplicationCreateDto.builder()
-                .passportNumber("MP1234567")
-                .plateNumber("1234 AB-7")
-                .serviceIds(null)
-                .build();
-
-            BulkApplicationCreateDto bulkDto = BulkApplicationCreateDto.builder()
-                .passportNumber("MP1234567")
-                .applications(List.of(app1))
-                .build();
-
-            Application activeApplication = Application.builder()
-                .status(ApplicationStatus.PENDING)
-                .submissionDate(LocalDateTime.now())
-                .reservedUntil(LocalDateTime.now().plusHours(1))
-                .build();
-            testPlate.getApplications().add(activeApplication);
-
-            when(applicantRepository.findByPassportNumber("MP1234567")).thenReturn(Optional.of(testApplicant));
-            when(licensePlateRepository.findByPlateNumber("1234 AB-7")).thenReturn(Optional.of(testPlate));
-
-            assertThatThrownBy(() -> applicationService.createBulkApplicationsWithTransaction(bulkDto))
-                .isInstanceOf(BusinessException.class)
-                .hasMessageContaining("недоступен");
-        }
-
-        @Test
+        @DisplayName("Should throw exception when applicant not found in bulk")
         void shouldThrowExceptionWhenApplicantNotFoundInBulk() {
-            ApplicationCreateDto app1 = ApplicationCreateDto.builder()
-                .passportNumber("NOT_EXIST")
-                .plateNumber("1234 AB-7")
-                .serviceIds(null)
-                .build();
-
             BulkApplicationCreateDto bulkDto = BulkApplicationCreateDto.builder()
-                .passportNumber("NOT_EXIST")
-                .applications(List.of(app1))
+                .passportNumber("INVALID")
+                .applications(List.of(testCreateDto))
                 .build();
 
-            when(applicantRepository.findByPassportNumber("NOT_EXIST")).thenReturn(Optional.empty());
+            when(applicantRepository.findByPassportNumber("INVALID")).thenReturn(Optional.empty());
 
             assertThatThrownBy(() -> applicationService.createBulkApplicationsWithTransaction(bulkDto))
                 .isInstanceOf(ResourceNotFoundException.class)
-                .hasMessageContaining("Заявитель с паспортом 'NOT_EXIST' не найден");
+                .hasMessageContaining("Заявитель с паспортом 'INVALID' не найден");
         }
-    }
-
-    @Nested
-    @DisplayName("Cache Management Tests")
-    class CacheManagementTests {
-        @Test
-        void shouldInvalidateEntireCache() {
-            applicationService.invalidateCache();
-            verify(cacheService).invalidate();
-        }
-
-        @Test
-        void shouldInvalidateCacheByRegion() {
-            applicationService.invalidateCacheByRegion("MINSK");
-            verify(cacheService).invalidateByRegion("MINSK");
-        }
-
-        @Test
-        void shouldInvalidateCacheByStatus() {
-            applicationService.invalidateCacheByStatus("PENDING");
-            verify(cacheService).invalidateByStatus("PENDING");
-        }
-    }
-
-    @Nested
-    @DisplayName("Expire Application Test")
-    class ExpireApplicationTest {
-        @Test
-        void shouldExpireApplicationWhenReservationExpired() {
-            testApplication.setStatus(ApplicationStatus.PENDING);
-            testApplication.setReservedUntil(LocalDateTime.now().minusHours(1));
-
-            when(applicationRepository.findById(1L)).thenReturn(Optional.of(testApplication));
-            when(applicationRepository.save(testApplication)).thenReturn(testApplication);
-
-            assertThatThrownBy(() -> applicationService.confirmApplication(1L))
-                .isInstanceOf(BusinessException.class)
-                .hasMessageContaining("Время бронирования истекло");
-
-            assertThat(testApplication.getStatus()).isEqualTo(ApplicationStatus.EXPIRED);
-        }
-    }
-
-    @Nested
-    @DisplayName("Calculate Total Amount Tests")
-    class CalculateTotalAmountTests {
-        @Test
-        void shouldCalculateTotalAmountWithServices() {
-            AdditionalService service1 = AdditionalService.builder().id(1L).price(BigDecimal.valueOf(50)).build();
-            AdditionalService service2 = AdditionalService.builder().id(2L).price(BigDecimal.valueOf(30)).build();
-
-            ArgumentCaptor<Application> applicationCaptor = ArgumentCaptor.forClass(Application.class);
-
-            when(applicantRepository.findByPassportNumber("MP1234567")).thenReturn(Optional.of(testApplicant));
-            when(licensePlateRepository.findByPlateNumber("1234 AB-7")).thenReturn(Optional.of(testPlate));
-            when(serviceRepository.findAllById(anyList())).thenReturn(List.of(service1, service2));
-            when(applicationRepository.save(applicationCaptor.capture())).thenReturn(testApplication);
-            when(applicationMapper.toDto(any(Application.class))).thenReturn(testApplicationDto);
-
-            applicationService.createApplication(testCreateDto);
-
-            Application savedApplication = applicationCaptor.getValue();
-            assertThat(savedApplication.getPaymentAmount()).isEqualTo(BigDecimal.valueOf(180));
-        }
-
-        @Test
-        void shouldCalculateTotalAmountWithoutServices() {
-            ApplicationCreateDto dtoWithoutServices = ApplicationCreateDto.builder()
-                .passportNumber("MP1234567")
-                .plateNumber("1234 AB-7")
-                .serviceIds(null)
-                .build();
-
-            ArgumentCaptor<Application> applicationCaptor = ArgumentCaptor.forClass(Application.class);
-
-            when(applicantRepository.findByPassportNumber("MP1234567")).thenReturn(Optional.of(testApplicant));
-            when(licensePlateRepository.findByPlateNumber("1234 AB-7")).thenReturn(Optional.of(testPlate));
-            when(applicationRepository.save(applicationCaptor.capture())).thenReturn(testApplication);
-            when(applicationMapper.toDto(any(Application.class))).thenReturn(testApplicationDto);
-
-            applicationService.createApplication(dtoWithoutServices);
-
-            Application savedApplication = applicationCaptor.getValue();
-            assertThat(savedApplication.getPaymentAmount()).isEqualTo(BigDecimal.valueOf(100));
-
-            verify(serviceRepository, never()).findAllById(any());
-        }
-    }
-
-    @Nested
-    @DisplayName("Find Or Create Applicant Tests")
-    class FindOrCreateApplicantTests {
-        @Test
-        void shouldFindExistingApplicant() {
-            ApplicationCreateDto dtoWithoutServices = ApplicationCreateDto.builder()
-                .passportNumber("MP1234567")
-                .plateNumber("1234 AB-7")
-                .serviceIds(null)
-                .build();
-
-            when(applicantRepository.findByPassportNumber("MP1234567")).thenReturn(Optional.of(testApplicant));
-            when(licensePlateRepository.findByPlateNumber("1234 AB-7")).thenReturn(Optional.of(testPlate));
-            when(applicationRepository.save(any(Application.class))).thenReturn(testApplication);
-            when(applicationMapper.toDto(testApplication)).thenReturn(testApplicationDto);
-
-            ApplicationDto result = applicationService.createApplication(dtoWithoutServices);
-
-            assertThat(result).isEqualTo(testApplicationDto);
-            verify(applicantRepository, never()).save(any());
-        }
-
-        @Test
-        void shouldCreateNewApplicantWhenNotFound() {
-            ApplicationCreateDto dto = ApplicationCreateDto.builder()
-                .passportNumber("NEW123")
-                .plateNumber("1234 AB-7")
-                .serviceIds(null)
-                .build();
-
-            Applicant newApplicant = Applicant.builder()
-                .id(2L)
-                .fullName("UNKNOWN")
-                .passportNumber("NEW123")
-                .build();
-
-            when(applicantRepository.findByPassportNumber("NEW123")).thenReturn(Optional.empty());
-            when(applicantRepository.save(any(Applicant.class))).thenReturn(newApplicant);
-            when(licensePlateRepository.findByPlateNumber("1234 AB-7")).thenReturn(Optional.of(testPlate));
-            when(licensePlateRepository.isPlateAvailable(1L)).thenReturn(true);
-            when(applicationRepository.save(any(Application.class))).thenReturn(testApplication);
-            when(applicationMapper.toDto(testApplication)).thenReturn(testApplicationDto);
-
-            ApplicationDto result = applicationService.createApplicationWithoutTransaction(dto);
-
-            assertThat(result).isEqualTo(testApplicationDto);
-            verify(applicantRepository).save(any(Applicant.class));
-        }
-    }
-
-    @Nested
-    @DisplayName("Find Methods Exception Tests")
-    class FindMethodsExceptionTests {
-        @Test
-        void shouldThrowExceptionWhenPlateNotFound() {
-            ApplicationCreateDto dto = ApplicationCreateDto.builder()
-                .passportNumber("MP1234567")
-                .plateNumber("NOT_EXIST")
-                .build();
-
-            when(applicantRepository.findByPassportNumber("MP1234567")).thenReturn(Optional.of(testApplicant));
-            when(licensePlateRepository.findByPlateNumber("NOT_EXIST")).thenReturn(Optional.empty());
-
-            assertThatThrownBy(() -> applicationService.createApplication(dto))
-                .isInstanceOf(ResourceNotFoundException.class)
-                .hasMessageContaining("не найден");
-        }
-
-        @Test
-        void shouldThrowExceptionWhenApplicantNotFound() {
-            ApplicationCreateDto dto = ApplicationCreateDto.builder()
-                .passportNumber("NOT_EXIST")
-                .plateNumber("1234 AB-7")
-                .build();
-
-            when(applicantRepository.findByPassportNumber("NOT_EXIST")).thenReturn(Optional.empty());
-
-            assertThatThrownBy(() -> applicationService.createApplication(dto))
-                .isInstanceOf(ResourceNotFoundException.class)
-                .hasMessageContaining("не найден");
-        }
-    }
-
-    @ParameterizedTest
-    @DisplayName("Cover pagination with empty page")
-    @CsvSource({"0", "1"})
-    void coverPaginationWithEmptyPage(int pageNumber) {
-        Pageable pageable = PageRequest.of(pageNumber, 10);
-        Page<Application> emptyPage = new PageImpl<>(Collections.emptyList(), pageable, 0);
-
-        when(applicationRepository.findByApplicantPassport("MP1234567", pageable))
-            .thenReturn(emptyPage);
-
-        Page<ApplicationDto> result = applicationService.getApplicationsByPassportPaginated("MP1234567", pageable);
-        assertThat(result.getContent()).isEmpty();
     }
 }
