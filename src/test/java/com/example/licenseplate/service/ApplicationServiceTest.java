@@ -34,6 +34,7 @@ import org.springframework.data.domain.Page;
 import org.springframework.data.domain.PageImpl;
 import org.springframework.data.domain.PageRequest;
 import org.springframework.data.domain.Pageable;
+
 import static org.mockito.Mockito.times;
 import static org.mockito.Mockito.verify;
 
@@ -1633,6 +1634,93 @@ class ApplicationServiceTest {
 
 
             verify(applicationRepository, atLeast(2)).save(any(Application.class));
+        }
+        @Test
+        void createApplication_WithServices_ShouldCoverServicesLogic() {
+            // Подготовка данных
+            ApplicationCreateDto dto = new ApplicationCreateDto();
+            dto.setPlateNumber("A111AA77");
+            dto.setPassportNumber("123456");
+            dto.setServiceIds(List.of(1L, 2L));
+
+            Applicant applicant = new Applicant();
+            LicensePlate plate = new LicensePlate();
+            plate.setPrice(BigDecimal.valueOf(1000));
+
+            AdditionalService service = new AdditionalService();
+            service.setPrice(BigDecimal.valueOf(500));
+            List<AdditionalService> services = List.of(service);
+
+            // Настройка моков
+            when(applicantRepository.findByPassportNumber(anyString())).thenReturn(Optional.of(applicant));
+            when(licensePlateRepository.findByPlateNumber(anyString())).thenReturn(Optional.of(plate));
+            when(serviceRepository.findAllById(dto.getServiceIds())).thenReturn(services); // Возвращаем услуги
+
+            Application savedApp = new Application();
+            when(applicationRepository.save(any(Application.class))).thenReturn(savedApp);
+            when(applicationMapper.toDto(any())).thenReturn(new ApplicationDto());
+
+            // Выполнение
+            applicationService.createApplication(dto);
+
+
+            verify(applicationRepository, times(2)).save(any());
+        }
+        @Test
+        @DisplayName("Должен покрыть логику доп. услуг в одиночном создании")
+        void createApplication_WithServices_ShouldCoverServicesLogic1() {
+            // 1. Подготовка DTO с услугами (Покрывает: if (createDto.getServiceIds() != null...))
+            testCreateDto.setServiceIds(List.of(1L, 2L));
+
+            Applicant applicant = new Applicant();
+            LicensePlate plate = new LicensePlate();
+
+            AdditionalService service1 = new AdditionalService();
+            service1.setId(1L);
+            AdditionalService service2 = new AdditionalService();
+            service2.setId(2L);
+            List<AdditionalService> services = List.of(service1, service2);
+
+            when(applicantRepository.findByPassportNumber(anyString())).thenReturn(Optional.of(applicant));
+            when(licensePlateRepository.findByPlateNumber(anyString())).thenReturn(Optional.of(plate));
+            when(serviceRepository.findAllById(testCreateDto.getServiceIds())).thenReturn(services);
+
+            when(applicationRepository.save(any(Application.class))).thenReturn(testApplication);
+            when(applicationMapper.toDto(any())).thenReturn(testApplicationDto);
+
+            applicationService.createApplication(testCreateDto);
+
+            verify(applicationRepository, atLeastOnce()).save(any(Application.class));
+            verify(serviceRepository).findAllById(anyList());
+        }
+
+        @Test
+        @DisplayName("Должен покрыть логику успешного пакетного создания и инвалидацию кэша")
+        void createBulkApplications_Success_ShouldCoverCacheInvalidation() {
+            // Подготовка данных для Bulk
+            ApplicationCreateDto item = new ApplicationCreateDto();
+            item.setPlateNumber("1234 AB-7");
+            item.setServiceIds(List.of(1L));
+
+            BulkApplicationCreateDto bulkDto = new BulkApplicationCreateDto();
+            bulkDto.setPassportNumber("MP1234567");
+            bulkDto.setApplications(List.of(item));
+
+            Applicant applicant = new Applicant();
+            LicensePlate plate = new LicensePlate();
+
+            when(applicantRepository.findByPassportNumber(anyString())).thenReturn(Optional.of(applicant));
+            when(licensePlateRepository.findByPlateNumber(anyString())).thenReturn(Optional.of(plate));
+            when(serviceRepository.findAllById(anyList())).thenReturn(List.of(new AdditionalService()));
+            when(applicationRepository.save(any(Application.class))).thenReturn(testApplication);
+            when(applicationMapper.toDto(any())).thenReturn(testApplicationDto);
+
+            BulkApplicationResult result = applicationService.createBulkApplicationsWithoutTransaction(bulkDto);
+
+
+            org.assertj.core.api.Assertions.assertThat(result.getSuccessful()).isGreaterThan(0);
+
+            verify(cacheService, times(1)).invalidate();
         }
     }
 }
