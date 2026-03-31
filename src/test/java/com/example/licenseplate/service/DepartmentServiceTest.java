@@ -349,7 +349,7 @@ class DepartmentServiceTest {
             departmentService.demonstrateNPlusOneProblem("MINSK");
 
             verify(departmentRepository).findByRegionIgnoreCase("MINSK");
-            // Проверяем что метод вызвал getLicensePlates().size()
+
             assertThat(testDept.getLicensePlates()).isEmpty();
         }
 

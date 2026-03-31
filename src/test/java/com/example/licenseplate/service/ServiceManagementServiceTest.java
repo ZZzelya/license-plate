@@ -252,7 +252,7 @@ class ServiceManagementServiceTest {
 
             assertThat(result).isEqualTo(testServiceDto);
             verify(serviceRepository).findById(1L);
-            // Убираем проверку existsByName, так как он НЕ вызывается когда имя не меняется
+
             verify(serviceRepository, never()).existsByName(anyString());
             verify(serviceMapper).updateEntity(testService, testCreateDto);
             verify(serviceRepository).save(testService);

@@ -317,7 +317,7 @@ class ApplicantServiceTest {
             testApplicant.getApplications().add(pendingApp);
 
             when(applicantRepository.findById(1L)).thenReturn(Optional.of(testApplicant));
-            // Мокаем existsByPassportNumber чтобы он вернул false (паспорт свободен)
+
             when(applicantRepository.existsByPassportNumber("MP7654321")).thenReturn(false);
 
             assertThatThrownBy(() -> applicantService.changePassport(1L, "MP7654321"))

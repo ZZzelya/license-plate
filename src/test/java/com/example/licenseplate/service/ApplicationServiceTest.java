@@ -922,7 +922,7 @@ class ApplicationServiceTest {
             ApplicationCreateDto dto = ApplicationCreateDto.builder()
                 .passportNumber("MP1234567")
                 .plateNumber("1234 AB-7")
-                .serviceIds(List.of(1L, 2L))  // с сервисами
+                .serviceIds(List.of(1L, 2L))
                 .build();
 
             when(applicantRepository.findByPassportNumber("MP1234567")).thenReturn(Optional.of(testApplicant));
@@ -2009,7 +2009,6 @@ class ApplicationServiceTest {
                     app.setId(1L);
 
                     if (app.getAdditionalServices() != null && !app.getAdditionalServices().isEmpty()) {
-                        // Это второй save, возвращаем как есть
                         return app;
                     }
 
