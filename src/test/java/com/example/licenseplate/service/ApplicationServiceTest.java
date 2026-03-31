@@ -24,7 +24,6 @@ import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Nested;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
-import org.mockito.ArgumentCaptor;
 import org.mockito.InjectMocks;
 import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
@@ -830,58 +829,11 @@ class ApplicationServiceTest {
         }
     }
     @Nested
-    @DisplayName("FINAL - 100% Coverage for Line 389-390")
-    class FinalCoverageLine389_390 {
+    @DisplayName("100% Coverage for All 4 Conditions")
+    class CompleteCoverageAllConditions {
 
         @Test
-        void forceCoverViaReflection() throws Exception {
-            java.lang.reflect.Method saveApplicationMethod = ApplicationService.class
-                .getDeclaredMethod("saveApplication",
-                    Applicant.class,
-                    LicensePlate.class,
-                    ApplicationCreateDto.class,
-                    List.class);
-            saveApplicationMethod.setAccessible(true);
-
-            AdditionalService service1 = new AdditionalService();
-            service1.setId(1L);
-            service1.setPrice(BigDecimal.valueOf(50));
-
-            AdditionalService service2 = new AdditionalService();
-            service2.setId(2L);
-            service2.setPrice(BigDecimal.valueOf(30));
-
-            List<AdditionalService> services = List.of(service1, service2);
-
-            ApplicationCreateDto dto = ApplicationCreateDto.builder()
-                .passportNumber("MP1234567")
-                .plateNumber("1234 AB-7")
-                .build();
-
-            Application savedApp = new Application();
-            savedApp.setId(1L);
-            savedApp.setStatus(ApplicationStatus.PENDING);
-
-            when(applicationRepository.save(any(Application.class)))
-                .thenReturn(savedApp)
-                .thenReturn(savedApp);
-
-            when(applicationMapper.toDto(any(Application.class))).thenReturn(testApplicationDto);
-
-            ApplicationDto result = (ApplicationDto) saveApplicationMethod.invoke(
-                applicationService,
-                testApplicant,
-                testPlate,
-                dto,
-                services
-            );
-
-            verify(applicationRepository, times(2)).save(any(Application.class));
-            assertThat(result).isEqualTo(testApplicationDto);
-        }
-
-        @Test
-        void coversAllThreeBranchesViaReflection() throws Exception {
+        void coverAllServiceConditions() throws Exception {
             java.lang.reflect.Method saveApplicationMethod = ApplicationService.class
                 .getDeclaredMethod("saveApplication",
                     Applicant.class,
@@ -898,24 +850,11 @@ class ApplicationServiceTest {
             when(applicationRepository.save(any(Application.class))).thenReturn(testApplication);
             when(applicationMapper.toDto(any())).thenReturn(testApplicationDto);
 
-            saveApplicationMethod.invoke(
-                applicationService,
-                testApplicant,
-                testPlate,
-                dto,
-                null
-            );
+            saveApplicationMethod.invoke(applicationService, testApplicant, testPlate, dto, null);
             verify(applicationRepository, times(1)).save(any(Application.class));
 
             List<AdditionalService> emptyServices = Collections.emptyList();
-
-            saveApplicationMethod.invoke(
-                applicationService,
-                testApplicant,
-                testPlate,
-                dto,
-                emptyServices
-            );
+            saveApplicationMethod.invoke(applicationService, testApplicant, testPlate, dto, emptyServices);
             verify(applicationRepository, times(2)).save(any(Application.class));
 
             AdditionalService service = new AdditionalService();
@@ -926,21 +865,158 @@ class ApplicationServiceTest {
                 .thenReturn(testApplication)
                 .thenReturn(testApplication);
 
-            saveApplicationMethod.invoke(
-                applicationService,
-                testApplicant,
-                testPlate,
-                dto,
-                notEmptyServices
-            );
-
+            saveApplicationMethod.invoke(applicationService, testApplicant, testPlate, dto, notEmptyServices);
             verify(applicationRepository, times(4)).save(any(Application.class));
         }
 
         @Test
-        void forceWithArgumentCaptor() {
+        void coverServiceIdsCondition() {
             AdditionalService service = AdditionalService.builder().id(1L).price(BigDecimal.TEN).build();
-            List<AdditionalService> services = List.of(service);
+
+            ApplicationCreateDto dtoNull = ApplicationCreateDto.builder()
+                .passportNumber("MP1234567")
+                .plateNumber("1234 AB-7")
+                .serviceIds(null)
+                .build();
+
+            when(applicantRepository.findByPassportNumber(anyString())).thenReturn(Optional.of(testApplicant));
+            when(licensePlateRepository.findByPlateNumber(anyString())).thenReturn(Optional.of(testPlate));
+            when(applicationRepository.save(any(Application.class))).thenReturn(testApplication);
+            when(applicationMapper.toDto(any())).thenReturn(testApplicationDto);
+
+            applicationService.createApplication(dtoNull);
+            verify(serviceRepository, never()).findAllById(any());
+
+            ApplicationCreateDto dtoEmpty = ApplicationCreateDto.builder()
+                .passportNumber("MP1234567")
+                .plateNumber("1234 AB-7")
+                .serviceIds(Collections.emptyList())
+                .build();
+
+            applicationService.createApplication(dtoEmpty);
+            verify(serviceRepository, never()).findAllById(any());
+
+            ApplicationCreateDto dtoWith = ApplicationCreateDto.builder()
+                .passportNumber("MP1234567")
+                .plateNumber("1234 AB-7")
+                .serviceIds(List.of(1L))
+                .build();
+
+            when(serviceRepository.findAllById(anyList())).thenReturn(List.of(service));
+            when(applicationRepository.save(any(Application.class)))
+                .thenReturn(testApplication)
+                .thenReturn(testApplication);
+
+            applicationService.createApplication(dtoWith);
+            verify(serviceRepository, times(1)).findAllById(anyList());
+        }
+
+        @Test
+        void coverCreateSingleApplicationServicesCondition() {
+            AdditionalService service = AdditionalService.builder().id(1L).price(BigDecimal.TEN).build();
+
+            ApplicationCreateDto appDtoWithout = ApplicationCreateDto.builder()
+                .passportNumber("MP1234567")
+                .plateNumber("1234 AB-7")
+                .serviceIds(null)
+                .build();
+
+            BulkApplicationCreateDto bulkDtoWithout = BulkApplicationCreateDto.builder()
+                .passportNumber("MP1234567")
+                .applications(List.of(appDtoWithout))
+                .build();
+
+            when(applicantRepository.findByPassportNumber(anyString())).thenReturn(Optional.of(testApplicant));
+            when(licensePlateRepository.findByPlateNumber(anyString())).thenReturn(Optional.of(testPlate));
+            when(applicationRepository.save(any(Application.class))).thenReturn(testApplication);
+            when(applicationMapper.toDto(any())).thenReturn(testApplicationDto);
+
+            applicationService.createBulkApplicationsWithoutTransaction(bulkDtoWithout);
+            verify(applicationRepository, times(1)).save(any(Application.class));
+
+            ApplicationCreateDto appDtoWith = ApplicationCreateDto.builder()
+                .passportNumber("MP1234567")
+                .plateNumber("1234 AB-7")
+                .serviceIds(List.of(1L))
+                .build();
+
+            BulkApplicationCreateDto bulkDtoWith = BulkApplicationCreateDto.builder()
+                .passportNumber("MP1234567")
+                .applications(List.of(appDtoWith))
+                .build();
+
+            when(serviceRepository.findAllById(anyList())).thenReturn(List.of(service));
+            when(applicationRepository.save(any(Application.class)))
+                .thenReturn(testApplication)
+                .thenReturn(testApplication);
+
+            applicationService.createBulkApplicationsWithoutTransaction(bulkDtoWith);
+            verify(applicationRepository, times(3)).save(any(Application.class));
+        }
+
+        @Test
+        void coverResultSuccessfulCondition() {
+            ApplicationCreateDto successApp = ApplicationCreateDto.builder()
+                .passportNumber("MP1234567")
+                .plateNumber("1234 AB-7")
+                .serviceIds(null)
+                .build();
+
+            BulkApplicationCreateDto successBulk = BulkApplicationCreateDto.builder()
+                .passportNumber("MP1234567")
+                .applications(List.of(successApp))
+                .build();
+
+            when(applicantRepository.findByPassportNumber(anyString())).thenReturn(Optional.of(testApplicant));
+            when(licensePlateRepository.findByPlateNumber(anyString())).thenReturn(Optional.of(testPlate));
+            when(applicationRepository.save(any(Application.class))).thenReturn(testApplication);
+            when(applicationMapper.toDto(any())).thenReturn(testApplicationDto);
+
+            applicationService.createBulkApplicationsWithoutTransaction(successBulk);
+            verify(cacheService, atLeastOnce()).invalidate();
+
+            ApplicationCreateDto failApp = ApplicationCreateDto.builder()
+                .passportNumber("MP1234567")
+                .plateNumber("NOT_EXIST")
+                .serviceIds(null)
+                .build();
+
+            BulkApplicationCreateDto failBulk = BulkApplicationCreateDto.builder()
+                .passportNumber("MP1234567")
+                .applications(List.of(failApp))
+                .build();
+
+            when(licensePlateRepository.findByPlateNumber("NOT_EXIST")).thenReturn(Optional.empty());
+
+            BulkApplicationResult result = applicationService.createBulkApplicationsWithoutTransaction(failBulk);
+            assertThat(result.getSuccessful()).isZero();
+        }
+
+        @Test
+        void coverResultSuccessfulConditionWithTransaction() {
+            ApplicationCreateDto successApp = ApplicationCreateDto.builder()
+                .passportNumber("MP1234567")
+                .plateNumber("1234 AB-7")
+                .serviceIds(null)
+                .build();
+
+            BulkApplicationCreateDto successBulk = BulkApplicationCreateDto.builder()
+                .passportNumber("MP1234567")
+                .applications(List.of(successApp))
+                .build();
+
+            when(applicantRepository.findByPassportNumber(anyString())).thenReturn(Optional.of(testApplicant));
+            when(licensePlateRepository.findByPlateNumber(anyString())).thenReturn(Optional.of(testPlate));
+            when(applicationRepository.save(any(Application.class))).thenReturn(testApplication);
+            when(applicationMapper.toDto(any())).thenReturn(testApplicationDto);
+
+            applicationService.createBulkApplicationsWithTransaction(successBulk);
+            verify(cacheService, atLeastOnce()).invalidate();
+        }
+
+        @Test
+        void coverAllFourConditionsTogether() {
+            AdditionalService service = AdditionalService.builder().id(1L).price(BigDecimal.TEN).build();
 
             ApplicationCreateDto dto = ApplicationCreateDto.builder()
                 .passportNumber("MP1234567")
@@ -948,39 +1024,9 @@ class ApplicationServiceTest {
                 .serviceIds(List.of(1L))
                 .build();
 
-            ArgumentCaptor<Application> firstSaveCaptor = ArgumentCaptor.forClass(Application.class);
-            ArgumentCaptor<Application> secondSaveCaptor = ArgumentCaptor.forClass(Application.class);
-
             when(applicantRepository.findByPassportNumber(anyString())).thenReturn(Optional.of(testApplicant));
             when(licensePlateRepository.findByPlateNumber(anyString())).thenReturn(Optional.of(testPlate));
-            when(serviceRepository.findAllById(anyList())).thenReturn(services);
-            when(applicationRepository.save(firstSaveCaptor.capture()))
-                .thenReturn(testApplication);
-            when(applicationRepository.save(secondSaveCaptor.capture()))
-                .thenReturn(testApplication);
-            when(applicationMapper.toDto(any())).thenReturn(testApplicationDto);
-
-            applicationService.createApplication(dto);
-
-            verify(applicationRepository, times(2)).save(any(Application.class));
-        }
-
-        @Test
-        void forceViaCreateApplicationWithRealServices() {
-            AdditionalService service1 = AdditionalService.builder().id(1L).price(BigDecimal.valueOf(50)).build();
-            AdditionalService service2 = AdditionalService.builder().id(2L).price(BigDecimal.valueOf(30)).build();
-
-            List<AdditionalService> services = List.of(service1, service2);
-
-            ApplicationCreateDto dto = ApplicationCreateDto.builder()
-                .passportNumber("MP1234567")
-                .plateNumber("1234 AB-7")
-                .serviceIds(List.of(1L, 2L))
-                .build();
-
-            when(applicantRepository.findByPassportNumber(anyString())).thenReturn(Optional.of(testApplicant));
-            when(licensePlateRepository.findByPlateNumber(anyString())).thenReturn(Optional.of(testPlate));
-            when(serviceRepository.findAllById(anyList())).thenReturn(services);
+            when(serviceRepository.findAllById(anyList())).thenReturn(List.of(service));
             when(applicationRepository.save(any(Application.class)))
                 .thenReturn(testApplication)
                 .thenReturn(testApplication);
@@ -989,6 +1035,8 @@ class ApplicationServiceTest {
             applicationService.createApplication(dto);
 
             verify(applicationRepository, times(2)).save(any(Application.class));
+            verify(serviceRepository, times(1)).findAllById(anyList());
+            verify(cacheService, atLeastOnce()).invalidate();
         }
     }
 }
