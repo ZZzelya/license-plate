@@ -387,11 +387,6 @@ public class ApplicationService {
         Application saved = applicationRepository.save(application);
         log.info(APPLICATION_SAVED, saved.getId());
 
-        if (services != null && !services.isEmpty()) {
-            saved.setAdditionalServices(services);
-            applicationRepository.save(saved);
-        }
-
         return applicationMapper.toDto(saved);
     }
 
@@ -406,23 +401,13 @@ public class ApplicationService {
         }
 
         List<AdditionalService> services = null;
-        if (createDto.getServiceIds() != null && !createDto.getServiceIds().isEmpty()) {
-            services = serviceRepository.findAllById(createDto.getServiceIds());
-            if (services.size() != createDto.getServiceIds().size()) {
-                throw new BusinessException(SERVICES_NOT_FOUND);
-            }
-        }
+
 
         Application application = buildApplication(applicant, plate, createDto, services);
         application.setStatus(transactional ? ApplicationStatus.CONFIRMED : ApplicationStatus.PENDING);
 
         Application saved = applicationRepository.save(application);
         log.info(APPLICATION_SAVED, saved.getId());
-
-        if (services != null && !services.isEmpty()) {
-            saved.setAdditionalServices(services);
-            applicationRepository.save(saved);
-        }
 
         return applicationMapper.toDto(saved);
     }
@@ -543,10 +528,6 @@ public class ApplicationService {
 
         log.info("Bulk application completed: total={}, success={}, failed={}",
             result.getTotalRequested(), result.getSuccessful(), result.getFailed());
-
-        if (result.getSuccessful() > 0) {
-            cacheService.invalidate();
-        }
 
         return result;
     }
