@@ -1591,5 +1591,48 @@ class ApplicationServiceTest {
 
             verify(serviceRepository, times(1)).findAllById(anyList());
         }
+        @Test
+        @DisplayName("Should cover all services and serviceIds null checks")
+        void shouldCoverAllServicesAndServiceIdsChecks() {
+            AdditionalService service1 = AdditionalService.builder().id(1L).price(BigDecimal.valueOf(50)).build();
+            AdditionalService service2 = AdditionalService.builder().id(2L).price(BigDecimal.valueOf(30)).build();
+
+            ArgumentCaptor<Application> applicationCaptor = ArgumentCaptor.forClass(Application.class);
+
+            when(applicantRepository.findByPassportNumber("MP1234567")).thenReturn(Optional.of(testApplicant));
+            when(licensePlateRepository.findByPlateNumber("1234 AB-7")).thenReturn(Optional.of(testPlate));
+            when(serviceRepository.findAllById(anyList())).thenReturn(List.of(service1, service2));
+            when(applicationRepository.save(applicationCaptor.capture())).thenReturn(testApplication);
+            when(applicationMapper.toDto(testApplication)).thenReturn(testApplicationDto);
+
+            applicationService.createApplication(testCreateDto);
+
+
+            verify(applicationRepository, times(2)).save(any(Application.class));
+
+            verify(serviceRepository, times(1)).findAllById(anyList());
+
+            Application savedApplication = applicationCaptor.getAllValues().getFirst();
+            assertThat(savedApplication.getAdditionalServices()).isNotEmpty();
+
+            ApplicationCreateDto bulkApp = ApplicationCreateDto.builder()
+                .passportNumber("MP1234567")
+                .plateNumber("1234 AB-7")
+                .serviceIds(List.of(1L, 2L))
+                .build();
+
+            BulkApplicationCreateDto bulkDto = BulkApplicationCreateDto.builder()
+                .passportNumber("MP1234567")
+                .applications(List.of(bulkApp))
+                .build();
+
+            when(applicationRepository.save(any(Application.class))).thenReturn(testApplication);
+            when(applicationMapper.toDto(any(Application.class))).thenReturn(testApplicationDto);
+
+            applicationService.createBulkApplicationsWithoutTransaction(bulkDto);
+
+
+            verify(applicationRepository, atLeast(2)).save(any(Application.class));
+        }
     }
 }
