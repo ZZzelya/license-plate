@@ -818,7 +818,7 @@ class ApplicationServiceTest {
 
         @Test
         void coverResultSuccessfulCondition_AllBranches() {
-            // Branch 1: successful > 0 (true)
+
             ApplicationCreateDto successApp = ApplicationCreateDto.builder()
                 .passportNumber("MP1234567")
                 .plateNumber("1234 AB-7")
@@ -852,7 +852,90 @@ class ApplicationServiceTest {
             when(licensePlateRepository.findByPlateNumber("NOT_EXIST")).thenReturn(Optional.empty());
 
             applicationService.createBulkApplicationsWithoutTransaction(failBulk);
-            // No additional verify needed, just ensure no exception
+
+        }
+    }
+    @Nested
+    @DisplayName("Force Coverage - Direct Private Method Call")
+    class DirectPrivateMethodCallTests {
+
+        @Test
+        @DisplayName("DIRECT CALL: saveApplication private method with services")
+        void directCallSaveApplicationWithServices() throws Exception {
+
+            java.lang.reflect.Method saveApplicationMethod = ApplicationService.class
+                .getDeclaredMethod("saveApplication",
+                    Applicant.class,
+                    LicensePlate.class,
+                    ApplicationCreateDto.class,
+                    List.class);
+            saveApplicationMethod.setAccessible(true);
+
+
+            AdditionalService service1 = AdditionalService.builder().id(1L).price(BigDecimal.valueOf(50)).build();
+            AdditionalService service2 = AdditionalService.builder().id(2L).price(BigDecimal.valueOf(30)).build();
+            List<AdditionalService> services = List.of(service1, service2);
+
+
+            ApplicationCreateDto dto = ApplicationCreateDto.builder()
+                .passportNumber("MP1234567")
+                .plateNumber("1234 AB-7")
+                .serviceIds(List.of(1L, 2L))
+                .vehicleVin("VIN123")
+                .vehicleModel("Toyota")
+                .vehicleYear(2020)
+                .build();
+
+
+            when(applicationRepository.save(any(Application.class)))
+                .thenReturn(testApplication)
+                .thenReturn(testApplication);
+            when(applicationMapper.toDto(any())).thenReturn(testApplicationDto);
+
+
+            ApplicationDto result = (ApplicationDto) saveApplicationMethod.invoke(
+                applicationService,
+                testApplicant,
+                testPlate,
+                dto,
+                services
+            );
+
+
+            assertThat(result).isEqualTo(testApplicationDto);
+            verify(applicationRepository, times(2)).save(any(Application.class));
+        }
+
+        @Test
+        @DisplayName("DIRECT CALL: saveApplication private method without services")
+        void directCallSaveApplicationWithoutServices() throws Exception {
+            java.lang.reflect.Method saveApplicationMethod = ApplicationService.class
+                .getDeclaredMethod("saveApplication",
+                    Applicant.class,
+                    LicensePlate.class,
+                    ApplicationCreateDto.class,
+                    List.class);
+            saveApplicationMethod.setAccessible(true);
+
+            ApplicationCreateDto dto = ApplicationCreateDto.builder()
+                .passportNumber("MP1234567")
+                .plateNumber("1234 AB-7")
+                .serviceIds(null)
+                .build();
+
+            when(applicationRepository.save(any(Application.class))).thenReturn(testApplication);
+            when(applicationMapper.toDto(any())).thenReturn(testApplicationDto);
+
+            ApplicationDto result = (ApplicationDto) saveApplicationMethod.invoke(
+                applicationService,
+                testApplicant,
+                testPlate,
+                dto,
+                null
+            );
+
+            assertThat(result).isEqualTo(testApplicationDto);
+            verify(applicationRepository, times(1)).save(any(Application.class));
         }
     }
 }
