@@ -847,7 +847,10 @@ class ApplicationServiceTest {
                 .plateNumber("1234 AB-7")
                 .build();
 
-            when(applicationRepository.save(any(Application.class))).thenReturn(testApplication);
+            Application appWithPrice = new Application();
+            appWithPrice.setPaymentAmount(BigDecimal.valueOf(100));
+
+            when(applicationRepository.save(any(Application.class))).thenReturn(appWithPrice);
             when(applicationMapper.toDto(any())).thenReturn(testApplicationDto);
 
             saveApplicationMethod.invoke(applicationService, testApplicant, testPlate, dto, null);
@@ -859,11 +862,12 @@ class ApplicationServiceTest {
 
             AdditionalService service = new AdditionalService();
             service.setId(1L);
+            service.setPrice(BigDecimal.TEN);
             List<AdditionalService> notEmptyServices = List.of(service);
 
             when(applicationRepository.save(any(Application.class)))
-                .thenReturn(testApplication)
-                .thenReturn(testApplication);
+                .thenReturn(appWithPrice)
+                .thenReturn(appWithPrice);
 
             saveApplicationMethod.invoke(applicationService, testApplicant, testPlate, dto, notEmptyServices);
             verify(applicationRepository, times(4)).save(any(Application.class));
