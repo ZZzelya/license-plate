@@ -401,7 +401,12 @@ public class ApplicationService {
         }
 
         List<AdditionalService> services = null;
-
+        if (createDto.getServiceIds() != null && !createDto.getServiceIds().isEmpty()) {
+            services = serviceRepository.findAllById(createDto.getServiceIds());
+            if (services.size() != createDto.getServiceIds().size()) {
+                throw new BusinessException(SERVICES_NOT_FOUND);
+            }
+        }
 
         Application application = buildApplication(applicant, plate, createDto, services);
         application.setStatus(transactional ? ApplicationStatus.CONFIRMED : ApplicationStatus.PENDING);
