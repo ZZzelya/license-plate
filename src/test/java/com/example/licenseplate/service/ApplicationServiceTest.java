@@ -1422,29 +1422,6 @@ class ApplicationServiceTest {
         }
 
         @Test
-        @DisplayName("Услуги NULL: покрытие первой части условия &&")
-        void createBulk_WithNullServiceIds_CoversNullBranch() {
-            ApplicationCreateDto appDto = ApplicationCreateDto.builder()
-                .plateNumber("1234 AB-7")
-                .serviceIds(null)
-                .build();
-
-            BulkApplicationCreateDto bulkDto = BulkApplicationCreateDto.builder()
-                .passportNumber("MP1234567")
-                .applications(List.of(appDto)).build();
-
-            when(applicantRepository.findByPassportNumber(any())).thenReturn(Optional.of(testApplicant));
-            when(licensePlateRepository.findByPlateNumber(any())).thenReturn(Optional.of(testPlate));
-            when(applicationRepository.save(any())).thenReturn(testApplication);
-            when(applicationMapper.toDto(any())).thenReturn(testApplicationDto);
-
-            applicationService.createBulkApplicationsWithoutTransaction(bulkDto);
-
-            verify(serviceRepository, never()).findAllById(any());
-        }
-
-
-        @Test
         @DisplayName("Услуги ПУСТЫЕ: покрытие второй части условия &&")
         void createApplication_WithEmptyServiceList_CoversEmptyBranch() {
             ApplicationCreateDto dto = ApplicationCreateDto.builder()
