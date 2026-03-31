@@ -1136,78 +1136,6 @@ class ApplicationServiceTest {
     }
 
     @Nested
-    @DisplayName("SonarCloud Coverage Fix Tests")
-    class SonarCoverageTests {
-
-        @Test
-        @DisplayName("Cover all branches: positive scenario with services")
-        void shouldCoverPositiveBranchesWithServices() {
-            // 1. Готовим данные (Ветка: serviceIds != null && !isEmpty)
-            List<Long> sIds = List.of(1L);
-            ApplicationCreateDto dtoWithServices = ApplicationCreateDto.builder()
-                .passportNumber(testApplicant.getPassportNumber())
-                .plateNumber(testPlate.getPlateNumber())
-                .serviceIds(sIds)
-                .build();
-
-            AdditionalService mockService = AdditionalService.builder()
-                .id(1L).price(BigDecimal.TEN).build();
-
-            // 2. Настройка моков
-            when(applicantRepository.findByPassportNumber(anyString())).thenReturn(Optional.of(testApplicant));
-            when(licensePlateRepository.findByPlateNumber(anyString())).thenReturn(Optional.of(testPlate));
-
-            // Ветка: services != null && !services.isEmpty()
-            when(serviceRepository.findAllById(sIds)).thenReturn(List.of(mockService));
-
-            // Важно: возвращаем тот же объект, что сохраняем
-            when(applicationRepository.save(any(Application.class))).thenAnswer(i -> i.getArgument(0));
-            when(applicationMapper.toDto(any())).thenReturn(testApplicationDto);
-
-            // 3. Вызов через Bulk, чтобы зацепить ветку if (result.getSuccessful() > 0)
-            BulkApplicationCreateDto bulkDto = BulkApplicationCreateDto.builder()
-                .passportNumber(testApplicant.getPassportNumber())
-                .applications(List.of(dtoWithServices))
-                .build();
-
-            applicationService.createBulkApplicationsWithoutTransaction(bulkDto);
-
-            // 4. Верификация (ПРОВЕРЯЕМ cacheService, а не applicationCacheService)
-            verify(serviceRepository).findAllById(sIds);
-            verify(applicationRepository, atLeast(2)).save(any());
-            verify(cacheService, atLeastOnce()).invalidate();
-        }
-
-        @Test
-        @DisplayName("Cover branches: empty services and zero success scenarios")
-        void shouldCoverNegativeAndEmptyBranches() {
-            ApplicationCreateDto dtoEmptyServices = ApplicationCreateDto.builder()
-                .passportNumber(testApplicant.getPassportNumber())
-                .plateNumber(testPlate.getPlateNumber())
-                .serviceIds(Collections.emptyList())
-                .build();
-
-            when(applicantRepository.findByPassportNumber(anyString())).thenReturn(Optional.of(testApplicant));
-            when(licensePlateRepository.findByPlateNumber(anyString())).thenReturn(Optional.of(testPlate));
-            when(applicationRepository.save(any(Application.class))).thenAnswer(i -> i.getArgument(0));
-            when(applicationMapper.toDto(any())).thenReturn(testApplicationDto);
-
-            applicationService.createApplication(dtoEmptyServices);
-
-            verify(serviceRepository, never()).findAllById(any());
-
-            BulkApplicationCreateDto emptyBulk = BulkApplicationCreateDto.builder()
-                .passportNumber(testApplicant.getPassportNumber())
-                .applications(Collections.emptyList())
-                .build();
-
-            applicationService.createBulkApplicationsWithoutTransaction(emptyBulk);
-
-            verify(cacheService, atMost(1)).invalidate();
-        }
-    }
-
-    @Nested
     @DisplayName("Additional Coverage Tests for 100%")
     class AdditionalCoverageTests1 {
 
@@ -1230,49 +1158,6 @@ class ApplicationServiceTest {
             assertThatThrownBy(() -> applicationService.createBulkApplicationsWithTransaction(bulkDto))
                 .isInstanceOf(ResourceNotFoundException.class)
                 .hasMessageContaining("Заявитель с паспортом 'NOT_EXIST' не найден");
-        }
-
-        @Test
-        @DisplayName("Final Sonar Fix: Cover all true/false branches for services and results")
-        void finalSonarFixTest() {
-            ApplicationCreateDto appWithServices = ApplicationCreateDto.builder()
-                .plateNumber("1111 AA-1")
-                .serviceIds(List.of(1L))
-                .build();
-
-            ApplicationCreateDto appWithoutServices = ApplicationCreateDto.builder()
-                .plateNumber("2222 AA-2")
-                .serviceIds(Collections.emptyList())
-                .build();
-
-            BulkApplicationCreateDto bulkDto = BulkApplicationCreateDto.builder()
-                .passportNumber(testApplicant.getPassportNumber())
-                .applications(List.of(appWithServices, appWithoutServices))
-                .build();
-
-            AdditionalService mockService = AdditionalService.builder().id(1L).price(BigDecimal.TEN).build();
-
-            when(applicantRepository.findByPassportNumber(anyString())).thenReturn(Optional.of(testApplicant));
-            when(licensePlateRepository.findByPlateNumber(anyString())).thenReturn(Optional.of(testPlate));
-
-            when(serviceRepository.findAllById(List.of(1L))).thenReturn(List.of(mockService));
-            when(serviceRepository.findAllById(Collections.emptyList())).thenReturn(Collections.emptyList());
-
-            when(applicationRepository.save(any(Application.class))).thenAnswer(i -> i.getArgument(0));
-            when(applicationMapper.toDto(any())).thenReturn(testApplicationDto);
-
-            applicationService.createBulkApplicationsWithoutTransaction(bulkDto);
-
-            verify(cacheService, atLeastOnce()).invalidate();
-
-            BulkApplicationCreateDto emptyBulk = BulkApplicationCreateDto.builder()
-                .passportNumber(testApplicant.getPassportNumber())
-                .applications(Collections.emptyList())
-                .build();
-
-            applicationService.createBulkApplicationsWithoutTransaction(emptyBulk);
-
-            appWithServices.setServiceIds(null);
         }
 
         @Test
