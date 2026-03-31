@@ -911,6 +911,7 @@ class ApplicationServiceTest {
             assertThat(result.getErrors()).hasSize(1);
         }
 
+
         @Test
         @DisplayName("Should throw exception when applicant not found in bulk")
         void shouldThrowExceptionWhenApplicantNotFoundInBulk() {
