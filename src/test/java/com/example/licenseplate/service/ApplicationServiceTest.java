@@ -1233,6 +1233,49 @@ class ApplicationServiceTest {
         }
 
         @Test
+        @DisplayName("Final Sonar Fix: Cover all true/false branches for services and results")
+        void finalSonarFixTest() {
+            ApplicationCreateDto appWithServices = ApplicationCreateDto.builder()
+                .plateNumber("1111 AA-1")
+                .serviceIds(List.of(1L))
+                .build();
+
+            ApplicationCreateDto appWithoutServices = ApplicationCreateDto.builder()
+                .plateNumber("2222 AA-2")
+                .serviceIds(Collections.emptyList())
+                .build();
+
+            BulkApplicationCreateDto bulkDto = BulkApplicationCreateDto.builder()
+                .passportNumber(testApplicant.getPassportNumber())
+                .applications(List.of(appWithServices, appWithoutServices))
+                .build();
+
+            AdditionalService mockService = AdditionalService.builder().id(1L).price(BigDecimal.TEN).build();
+
+            when(applicantRepository.findByPassportNumber(anyString())).thenReturn(Optional.of(testApplicant));
+            when(licensePlateRepository.findByPlateNumber(anyString())).thenReturn(Optional.of(testPlate));
+
+            when(serviceRepository.findAllById(List.of(1L))).thenReturn(List.of(mockService));
+            when(serviceRepository.findAllById(Collections.emptyList())).thenReturn(Collections.emptyList());
+
+            when(applicationRepository.save(any(Application.class))).thenAnswer(i -> i.getArgument(0));
+            when(applicationMapper.toDto(any())).thenReturn(testApplicationDto);
+
+            applicationService.createBulkApplicationsWithoutTransaction(bulkDto);
+
+            verify(cacheService, atLeastOnce()).invalidate();
+
+            BulkApplicationCreateDto emptyBulk = BulkApplicationCreateDto.builder()
+                .passportNumber(testApplicant.getPassportNumber())
+                .applications(Collections.emptyList())
+                .build();
+
+            applicationService.createBulkApplicationsWithoutTransaction(emptyBulk);
+
+            appWithServices.setServiceIds(null);
+        }
+
+        @Test
         @DisplayName("Should invalidate cache after successful bulk with transaction")
         void shouldInvalidateCacheAfterBulkWithTransaction() {
             ApplicationCreateDto app1 = ApplicationCreateDto.builder()
