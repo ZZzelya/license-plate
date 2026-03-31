@@ -1736,5 +1736,68 @@ class ApplicationServiceTest {
             verify(serviceRepository, atLeastOnce()).findAllById(anyList());
             verify(applicationRepository, atLeast(2)).save(any(Application.class));
         }
+        @Test
+        @DisplayName("Should skip services when serviceIds is null or empty")
+        void shouldSkipServicesWhenServiceIdsIsNullOrEmpty() {
+            testCreateDto.setServiceIds(null);
+
+            when(applicantRepository.findByPassportNumber(anyString())).thenReturn(Optional.of(testApplicant));
+            when(licensePlateRepository.findByPlateNumber(anyString())).thenReturn(Optional.of(testPlate));
+            when(applicationRepository.save(any(Application.class))).thenAnswer(i -> i.getArgument(0));
+            when(applicationMapper.toDto(any())).thenReturn(testApplicationDto);
+
+            applicationService.createApplication(testCreateDto);
+
+            verify(serviceRepository, never()).findAllById(any());
+            verify(applicationRepository, times(1)).save(any());
+        }
+
+        @Test
+        @DisplayName("Should cover services branch when services exist")
+        void shouldCoverServicesBranchWhenServicesExist() {
+            testCreateDto.setServiceIds(List.of(1L));
+            AdditionalService service = AdditionalService.builder().id(1L).price(BigDecimal.TEN).build();
+
+            when(applicantRepository.findByPassportNumber(anyString())).thenReturn(Optional.of(testApplicant));
+            when(licensePlateRepository.findByPlateNumber(anyString())).thenReturn(Optional.of(testPlate));
+            when(serviceRepository.findAllById(anyList())).thenReturn(List.of(service));
+            when(applicationRepository.save(any(Application.class))).thenAnswer(i -> i.getArgument(0));
+            when(applicationMapper.toDto(any())).thenReturn(testApplicationDto);
+
+            applicationService.createApplication(testCreateDto);
+
+            verify(applicationRepository, times(2)).save(any());
+        }
+        @Test
+        @DisplayName("Should not invalidate cache if no successful applications")
+        void shouldNotInvalidateCacheIfNoSuccessfulApplications() {
+            BulkApplicationCreateDto emptyBulk = BulkApplicationCreateDto.builder()
+                .passportNumber("MP1234567")
+                .applications(List.of())
+                .build();
+
+            when(applicantRepository.findByPassportNumber(anyString())).thenReturn(Optional.of(testApplicant));
+
+            applicationService.createBulkApplicationsWithoutTransaction(emptyBulk);
+
+
+            verify(applicationService, never()).invalidateCache();
+        }
+
+        @Test
+        @DisplayName("Should handle empty services list from repository")
+        void shouldHandleEmptyServicesListFromRepository() {
+            testCreateDto.setServiceIds(List.of(999L));
+
+            when(applicantRepository.findByPassportNumber(anyString())).thenReturn(Optional.of(testApplicant));
+            when(licensePlateRepository.findByPlateNumber(anyString())).thenReturn(Optional.of(testPlate));
+            when(serviceRepository.findAllById(anyList())).thenReturn(Collections.emptyList());
+            when(applicationRepository.save(any(Application.class))).thenAnswer(i -> i.getArgument(0));
+            when(applicationMapper.toDto(any())).thenReturn(testApplicationDto);
+
+            applicationService.createApplication(testCreateDto);
+
+            verify(applicationRepository, times(1)).save(any());
+        }
     }
 }
