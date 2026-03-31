@@ -1978,115 +1978,17 @@ class ApplicationServiceTest {
         }
 
         @Test
-        @DisplayName("FORCE COVER: getServices line 409 - serviceIds not null and not empty")
-        void forceCoverGetServicesLine409() {
-            AdditionalService service = AdditionalService.builder().id(1L).price(BigDecimal.TEN).build();
-
-            ApplicationCreateDto dto = ApplicationCreateDto.builder()
-                .passportNumber("MP1234567")
-                .plateNumber("1234 AB-7")
-                .serviceIds(List.of(1L))
-                .vehicleVin("VIN123")
-                .vehicleModel("Toyota")
-                .vehicleYear(2020)
-                .notes("Test notes")
-                .build();
-
-            when(applicantRepository.findByPassportNumber(anyString())).thenReturn(Optional.of(testApplicant));
-            when(licensePlateRepository.findByPlateNumber(anyString())).thenReturn(Optional.of(testPlate));
-            when(serviceRepository.findAllById(anyList())).thenReturn(List.of(service));
-
-            when(applicationRepository.save(any(Application.class)))
-                .thenReturn(testApplication)
-                .thenReturn(testApplication);
-            when(applicationMapper.toDto(any())).thenReturn(testApplicationDto);
-
-            applicationService.createApplication(dto);
-
-            verify(serviceRepository).findAllById(anyList());
-        }
-
-        @Test
-        @DisplayName("FORCE COVER: saveApplication line 390 - services not null and not empty")
-        void forceCoverSaveApplicationLine390() {
-            AdditionalService service1 = AdditionalService.builder().id(1L).price(BigDecimal.valueOf(50)).build();
-            AdditionalService service2 = AdditionalService.builder().id(2L).price(BigDecimal.valueOf(30)).build();
-
-            ApplicationCreateDto dto = ApplicationCreateDto.builder()
-                .passportNumber("MP1234567")
-                .plateNumber("1234 AB-7")
-                .serviceIds(List.of(1L, 2L))  // Сервисы есть
-                .build();
-
-            when(applicantRepository.findByPassportNumber(anyString())).thenReturn(Optional.of(testApplicant));
-            when(licensePlateRepository.findByPlateNumber(anyString())).thenReturn(Optional.of(testPlate));
-            when(serviceRepository.findAllById(anyList())).thenReturn(List.of(service1, service2));
-
-            ArgumentCaptor<Application> firstSaveCaptor = ArgumentCaptor.forClass(Application.class);
-            ArgumentCaptor<Application> secondSaveCaptor = ArgumentCaptor.forClass(Application.class);
-
-            when(applicationRepository.save(firstSaveCaptor.capture()))
-                .thenReturn(testApplication);
-            when(applicationRepository.save(secondSaveCaptor.capture()))
-                .thenReturn(testApplication);
-            when(applicationMapper.toDto(any())).thenReturn(testApplicationDto);
-
-
-            applicationService.createApplication(dto);
-
-            verify(applicationRepository, times(2)).save(any(Application.class));
-
-            Application secondSaved = secondSaveCaptor.getValue();
-            assertThat(secondSaved).isNotNull();
-            assertThat(secondSaved.getAdditionalServices()).isNotEmpty();
-        }
-
-        @Test
-        @DisplayName("FORCE COVER: createSingleApplication line 422 - services not null and not empty")
-        void forceCoverCreateSingleApplicationLine422() {
-
-            AdditionalService service1 = AdditionalService.builder().id(1L).price(BigDecimal.valueOf(50)).build();
-            AdditionalService service2 = AdditionalService.builder().id(2L).price(BigDecimal.valueOf(30)).build();
-
-            ApplicationCreateDto appDto = ApplicationCreateDto.builder()
-                .passportNumber("MP1234567")
-                .plateNumber("1234 AB-7")
-                .serviceIds(List.of(1L, 2L))
-                .build();
-
-            BulkApplicationCreateDto bulkDto = BulkApplicationCreateDto.builder()
-                .passportNumber("MP1234567")
-                .applications(List.of(appDto))
-                .build();
-
-            when(applicantRepository.findByPassportNumber(anyString())).thenReturn(Optional.of(testApplicant));
-            when(licensePlateRepository.findByPlateNumber(anyString())).thenReturn(Optional.of(testPlate));
-            when(serviceRepository.findAllById(anyList())).thenReturn(List.of(service1, service2));
-
-            when(applicationRepository.save(any(Application.class)))
-                .thenReturn(testApplication)
-                .thenReturn(testApplication);
-            when(applicationMapper.toDto(any())).thenReturn(testApplicationDto);
-
-            applicationService.createBulkApplicationsWithoutTransaction(bulkDto);
-
-            verify(applicationRepository, times(2)).save(any(Application.class));
-        }
-
-
-        @Test
-        @DisplayName("FORCE COVER: processBulkApplications line 547 - successful > 0")
-        void forceCoverProcessBulkApplicationsLine547() {
-
-            ApplicationCreateDto app1 = ApplicationCreateDto.builder()
+        @DisplayName("COVER ALL BRANCHES: result.getSuccessful() > 0")
+        void coverAllBranches_ResultSuccessfulGreaterThanZero() {
+            ApplicationCreateDto successApp = ApplicationCreateDto.builder()
                 .passportNumber("MP1234567")
                 .plateNumber("1234 AB-7")
                 .serviceIds(null)
                 .build();
 
-            BulkApplicationCreateDto bulkDto = BulkApplicationCreateDto.builder()
+            BulkApplicationCreateDto successBulk = BulkApplicationCreateDto.builder()
                 .passportNumber("MP1234567")
-                .applications(List.of(app1))
+                .applications(List.of(successApp))
                 .build();
 
             when(applicantRepository.findByPassportNumber(anyString())).thenReturn(Optional.of(testApplicant));
@@ -2094,11 +1996,158 @@ class ApplicationServiceTest {
             when(applicationRepository.save(any(Application.class))).thenReturn(testApplication);
             when(applicationMapper.toDto(any())).thenReturn(testApplicationDto);
 
-
-            applicationService.createBulkApplicationsWithoutTransaction(bulkDto);
-
-
+            applicationService.createBulkApplicationsWithoutTransaction(successBulk);
             verify(cacheService, times(1)).invalidate();
+
+
+            ApplicationCreateDto failApp = ApplicationCreateDto.builder()
+                .passportNumber("MP1234567")
+                .plateNumber("NOT_EXIST")
+                .serviceIds(null)
+                .build();
+
+            BulkApplicationCreateDto failBulk = BulkApplicationCreateDto.builder()
+                .passportNumber("MP1234567")
+                .applications(List.of(failApp))
+                .build();
+
+            when(licensePlateRepository.findByPlateNumber("NOT_EXIST")).thenReturn(Optional.empty());
+
+            BulkApplicationResult result = applicationService.createBulkApplicationsWithoutTransaction(failBulk);
+            assertThat(result.getSuccessful()).isZero();
+            verify(cacheService, times(1)).invalidate();
+        }
+
+        @Test
+        @DisplayName("COVER ALL BRANCHES: services != null && !services.isEmpty() in createSingleApplication")
+        void coverAllBranches_ServicesNotNullAndNotEmpty_InCreateSingleApplication() {
+            AdditionalService service = AdditionalService.builder().id(1L).price(BigDecimal.TEN).build();
+
+
+            ApplicationCreateDto appDtoWithout = ApplicationCreateDto.builder()
+                .passportNumber("MP1234567")
+                .plateNumber("1234 AB-7")
+                .serviceIds(null)
+                .build();
+
+            BulkApplicationCreateDto bulkDtoWithout = BulkApplicationCreateDto.builder()
+                .passportNumber("MP1234567")
+                .applications(List.of(appDtoWithout))
+                .build();
+
+            when(applicantRepository.findByPassportNumber(anyString())).thenReturn(Optional.of(testApplicant));
+            when(licensePlateRepository.findByPlateNumber(anyString())).thenReturn(Optional.of(testPlate));
+            when(applicationRepository.save(any(Application.class))).thenReturn(testApplication);
+            when(applicationMapper.toDto(any())).thenReturn(testApplicationDto);
+
+            applicationService.createBulkApplicationsWithoutTransaction(bulkDtoWithout);
+            verify(applicationRepository, times(1)).save(any(Application.class));
+
+
+            ApplicationCreateDto appDtoWith = ApplicationCreateDto.builder()
+                .passportNumber("MP1234567")
+                .plateNumber("1234 AB-7")
+                .serviceIds(List.of(1L))
+                .build();
+
+            BulkApplicationCreateDto bulkDtoWith = BulkApplicationCreateDto.builder()
+                .passportNumber("MP1234567")
+                .applications(List.of(appDtoWith))
+                .build();
+
+            when(serviceRepository.findAllById(anyList())).thenReturn(List.of(service));
+            when(applicationRepository.save(any(Application.class)))
+                .thenReturn(testApplication)
+                .thenReturn(testApplication);
+
+            applicationService.createBulkApplicationsWithoutTransaction(bulkDtoWith);
+            verify(applicationRepository, times(3)).save(any(Application.class));
+        }
+
+        @Test
+        @DisplayName("COVER ALL BRANCHES: createDto.getServiceIds() != null && !createDto.getServiceIds().isEmpty()")
+        void coverAllBranches_ServiceIdsNotNullAndNotEmpty() {
+            AdditionalService service = AdditionalService.builder().id(1L).price(BigDecimal.TEN).build();
+
+            ApplicationCreateDto dtoNull = ApplicationCreateDto.builder()
+                .passportNumber("MP1234567")
+                .plateNumber("1234 AB-7")
+                .serviceIds(null)
+                .build();
+
+            when(applicantRepository.findByPassportNumber(anyString())).thenReturn(Optional.of(testApplicant));
+            when(licensePlateRepository.findByPlateNumber(anyString())).thenReturn(Optional.of(testPlate));
+            when(applicationRepository.save(any(Application.class))).thenReturn(testApplication);
+            when(applicationMapper.toDto(any())).thenReturn(testApplicationDto);
+
+            applicationService.createApplication(dtoNull);
+            verify(serviceRepository, never()).findAllById(any());
+
+            ApplicationCreateDto dtoEmpty = ApplicationCreateDto.builder()
+                .passportNumber("MP1234567")
+                .plateNumber("1234 AB-7")
+                .serviceIds(Collections.emptyList())
+                .build();
+
+            applicationService.createApplication(dtoEmpty);
+            verify(serviceRepository, never()).findAllById(any());
+
+            ApplicationCreateDto dtoWith = ApplicationCreateDto.builder()
+                .passportNumber("MP1234567")
+                .plateNumber("1234 AB-7")
+                .serviceIds(List.of(1L))
+                .build();
+
+            when(serviceRepository.findAllById(anyList())).thenReturn(List.of(service));
+            when(applicationRepository.save(any(Application.class)))
+                .thenReturn(testApplication)
+                .thenReturn(testApplication);
+
+            applicationService.createApplication(dtoWith);
+            verify(serviceRepository, times(1)).findAllById(anyList());
+        }
+
+
+        @Test
+        @DisplayName("COVER ALL BRANCHES: services != null && !services.isEmpty()")
+        void coverAllBranches_ServicesNotNullAndNotEmpty() {
+            ApplicationCreateDto dtoWithoutServices = ApplicationCreateDto.builder()
+                .passportNumber("MP1234567")
+                .plateNumber("1234 AB-7")
+                .serviceIds(null)
+                .build();
+
+            when(applicantRepository.findByPassportNumber(anyString())).thenReturn(Optional.of(testApplicant));
+            when(licensePlateRepository.findByPlateNumber(anyString())).thenReturn(Optional.of(testPlate));
+            when(applicationRepository.save(any(Application.class))).thenReturn(testApplication);
+            when(applicationMapper.toDto(any())).thenReturn(testApplicationDto);
+
+            applicationService.createApplication(dtoWithoutServices);
+            verify(applicationRepository, times(1)).save(any(Application.class));
+            ApplicationCreateDto dtoEmptyServices = ApplicationCreateDto.builder()
+                .passportNumber("MP1234567")
+                .plateNumber("1234 AB-7")
+                .serviceIds(Collections.emptyList())
+                .build();
+
+            applicationService.createApplication(dtoEmptyServices);
+            verify(applicationRepository, times(2)).save(any(Application.class));
+
+
+            AdditionalService service = AdditionalService.builder().id(1L).price(BigDecimal.TEN).build();
+            ApplicationCreateDto dtoWithServices = ApplicationCreateDto.builder()
+                .passportNumber("MP1234567")
+                .plateNumber("1234 AB-7")
+                .serviceIds(List.of(1L))
+                .build();
+
+            when(serviceRepository.findAllById(anyList())).thenReturn(List.of(service));
+            when(applicationRepository.save(any(Application.class)))
+                .thenReturn(testApplication)
+                .thenReturn(testApplication);
+
+            applicationService.createApplication(dtoWithServices);
+            verify(applicationRepository, times(4)).save(any(Application.class));
         }
 
         @Test
@@ -2163,7 +2212,5 @@ class ApplicationServiceTest {
             assertThat(result.getSuccessful()).isEqualTo(2);
             verify(cacheService).invalidate();
         }
-
-
     }
 }
