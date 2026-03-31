@@ -387,6 +387,11 @@ public class ApplicationService {
         Application saved = applicationRepository.save(application);
         log.info(APPLICATION_SAVED, saved.getId());
 
+        if (services != null && !services.isEmpty()) {
+            saved.setAdditionalServices(services);
+            applicationRepository.save(saved);
+        }
+
         return applicationMapper.toDto(saved);
     }
 
@@ -413,6 +418,11 @@ public class ApplicationService {
 
         Application saved = applicationRepository.save(application);
         log.info(APPLICATION_SAVED, saved.getId());
+
+        if (services != null && !services.isEmpty()) {
+            saved.setAdditionalServices(services);
+            applicationRepository.save(saved);
+        }
 
         return applicationMapper.toDto(saved);
     }
@@ -533,6 +543,10 @@ public class ApplicationService {
 
         log.info("Bulk application completed: total={}, success={}, failed={}",
             result.getTotalRequested(), result.getSuccessful(), result.getFailed());
+
+        if (result.getSuccessful() > 0) {
+            cacheService.invalidate();
+        }
 
         return result;
     }
