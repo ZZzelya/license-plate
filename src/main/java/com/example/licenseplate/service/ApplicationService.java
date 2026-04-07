@@ -391,6 +391,10 @@ public class ApplicationService {
         Application application = buildApplication(applicant, plate, createDto, services);
         application.setStatus(transactional ? ApplicationStatus.CONFIRMED : ApplicationStatus.PENDING);
 
+        if (transactional) {
+            application.setConfirmationDate(LocalDateTime.now());
+        }
+
         Application saved = applicationRepository.save(application);
         log.info("Application saved with id: {}", saved.getId());
 

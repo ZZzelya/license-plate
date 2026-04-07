@@ -313,6 +313,35 @@ class ApplicationServiceTest {
         }
 
         @Test
+        @DisplayName("Should set confirmation date when transactional bulk")
+        void shouldSetConfirmationDateWhenTransactionalBulk() {
+            ApplicationCreateDto app1 = ApplicationCreateDto.builder()
+                .passportNumber("MP1234567")
+                .plateNumber("1234 AB-7")
+                .serviceIds(null)
+                .build();
+
+            BulkApplicationCreateDto bulkDto = BulkApplicationCreateDto.builder()
+                .passportNumber("MP1234567")
+                .applications(List.of(app1))
+                .build();
+
+            ArgumentCaptor<Application> applicationCaptor = ArgumentCaptor.forClass(Application.class);
+
+            when(applicantRepository.findByPassportNumber("MP1234567")).thenReturn(Optional.of(testApplicant));
+            when(licensePlateRepository.findByPlateNumber("1234 AB-7")).thenReturn(Optional.of(testPlate));
+            when(applicationRepository.save(applicationCaptor.capture())).thenReturn(testApplication);
+            when(applicationMapper.toDto(any(Application.class))).thenReturn(testApplicationDto);
+
+            applicationService.createBulkApplicationsWithTransaction(bulkDto);
+
+            Application savedApplication = applicationCaptor.getValue();
+            assertThat(savedApplication.getStatus()).isEqualTo(ApplicationStatus.CONFIRMED);
+            assertThat(savedApplication.getConfirmationDate()).isNotNull();  // ✅ ПРОВЕРКА
+            assertThat(savedApplication.getConfirmationDate()).isBeforeOrEqualTo(LocalDateTime.now());
+        }
+
+        @Test
         void shouldFetchFromDbAndCacheWhenCacheMiss() {
             List<Application> applications = List.of(testApplication);
             List<ApplicationDto> expectedDtos = List.of(testApplicationDto);
