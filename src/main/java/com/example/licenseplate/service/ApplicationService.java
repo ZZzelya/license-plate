@@ -380,7 +380,7 @@ public class ApplicationService {
             throw new BusinessException(String.format(PLATE_NOT_AVAILABLE, createDto.getPlateNumber()));
         }
 
-        List<AdditionalService> services = Collections.emptyList(); // Инициализируем пустым списком вместо null
+        List<AdditionalService> services = Collections.emptyList();
         if (createDto.getServiceIds() != null && !createDto.getServiceIds().isEmpty()) {
             services = serviceRepository.findAllById(createDto.getServiceIds());
             if (services.size() != createDto.getServiceIds().size()) {
