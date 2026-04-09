@@ -49,7 +49,11 @@ public class AsyncExportService {
             .build();
         taskStatusMap.put(taskId, response);
 
+
+
         try {
+
+            Thread.sleep(16000);
 
             log.info("TASK #{}: Fetching applications from database for region: {}", taskNum, region);
 
@@ -78,8 +82,6 @@ public class AsyncExportService {
                         taskNum, i + 1, totalRecords, ((i + 1) * 100 / totalRecords));
                 }
             }
-
-            Thread.sleep(16000);
 
             totalTasksCompleted.incrementAndGet();
             activeTasks.decrementAndGet();
