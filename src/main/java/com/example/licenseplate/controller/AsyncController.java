@@ -44,7 +44,7 @@ public class AsyncController {
         return ResponseEntity.ok(AsyncTaskResponse.builder()
             .taskId(taskId)
             .status("SUBMITTED")
-            .message("Exporting 10000 applications for region: " + region + " (takes ~10 seconds)")
+            .message("Exporting 10000 applications for region: " + region)
             .submittedAt(LocalDateTime.now())
             .build());
     }
@@ -65,7 +65,7 @@ public class AsyncController {
         return ResponseEntity.ok(AsyncTaskResponse.builder()
             .taskId(taskId)
             .status("SUBMITTED")
-            .message("LOAD TEST: Fast export for region: " + region + " (instant, for JMeter)")
+            .message("LOAD TEST: Fast export for region: " + region)
             .submittedAt(LocalDateTime.now())
             .build());
     }
