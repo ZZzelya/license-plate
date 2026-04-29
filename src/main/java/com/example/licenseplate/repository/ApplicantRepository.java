@@ -9,6 +9,9 @@ import java.util.Optional;
 public interface ApplicantRepository extends JpaRepository<Applicant, Long> {
     Optional<Applicant> findByPassportNumber(String passportNumber);
 
+    Optional<Applicant> findByEmailIgnoreCase(String email);
+
     boolean existsByPassportNumber(String passportNumber);
 
+    boolean existsByEmailIgnoreCase(String email);
 }

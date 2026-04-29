@@ -1,6 +1,5 @@
 package com.example.licenseplate.model.entity;
 
-import jakarta.persistence.CascadeType;
 import jakarta.persistence.Column;
 import jakarta.persistence.Entity;
 import jakarta.persistence.FetchType;
@@ -25,8 +24,8 @@ import java.util.List;
 @Builder
 @NoArgsConstructor
 @AllArgsConstructor
-@EqualsAndHashCode(exclude = {"licensePlates", "applications"})
-@ToString(exclude = {"licensePlates", "applications"})
+@EqualsAndHashCode(exclude = {"applications"})
+@ToString(exclude = {"applications"})
 public class RegistrationDept {
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
@@ -44,12 +43,7 @@ public class RegistrationDept {
     @Column(length = 50)
     private String region;
 
-    @OneToMany(mappedBy = "department", cascade = CascadeType.ALL,
-        fetch = FetchType.LAZY)
-    @Builder.Default
-    private List<LicensePlate> licensePlates = new ArrayList<>();
-
-    @OneToMany(mappedBy = "department", cascade = CascadeType.ALL,
+    @OneToMany(mappedBy = "department",
         fetch = FetchType.LAZY)
     @Builder.Default
     private List<Application> applications = new ArrayList<>();

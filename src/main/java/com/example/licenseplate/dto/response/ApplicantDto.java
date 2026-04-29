@@ -17,4 +17,6 @@ public class ApplicantDto {
     private String email;
     private String address;
     private Integer applicationsCount;
+    private String role;
+    private Boolean hasUserAccount;
 }

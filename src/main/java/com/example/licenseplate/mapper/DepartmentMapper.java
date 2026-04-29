@@ -2,19 +2,14 @@ package com.example.licenseplate.mapper;
 
 import com.example.licenseplate.dto.request.DepartmentCreateDto;
 import com.example.licenseplate.dto.response.DepartmentDto;
-import com.example.licenseplate.dto.DepartmentWithPlatesDto;
 import com.example.licenseplate.model.entity.RegistrationDept;
-import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Component;
 
 import java.util.Collections;
 import java.util.List;
 
 @Component
-@RequiredArgsConstructor
 public class DepartmentMapper {
-
-    private final LicensePlateMapper licensePlateMapper;
 
     public DepartmentDto toDto(RegistrationDept department) {
         if (department == null) {
@@ -27,32 +22,7 @@ public class DepartmentMapper {
         dto.setAddress(department.getAddress());
         dto.setPhoneNumber(department.getPhoneNumber());
         dto.setRegion(department.getRegion());
-
-        if (department.getLicensePlates() != null) {
-            dto.setLicensePlatesCount(department.getLicensePlates().size());
-        } else {
-            dto.setLicensePlatesCount(0);
-        }
-
-        return dto;
-    }
-
-    public DepartmentWithPlatesDto toDtoWithPlates(RegistrationDept department) {
-        if (department == null) {
-            return null;
-        }
-
-        DepartmentWithPlatesDto dto = new DepartmentWithPlatesDto();
-        dto.setId(department.getId());
-        dto.setName(department.getName());
-        dto.setAddress(department.getAddress());
-        dto.setPhoneNumber(department.getPhoneNumber());
-        dto.setRegion(department.getRegion());
-
-        if (department.getLicensePlates() != null) {
-            dto.setLicensePlates(licensePlateMapper.toDtoList(
-                department.getLicensePlates()));
-        }
+        dto.setApplicationsCount(department.getApplications() != null ? department.getApplications().size() : 0);
 
         return dto;
     }

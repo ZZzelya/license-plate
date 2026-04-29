@@ -2,7 +2,6 @@ package com.example.licenseplate.controller;
 
 import com.example.licenseplate.dto.request.DepartmentCreateDto;
 import com.example.licenseplate.dto.response.DepartmentDto;
-import com.example.licenseplate.dto.DepartmentWithPlatesDto;
 import com.example.licenseplate.service.DepartmentService;
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.Parameter;
@@ -30,174 +29,80 @@ import java.util.List;
 @RestController
 @RequestMapping("/api/departments")
 @RequiredArgsConstructor
-@Tag(name = "Отделы ГАИ", description = "API для управления отделами регистрации")
+@Tag(name = "РћС‚РґРµР»С‹ Р“РђР", description = "API РґР»СЏ СѓРїСЂР°РІР»РµРЅРёСЏ РѕС‚РґРµР»Р°РјРё СЂРµРіРёСЃС‚СЂР°С†РёРё")
 public class DepartmentController {
 
     private final DepartmentService departmentService;
 
-    @Operation(
-        summary = "Создать отдел ГАИ",
-        description = "Регистрирует новый отдел регистрации"
-    )
+    @Operation(summary = "РЎРѕР·РґР°С‚СЊ РѕС‚РґРµР» Р“РђР", description = "Р РµРіРёСЃС‚СЂРёСЂСѓРµС‚ РЅРѕРІС‹Р№ РѕС‚РґРµР» СЂРµРіРёСЃС‚СЂР°С†РёРё")
     @ApiResponses(value = {
-        @ApiResponse(
-            responseCode = "201",
-            description = "Отдел успешно создан",
-            content = @Content(schema = @Schema(implementation = DepartmentDto.class))
-        ),
-        @ApiResponse(
-            responseCode = "400",
-            description = "Неверные данные запроса",
-            content = @Content
-        ),
-        @ApiResponse(
-            responseCode = "409",
-            description = "Отдел с таким телефоном уже существует",
-            content = @Content
-        )
+        @ApiResponse(responseCode = "201", description = "РћС‚РґРµР» СѓСЃРїРµС€РЅРѕ СЃРѕР·РґР°РЅ",
+            content = @Content(schema = @Schema(implementation = DepartmentDto.class))),
+        @ApiResponse(responseCode = "400", description = "РќРµРІРµСЂРЅС‹Рµ РґР°РЅРЅС‹Рµ Р·Р°РїСЂРѕСЃР°", content = @Content),
+        @ApiResponse(responseCode = "409", description = "РћС‚РґРµР» СЃ С‚Р°РєРёРј С‚РµР»РµС„РѕРЅРѕРј СѓР¶Рµ СЃСѓС‰РµСЃС‚РІСѓРµС‚", content = @Content)
     })
     @PostMapping
-    public ResponseEntity<DepartmentDto> createDepartment(
-        @Parameter(description = "Данные для создания отдела", required = true)
-        @Valid @RequestBody final DepartmentCreateDto createDto) {
+    public ResponseEntity<DepartmentDto> createDepartment(@Valid @RequestBody final DepartmentCreateDto createDto) {
         DepartmentDto created = departmentService.createDepartment(createDto);
         return ResponseEntity.status(HttpStatus.CREATED).body(created);
     }
 
-    @Operation(
-        summary = "Получить все отделы",
-        description = "Возвращает список всех отделов ГАИ"
-    )
+    @Operation(summary = "РџРѕР»СѓС‡РёС‚СЊ РІСЃРµ РѕС‚РґРµР»С‹", description = "Р’РѕР·РІСЂР°С‰Р°РµС‚ СЃРїРёСЃРѕРє РІСЃРµС… РѕС‚РґРµР»РѕРІ Р“РђР")
     @GetMapping
     public ResponseEntity<List<DepartmentDto>> getAllDepartments() {
         return ResponseEntity.ok(departmentService.getAllDepartments());
     }
 
-    @Operation(
-        summary = "Получить отдел по ID",
-        description = "Возвращает информацию об отделе по его идентификатору"
-    )
+    @Operation(summary = "РџРѕР»СѓС‡РёС‚СЊ РѕС‚РґРµР» РїРѕ ID", description = "Р’РѕР·РІСЂР°С‰Р°РµС‚ РёРЅС„РѕСЂРјР°С†РёСЋ РѕР± РѕС‚РґРµР»Рµ РїРѕ РµРіРѕ РёРґРµРЅС‚РёС„РёРєР°С‚РѕСЂСѓ")
     @ApiResponses(value = {
-        @ApiResponse(
-            responseCode = "200",
-            description = "Отдел найден",
-            content = @Content(schema = @Schema(implementation = DepartmentDto.class))
-        ),
-        @ApiResponse(
-            responseCode = "404",
-            description = "Отдел не найден",
-            content = @Content
-        )
+        @ApiResponse(responseCode = "200", description = "РћС‚РґРµР» РЅР°Р№РґРµРЅ",
+            content = @Content(schema = @Schema(implementation = DepartmentDto.class))),
+        @ApiResponse(responseCode = "404", description = "РћС‚РґРµР» РЅРµ РЅР°Р№РґРµРЅ", content = @Content)
     })
     @GetMapping("/{id}")
-    public ResponseEntity<DepartmentDto> getDepartmentById(
-        @Parameter(description = "ID отдела", required = true, example = "1")
-        @PathVariable final Long id) {
+    public ResponseEntity<DepartmentDto> getDepartmentById(@PathVariable final Long id) {
         return ResponseEntity.ok(departmentService.getDepartmentById(id));
     }
 
-    @Operation(
-        summary = "Получить отдел с номерными знаками",
-        description = "Возвращает информацию об отделе вместе со списком его номерных знаков"
-    )
-    @GetMapping("/{id}/with-plates")
-    public ResponseEntity<DepartmentWithPlatesDto> getDepartmentWithPlates(
-        @Parameter(description = "ID отдела", required = true, example = "1")
-        @PathVariable final Long id) {
-        return ResponseEntity.ok(departmentService.getDepartmentWithPlates(id));
-    }
-
-    @Operation(
-        summary = "Получить отделы по региону",
-        description = "Возвращает список отделов в указанном регионе"
-    )
+    @Operation(summary = "РџРѕР»СѓС‡РёС‚СЊ РѕС‚РґРµР»С‹ РїРѕ СЂРµРіРёРѕРЅСѓ", description = "Р’РѕР·РІСЂР°С‰Р°РµС‚ СЃРїРёСЃРѕРє РѕС‚РґРµР»РѕРІ РІ СѓРєР°Р·Р°РЅРЅРѕРј СЂРµРіРёРѕРЅРµ")
     @GetMapping("/by-region")
     public ResponseEntity<List<DepartmentDto>> getDepartmentsByRegion(
-        @Parameter(description = "Регион", required = true, example = "MINSK")
+        @Parameter(description = "Р РµРіРёРѕРЅ", required = true, example = "MINSK")
         @RequestParam final String region) {
         return ResponseEntity.ok(departmentService.getDepartmentsByRegion(region));
     }
 
-    @Operation(
-        summary = "Обновить отдел",
-        description = "Обновляет информацию о существующем отделе"
-    )
-    @ApiResponses(value = {
-        @ApiResponse(
-            responseCode = "200",
-            description = "Отдел успешно обновлен",
-            content = @Content(schema = @Schema(implementation = DepartmentDto.class))
-        ),
-        @ApiResponse(
-            responseCode = "400",
-            description = "Неверные данные запроса",
-            content = @Content
-        ),
-        @ApiResponse(
-            responseCode = "404",
-            description = "Отдел не найден",
-            content = @Content
-        )
-    })
+    @Operation(summary = "РћР±РЅРѕРІРёС‚СЊ РѕС‚РґРµР»", description = "РћР±РЅРѕРІР»СЏРµС‚ РёРЅС„РѕСЂРјР°С†РёСЋ Рѕ СЃСѓС‰РµСЃС‚РІСѓСЋС‰РµРј РѕС‚РґРµР»Рµ")
     @PutMapping("/{id}")
     public ResponseEntity<DepartmentDto> updateDepartment(
-        @Parameter(description = "ID отдела", required = true, example = "1")
         @PathVariable final Long id,
-        @Parameter(description = "Обновленные данные отдела", required = true)
         @Valid @RequestBody final DepartmentCreateDto updateDto) {
         return ResponseEntity.ok(departmentService.updateDepartment(id, updateDto));
     }
 
-    @Operation(
-        summary = "Удалить отдел",
-        description = "Удаляет отдел из системы. Невозможно удалить отдел с существующими номерными знаками."
-    )
+    @Operation(summary = "РЈРґР°Р»РёС‚СЊ РѕС‚РґРµР»", description = "РЈРґР°Р»СЏРµС‚ РѕС‚РґРµР» РёР· СЃРёСЃС‚РµРјС‹. РќРµРІРѕР·РјРѕР¶РЅРѕ СѓРґР°Р»РёС‚СЊ РѕС‚РґРµР» СЃ Р·Р°СЏРІР»РµРЅРёСЏРјРё.")
     @ApiResponses(value = {
-        @ApiResponse(
-            responseCode = "204",
-            description = "Отдел успешно удален",
-            content = @Content
-        ),
-        @ApiResponse(
-            responseCode = "404",
-            description = "Отдел не найден",
-            content = @Content
-        ),
-        @ApiResponse(
-            responseCode = "409",
-            description = "Невозможно удалить отдел с существующими номерными знаками",
-            content = @Content
-        )
+        @ApiResponse(responseCode = "204", description = "РћС‚РґРµР» СѓСЃРїРµС€РЅРѕ СѓРґР°Р»РµРЅ", content = @Content),
+        @ApiResponse(responseCode = "404", description = "РћС‚РґРµР» РЅРµ РЅР°Р№РґРµРЅ", content = @Content),
+        @ApiResponse(responseCode = "409", description = "РќРµРІРѕР·РјРѕР¶РЅРѕ СѓРґР°Р»РёС‚СЊ РѕС‚РґРµР» СЃ Р·Р°СЏРІР»РµРЅРёСЏРјРё", content = @Content)
     })
     @DeleteMapping("/{id}")
-    public ResponseEntity<Void> deleteDepartment(
-        @Parameter(description = "ID отдела", required = true, example = "1")
-        @PathVariable final Long id) {
+    public ResponseEntity<Void> deleteDepartment(@PathVariable final Long id) {
         departmentService.deleteDepartment(id);
         return ResponseEntity.noContent().build();
     }
 
-    @Operation(
-        summary = "Демонстрация N+1 проблемы",
-        description = "Показывает проблему N+1 запросов при загрузке отделов с номерными знаками"
-    )
+    @Operation(summary = "Р”РµРјРѕРЅСЃС‚СЂР°С†РёСЏ РѕР±С…РѕРґР° РѕС‚РґРµР»РѕРІ", description = "РџРѕРєР°Р·С‹РІР°РµС‚ РѕР±С…РѕРґ РѕС‚РґРµР»РѕРІ РїРѕ СЂРµРіРёРѕРЅСѓ")
     @GetMapping("/demo/nplus1")
-    public ResponseEntity<String> demonstrateNPlusOne(
-        @Parameter(description = "Регион", required = true, example = "MINSK")
-        @RequestParam final String region) {
+    public ResponseEntity<String> demonstrateNPlusOne(@RequestParam final String region) {
         departmentService.demonstrateNPlusOneProblem(region);
-        return ResponseEntity.ok("N+1 problem demonstrated. Check logs!");
+        return ResponseEntity.ok("Department traversal demonstrated. Check logs!");
     }
 
-    @Operation(
-        summary = "Решение N+1 проблемы (Fetch Join)",
-        description = "Показывает решение N+1 проблемы с использованием Fetch Join"
-    )
+    @Operation(summary = "РћР±С…РѕРґ РѕС‚РґРµР»РѕРІ РїРѕ СЂРµРіРёРѕРЅСѓ", description = "РџРѕРєР°Р·С‹РІР°РµС‚ РѕР±С…РѕРґ РѕС‚РґРµР»РѕРІ РґР»СЏ РѕС‚Р»Р°РґРєРё")
     @GetMapping("/demo/solved")
-    public ResponseEntity<String> solveNPlusOne(
-        @Parameter(description = "Регион", required = true, example = "MINSK")
-        @RequestParam final String region) {
+    public ResponseEntity<String> solveNPlusOne(@RequestParam final String region) {
         departmentService.solveNPlusOneWithFetchJoin(region);
-        return ResponseEntity.ok("N+1 solved with fetch join. Check logs!");
+        return ResponseEntity.ok("Department traversal completed. Check logs!");
     }
 }

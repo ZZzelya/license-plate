@@ -28,6 +28,7 @@ public class ApplicationMapper {
         dto.setConfirmationDate(application.getConfirmationDate());
         dto.setPaymentAmount(application.getPaymentAmount());
         dto.setNotes(application.getNotes());
+        dto.setAdminComment(application.getAdminComment());
         dto.setVehicleVin(application.getVehicleVin());
         dto.setVehicleModel(application.getVehicleModel());
         dto.setVehicleYear(application.getVehicleYear());

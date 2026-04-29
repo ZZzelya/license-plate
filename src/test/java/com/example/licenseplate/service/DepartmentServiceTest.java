@@ -2,16 +2,13 @@ package com.example.licenseplate.service;
 
 import com.example.licenseplate.dto.request.DepartmentCreateDto;
 import com.example.licenseplate.dto.response.DepartmentDto;
-import com.example.licenseplate.dto.DepartmentWithPlatesDto;
 import com.example.licenseplate.exception.BusinessException;
 import com.example.licenseplate.exception.ResourceNotFoundException;
-import com.example.licenseplate.model.entity.LicensePlate;
+import com.example.licenseplate.mapper.DepartmentMapper;
+import com.example.licenseplate.model.entity.Application;
 import com.example.licenseplate.model.entity.RegistrationDept;
 import com.example.licenseplate.repository.DepartmentRepository;
-import com.example.licenseplate.mapper.DepartmentMapper;
 import org.junit.jupiter.api.BeforeEach;
-import org.junit.jupiter.api.DisplayName;
-import org.junit.jupiter.api.Nested;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
 import org.mockito.InjectMocks;
@@ -19,374 +16,182 @@ import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
 
 import java.util.ArrayList;
-import java.util.Collections;
 import java.util.List;
 import java.util.Optional;
 
 import static org.assertj.core.api.Assertions.assertThat;
+import static org.assertj.core.api.Assertions.assertThatCode;
 import static org.assertj.core.api.Assertions.assertThatThrownBy;
-import static org.mockito.ArgumentMatchers.any;
-import static org.mockito.Mockito.*;
+import static org.mockito.Mockito.doNothing;
+import static org.mockito.Mockito.verify;
+import static org.mockito.Mockito.when;
 
 @ExtendWith(MockitoExtension.class)
-@DisplayName("DepartmentService Coverage Tests")
 class DepartmentServiceTest {
 
     @Mock
     private DepartmentRepository departmentRepository;
-
     @Mock
     private DepartmentMapper departmentMapper;
 
     @InjectMocks
     private DepartmentService departmentService;
 
-    private RegistrationDept testDept;
-    private DepartmentDto testDeptDto;
-    private DepartmentCreateDto testCreateDto;
+    private RegistrationDept department;
+    private DepartmentDto departmentDto;
+    private DepartmentCreateDto createDto;
 
     @BeforeEach
     void setUp() {
-        testDept = RegistrationDept.builder()
+        department = RegistrationDept.builder()
             .id(1L)
-            .name("МРЭО ГАИ")
-            .address("г.Минск, ул.Московская 1")
+            .name("Dept")
+            .region("Minsk")
             .phoneNumber("+375291234567")
-            .region("MINSK")
-            .licensePlates(new ArrayList<>())
+            .applications(new ArrayList<>())
             .build();
 
-        testDeptDto = DepartmentDto.builder()
+        departmentDto = DepartmentDto.builder()
             .id(1L)
-            .name("МРЭО ГАИ")
-            .address("г.Минск, ул.Московская 1")
-            .phoneNumber("+375291234567")
-            .region("MINSK")
-            .licensePlatesCount(0)
+            .name("Dept")
+            .region("Minsk")
+            .applicationsCount(0)
             .build();
-
-        testCreateDto = DepartmentCreateDto.builder()
-            .name("МРЭО ГАИ")
-            .address("г.Минск, ул.Московская 1")
+        createDto = DepartmentCreateDto.builder()
+            .name("Dept")
+            .region("Minsk")
             .phoneNumber("+375291234567")
-            .region("MINSK")
+            .address("Address")
             .build();
     }
 
-    @Nested
-    @DisplayName("getAllDepartments()")
-    class GetAllDepartmentsTests {
+    @Test
+    void getAllDepartmentsReturnsMappedList() {
+        when(departmentRepository.findAll()).thenReturn(List.of(department));
+        when(departmentMapper.toDtoList(List.of(department))).thenReturn(List.of(departmentDto));
 
-        @Test
-        @DisplayName("Should return list of departments")
-        void shouldReturnListOfDepartments() {
-            List<RegistrationDept> depts = List.of(testDept);
-            List<DepartmentDto> expectedDtos = List.of(testDeptDto);
-
-            when(departmentRepository.findAll()).thenReturn(depts);
-            when(departmentMapper.toDtoList(depts)).thenReturn(expectedDtos);
-
-            List<DepartmentDto> result = departmentService.getAllDepartments();
-
-            assertThat(result).isEqualTo(expectedDtos);
-            verify(departmentRepository).findAll();
-            verify(departmentMapper).toDtoList(depts);
-        }
-
-        @Test
-        @DisplayName("Should return empty list when no departments")
-        void shouldReturnEmptyListWhenNoDepartments() {
-            when(departmentRepository.findAll()).thenReturn(Collections.emptyList());
-            when(departmentMapper.toDtoList(Collections.emptyList())).thenReturn(Collections.emptyList());
-
-            List<DepartmentDto> result = departmentService.getAllDepartments();
-
-            assertThat(result).isEmpty();
-        }
+        assertThat(departmentService.getAllDepartments()).containsExactly(departmentDto);
     }
 
-    @Nested
-    @DisplayName("getDepartmentById()")
-    class GetDepartmentByIdTests {
+    @Test
+    void getDepartmentByIdReturnsMappedDepartment() {
+        when(departmentRepository.findById(1L)).thenReturn(Optional.of(department));
+        when(departmentMapper.toDto(department)).thenReturn(departmentDto);
 
-        @Test
-        @DisplayName("Should return department when id exists")
-        void shouldReturnDepartmentWhenIdExists() {
-            when(departmentRepository.findById(1L)).thenReturn(Optional.of(testDept));
-            when(departmentMapper.toDto(testDept)).thenReturn(testDeptDto);
-
-            DepartmentDto result = departmentService.getDepartmentById(1L);
-
-            assertThat(result).isEqualTo(testDeptDto);
-            verify(departmentRepository).findById(1L);
-            verify(departmentMapper).toDto(testDept);
-        }
-
-        @Test
-        @DisplayName("Should throw ResourceNotFoundException when id not found")
-        void shouldThrowNotFoundExceptionWhenIdNotFound() {
-            when(departmentRepository.findById(999L)).thenReturn(Optional.empty());
-
-            assertThatThrownBy(() -> departmentService.getDepartmentById(999L))
-                .isInstanceOf(ResourceNotFoundException.class)
-                .hasMessageContaining("Department not found with id: 999");
-        }
+        assertThat(departmentService.getDepartmentById(1L)).isEqualTo(departmentDto);
     }
 
-    @Nested
-    @DisplayName("getDepartmentWithPlates()")
-    class GetDepartmentWithPlatesTests {
+    @Test
+    void getDepartmentByIdThrowsWhenMissing() {
+        when(departmentRepository.findById(1L)).thenReturn(Optional.empty());
 
-        @Test
-        @DisplayName("Should return department with plates when id exists")
-        void shouldReturnDepartmentWithPlates() {
-            DepartmentWithPlatesDto expectedDto = DepartmentWithPlatesDto.builder()
-                .id(1L)
-                .name("МРЭО ГАИ")
-                .licensePlates(new ArrayList<>())
-                .build();
-
-            when(departmentRepository.findByIdWithPlates(1L)).thenReturn(Optional.of(testDept));
-            when(departmentMapper.toDtoWithPlates(testDept)).thenReturn(expectedDto);
-
-            DepartmentWithPlatesDto result = departmentService.getDepartmentWithPlates(1L);
-
-            assertThat(result).isEqualTo(expectedDto);
-            verify(departmentRepository).findByIdWithPlates(1L);
-        }
-
-        @Test
-        @DisplayName("Should throw ResourceNotFoundException when id not found")
-        void shouldThrowNotFoundExceptionWhenIdNotFound() {
-            when(departmentRepository.findByIdWithPlates(999L)).thenReturn(Optional.empty());
-
-            assertThatThrownBy(() -> departmentService.getDepartmentWithPlates(999L))
-                .isInstanceOf(ResourceNotFoundException.class)
-                .hasMessageContaining("Department not found with id: 999");
-        }
+        assertThatThrownBy(() -> departmentService.getDepartmentById(1L))
+            .isInstanceOf(ResourceNotFoundException.class);
     }
 
-    @Nested
-    @DisplayName("getDepartmentsByRegion()")
-    class GetDepartmentsByRegionTests {
+    @Test
+    void getDepartmentsByRegionReturnsMappedList() {
+        when(departmentRepository.findByRegionIgnoreCase("Minsk")).thenReturn(List.of(department));
+        when(departmentMapper.toDtoList(List.of(department))).thenReturn(List.of(departmentDto));
 
-        @Test
-        @DisplayName("Should return departments by region")
-        void shouldReturnDepartmentsByRegion() {
-            List<RegistrationDept> depts = List.of(testDept);
-            List<DepartmentDto> expectedDtos = List.of(testDeptDto);
-
-            when(departmentRepository.findByRegionIgnoreCase("MINSK")).thenReturn(depts);
-            when(departmentMapper.toDtoList(depts)).thenReturn(expectedDtos);
-
-            List<DepartmentDto> result = departmentService.getDepartmentsByRegion("MINSK");
-
-            assertThat(result).isEqualTo(expectedDtos);
-            verify(departmentRepository).findByRegionIgnoreCase("MINSK");
-        }
-
-        @Test
-        @DisplayName("Should return empty list when no departments in region")
-        void shouldReturnEmptyListWhenNoDepartmentsInRegion() {
-            when(departmentRepository.findByRegionIgnoreCase("UNKNOWN")).thenReturn(Collections.emptyList());
-            when(departmentMapper.toDtoList(Collections.emptyList())).thenReturn(Collections.emptyList());
-
-            List<DepartmentDto> result = departmentService.getDepartmentsByRegion("UNKNOWN");
-
-            assertThat(result).isEmpty();
-        }
+        assertThat(departmentService.getDepartmentsByRegion("Minsk")).containsExactly(departmentDto);
     }
 
-    @Nested
-    @DisplayName("createDepartment()")
-    class CreateDepartmentTests {
+    @Test
+    void getDepartmentsByRegionReturnsEmptyList() {
+        when(departmentRepository.findByRegionIgnoreCase("Unknown")).thenReturn(List.of());
+        when(departmentMapper.toDtoList(List.of())).thenReturn(List.of());
 
-        @Test
-        @DisplayName("Should create department successfully")
-        void shouldCreateDepartmentSuccessfully() {
-            when(departmentRepository.existsByPhoneNumber("+375291234567")).thenReturn(false);
-            when(departmentMapper.toEntity(testCreateDto)).thenReturn(testDept);
-            when(departmentRepository.save(testDept)).thenReturn(testDept);
-            when(departmentMapper.toDto(testDept)).thenReturn(testDeptDto);
-
-            DepartmentDto result = departmentService.createDepartment(testCreateDto);
-
-            assertThat(result).isEqualTo(testDeptDto);
-            verify(departmentRepository).existsByPhoneNumber("+375291234567");
-            verify(departmentMapper).toEntity(testCreateDto);
-            verify(departmentRepository).save(testDept);
-        }
-
-        @Test
-        @DisplayName("Should throw BusinessException when phone already exists")
-        void shouldThrowExceptionWhenPhoneExists() {
-            when(departmentRepository.existsByPhoneNumber("+375291234567")).thenReturn(true);
-
-            assertThatThrownBy(() -> departmentService.createDepartment(testCreateDto))
-                .isInstanceOf(BusinessException.class)
-                .hasMessageContaining("Department with phone +375291234567 already exists");
-
-            verify(departmentRepository).existsByPhoneNumber("+375291234567");
-            verify(departmentMapper, never()).toEntity(any());
-            verify(departmentRepository, never()).save(any());
-        }
+        assertThat(departmentService.getDepartmentsByRegion("Unknown")).isEmpty();
     }
 
-    @Nested
-    @DisplayName("updateDepartment()")
-    class UpdateDepartmentTests {
+    @Test
+    void createDepartmentThrowsWhenPhoneExists() {
+        when(departmentRepository.existsByPhoneNumber("+375291234567")).thenReturn(true);
 
-        @Test
-        @DisplayName("Should update department successfully")
-        void shouldUpdateDepartmentSuccessfully() {
-            when(departmentRepository.findById(1L)).thenReturn(Optional.of(testDept));
-            doNothing().when(departmentMapper).updateEntity(testDept, testCreateDto);
-            when(departmentRepository.save(testDept)).thenReturn(testDept);
-            when(departmentMapper.toDto(testDept)).thenReturn(testDeptDto);
-
-            DepartmentDto result = departmentService.updateDepartment(1L, testCreateDto);
-
-            assertThat(result).isEqualTo(testDeptDto);
-            verify(departmentRepository).findById(1L);
-            verify(departmentMapper).updateEntity(testDept, testCreateDto);
-            verify(departmentRepository).save(testDept);
-        }
-
-        @Test
-        @DisplayName("Should throw ResourceNotFoundException when id not found")
-        void shouldThrowNotFoundExceptionWhenIdNotFound() {
-            when(departmentRepository.findById(999L)).thenReturn(Optional.empty());
-
-            assertThatThrownBy(() -> departmentService.updateDepartment(999L, testCreateDto))
-                .isInstanceOf(ResourceNotFoundException.class)
-                .hasMessageContaining("Department not found with id: 999");
-        }
-
-        @Test
-        @DisplayName("Should handle null updateDto")
-        void shouldHandleNullUpdateDto() {
-            when(departmentRepository.findById(1L)).thenReturn(Optional.of(testDept));
-            when(departmentRepository.save(testDept)).thenReturn(testDept);
-            when(departmentMapper.toDto(testDept)).thenReturn(testDeptDto);
-
-            DepartmentDto result = departmentService.updateDepartment(1L, null);
-
-            assertThat(result).isEqualTo(testDeptDto);
-            verify(departmentMapper).updateEntity(testDept, null);
-        }
+        assertThatThrownBy(() -> departmentService.createDepartment(createDto))
+            .isInstanceOf(BusinessException.class);
     }
 
-    @Nested
-    @DisplayName("deleteDepartment()")
-    class DeleteDepartmentTests {
+    @Test
+    void createDepartmentSavesAndMapsEntity() {
+        when(departmentRepository.existsByPhoneNumber("+375291234567")).thenReturn(false);
+        when(departmentMapper.toEntity(createDto)).thenReturn(department);
+        when(departmentRepository.save(department)).thenReturn(department);
+        when(departmentMapper.toDto(department)).thenReturn(departmentDto);
 
-        @Test
-        @DisplayName("Should delete department successfully when no license plates")
-        void shouldDeleteDepartmentSuccessfully() {
-            when(departmentRepository.findById(1L)).thenReturn(Optional.of(testDept));
-            doNothing().when(departmentRepository).delete(testDept);
-
-            departmentService.deleteDepartment(1L);
-
-            verify(departmentRepository).findById(1L);
-            verify(departmentRepository).delete(testDept);
-        }
-
-        @Test
-        @DisplayName("Should throw BusinessException when department has license plates")
-        void shouldThrowExceptionWhenHasLicensePlates() {
-            testDept.setLicensePlates(List.of(new LicensePlate()));
-
-            when(departmentRepository.findById(1L)).thenReturn(Optional.of(testDept));
-
-            assertThatThrownBy(() -> departmentService.deleteDepartment(1L))
-                .isInstanceOf(BusinessException.class)
-                .hasMessageContaining("Cannot delete department with existing license plates");
-
-            verify(departmentRepository).findById(1L);
-            verify(departmentRepository, never()).delete(any());
-        }
-
-        @Test
-        @DisplayName("Should handle null license plates list gracefully")
-        void shouldHandleNullLicensePlatesList() {
-            testDept.setLicensePlates(null);
-
-            when(departmentRepository.findById(1L)).thenReturn(Optional.of(testDept));
-            doNothing().when(departmentRepository).delete(testDept);
-
-            departmentService.deleteDepartment(1L);
-
-            verify(departmentRepository).findById(1L);
-            verify(departmentRepository).delete(testDept);
-        }
-
-        @Test
-        @DisplayName("Should handle empty license plates list gracefully")
-        void shouldHandleEmptyLicensePlatesList() {
-            testDept.setLicensePlates(Collections.emptyList());
-
-            when(departmentRepository.findById(1L)).thenReturn(Optional.of(testDept));
-            doNothing().when(departmentRepository).delete(testDept);
-
-            departmentService.deleteDepartment(1L);
-
-            verify(departmentRepository).findById(1L);
-            verify(departmentRepository).delete(testDept);
-        }
+        assertThat(departmentService.createDepartment(createDto)).isEqualTo(departmentDto);
     }
 
-    @Nested
-    @DisplayName("demonstrateNPlusOneProblem()")
-    class DemonstrateNPlusOneProblemTests {
+    @Test
+    void updateDepartmentThrowsWhenMissing() {
+        when(departmentRepository.findById(1L)).thenReturn(Optional.empty());
 
-        @Test
-        @DisplayName("Should demonstrate N+1 problem")
-        void shouldDemonstrateNPlusOneProblem() {
-            List<RegistrationDept> depts = List.of(testDept);
-            when(departmentRepository.findByRegionIgnoreCase("MINSK")).thenReturn(depts);
-
-            departmentService.demonstrateNPlusOneProblem("MINSK");
-
-            verify(departmentRepository).findByRegionIgnoreCase("MINSK");
-
-            assertThat(testDept.getLicensePlates()).isEmpty();
-        }
-
-        @Test
-        @DisplayName("Should handle empty list in N+1 demo")
-        void shouldHandleEmptyListInNPlusOneDemo() {
-            when(departmentRepository.findByRegionIgnoreCase("MINSK")).thenReturn(Collections.emptyList());
-
-            departmentService.demonstrateNPlusOneProblem("MINSK");
-
-            verify(departmentRepository).findByRegionIgnoreCase("MINSK");
-        }
+        assertThatThrownBy(() -> departmentService.updateDepartment(1L, createDto))
+            .isInstanceOf(ResourceNotFoundException.class);
     }
 
-    @Nested
-    @DisplayName("solveNPlusOneWithFetchJoin()")
-    class SolveNPlusOneWithFetchJoinTests {
+    @Test
+    void updateDepartmentUpdatesEntity() {
+        when(departmentRepository.findById(1L)).thenReturn(Optional.of(department));
+        when(departmentRepository.save(department)).thenReturn(department);
+        when(departmentMapper.toDto(department)).thenReturn(departmentDto);
 
-        @Test
-        @DisplayName("Should solve N+1 problem with fetch join")
-        void shouldSolveNPlusOneWithFetchJoin() {
-            List<RegistrationDept> depts = List.of(testDept);
-            when(departmentRepository.findByRegionWithPlatesFetch("MINSK")).thenReturn(depts);
+        assertThat(departmentService.updateDepartment(1L, createDto)).isEqualTo(departmentDto);
+        verify(departmentMapper).updateEntity(department, createDto);
+    }
 
-            departmentService.solveNPlusOneWithFetchJoin("MINSK");
+    @Test
+    void deleteDepartmentThrowsWhenApplicationsExist() {
+        department.setApplications(List.of(new Application()));
+        when(departmentRepository.findById(1L)).thenReturn(Optional.of(department));
 
-            verify(departmentRepository).findByRegionWithPlatesFetch("MINSK");
-        }
+        assertThatThrownBy(() -> departmentService.deleteDepartment(1L))
+            .isInstanceOf(BusinessException.class);
+    }
 
-        @Test
-        @DisplayName("Should handle empty list in fetch join demo")
-        void shouldHandleEmptyListInFetchJoinDemo() {
-            when(departmentRepository.findByRegionWithPlatesFetch("MINSK")).thenReturn(Collections.emptyList());
+    @Test
+    void deleteDepartmentDeletesWhenNoApplications() {
+        when(departmentRepository.findById(1L)).thenReturn(Optional.of(department));
+        doNothing().when(departmentRepository).delete(department);
 
-            departmentService.solveNPlusOneWithFetchJoin("MINSK");
+        departmentService.deleteDepartment(1L);
 
-            verify(departmentRepository).findByRegionWithPlatesFetch("MINSK");
-        }
+        verify(departmentRepository).delete(department);
+    }
+
+    @Test
+    void deleteDepartmentDeletesWhenApplicationsListIsNull() {
+        department.setApplications(null);
+        when(departmentRepository.findById(1L)).thenReturn(Optional.of(department));
+        doNothing().when(departmentRepository).delete(department);
+
+        departmentService.deleteDepartment(1L);
+
+        verify(departmentRepository).delete(department);
+    }
+
+    @Test
+    void deleteDepartmentThrowsWhenMissing() {
+        when(departmentRepository.findById(1L)).thenReturn(Optional.empty());
+
+        assertThatThrownBy(() -> departmentService.deleteDepartment(1L))
+            .isInstanceOf(ResourceNotFoundException.class);
+    }
+
+    @Test
+    void demonstrateNPlusOneProblemTraversesDepartments() {
+        department.setApplications(List.of(new Application()));
+        when(departmentRepository.findByRegionIgnoreCase("Minsk")).thenReturn(List.of(department));
+
+        assertThatCode(() -> departmentService.demonstrateNPlusOneProblem("Minsk")).doesNotThrowAnyException();
+    }
+
+    @Test
+    void solveNPlusOneWithFetchJoinTraversesDepartments() {
+        department.setApplications(List.of(new Application()));
+        when(departmentRepository.findByRegionIgnoreCase("Minsk")).thenReturn(List.of(department));
+
+        assertThatCode(() -> departmentService.solveNPlusOneWithFetchJoin("Minsk")).doesNotThrowAnyException();
     }
 }

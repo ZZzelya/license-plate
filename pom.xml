@@ -42,7 +42,10 @@
         <sonar.host.url>https://sonarcloud.io</sonar.host.url>
         <sonar.coverage.jacoco.xmlReportPaths>target/site/jacoco/jacoco.xml</sonar.coverage.jacoco.xmlReportPaths>
 
-        <sonar.sources>src/main/java/com/example/licenseplate/service</sonar.sources>
+        <sonar.sources>
+            src/main/java/com/example/licenseplate/service,
+            src/main/java/com/example/licenseplate/aspect
+        </sonar.sources>
 
         <sonar.exclusions>
             src/main/java/com/example/licenseplate/dto/**,
@@ -51,7 +54,6 @@
             src/main/java/com/example/licenseplate/config/**,
             src/main/java/com/example/licenseplate/mapper/**,
             src/main/java/com/example/licenseplate/cache/**,
-            src/main/java/com/example/licenseplate/aspect/**,
             src/main/java/com/example/licenseplate/controller/**,
             src/main/java/com/example/licenseplate/repository/**,
             src/main/java/com/example/licenseplate/scheduler/**,
@@ -65,7 +67,6 @@
             src/main/java/com/example/licenseplate/config/**,
             src/main/java/com/example/licenseplate/mapper/**,
             src/main/java/com/example/licenseplate/cache/**,
-            src/main/java/com/example/licenseplate/aspect/**,
             src/main/java/com/example/licenseplate/controller/**,
             src/main/java/com/example/licenseplate/repository/**,
             src/main/java/com/example/licenseplate/scheduler/**,
@@ -73,7 +74,8 @@
         </sonar.coverage.exclusions>
 
         <sonar.coverage.inclusions>
-            src/main/java/com/example/licenseplate/service/**/*.java
+            src/main/java/com/example/licenseplate/service/**/*.java,
+            src/main/java/com/example/licenseplate/aspect/**/*.java
         </sonar.coverage.inclusions>
     </properties>
 
@@ -96,6 +98,11 @@
         <dependency>
             <groupId>org.springframework.boot</groupId>
             <artifactId>spring-boot-starter-aop</artifactId>
+        </dependency>
+
+        <dependency>
+            <groupId>org.springframework.security</groupId>
+            <artifactId>spring-security-crypto</artifactId>
         </dependency>
 
         <dependency>
@@ -176,6 +183,26 @@
             <groupId>net.minidev</groupId>
             <artifactId>json-smart</artifactId>
             <version>${json-smart.version}</version>
+        </dependency>
+
+        <dependency>
+            <groupId>io.jsonwebtoken</groupId>
+            <artifactId>jjwt-api</artifactId>
+            <version>0.12.6</version>
+        </dependency>
+
+        <dependency>
+            <groupId>io.jsonwebtoken</groupId>
+            <artifactId>jjwt-impl</artifactId>
+            <version>0.12.6</version>
+            <scope>runtime</scope>
+        </dependency>
+
+        <dependency>
+            <groupId>io.jsonwebtoken</groupId>
+            <artifactId>jjwt-jackson</artifactId>
+            <version>0.12.6</version>
+            <scope>runtime</scope>
         </dependency>
 
         <!-- Test Dependencies -->
@@ -295,6 +322,7 @@
                             <outputDirectory>${project.build.directory}/site/jacoco</outputDirectory>
                             <includes>
                                 <include>com/example/licenseplate/service/**/*.class</include>
+                                <include>com/example/licenseplate/aspect/**/*.class</include>
                             </includes>
                             <excludes>
                                 <exclude>com/example/licenseplate/dto/**/*.class</exclude>
@@ -303,7 +331,6 @@
                                 <exclude>com/example/licenseplate/config/**/*.class</exclude>
                                 <exclude>com/example/licenseplate/mapper/**/*.class</exclude>
                                 <exclude>com/example/licenseplate/cache/**/*.class</exclude>
-                                <exclude>com/example/licenseplate/aspect/**/*.class</exclude>
                                 <exclude>com/example/licenseplate/controller/**/*.class</exclude>
                                 <exclude>com/example/licenseplate/repository/**/*.class</exclude>
                                 <exclude>com/example/licenseplate/scheduler/**/*.class</exclude>

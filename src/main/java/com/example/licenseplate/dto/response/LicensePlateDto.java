@@ -6,7 +6,6 @@ import lombok.Builder;
 import lombok.Data;
 import lombok.NoArgsConstructor;
 
-import java.math.BigDecimal;
 import java.time.LocalDateTime;
 
 @Data
@@ -16,8 +15,10 @@ import java.time.LocalDateTime;
 public class LicensePlateDto {
     private Long id;
     private String plateNumber;
-    private BigDecimal price;
+    private String numberPart;
     private String series;
+    private String regionCode;
+    private String region;
     @JsonFormat(pattern = "yyyy-MM-dd HH:mm")
     private LocalDateTime issueDate;
     @JsonFormat(pattern = "yyyy-MM-dd HH:mm")

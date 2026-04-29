@@ -2,6 +2,7 @@ package com.example.licenseplate.controller;
 
 import com.example.licenseplate.dto.request.ApplicantCreateDto;
 import com.example.licenseplate.dto.response.ApplicantDto;
+import com.example.licenseplate.model.enums.UserRole;
 import com.example.licenseplate.service.ApplicantService;
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.Parameter;
@@ -211,5 +212,11 @@ public class ApplicantController {
         @Parameter(description = "Новый номер паспорта", required = true, example = "MP7654321")
         @RequestParam String newPassportNumber) {
         return ResponseEntity.ok(applicantService.changePassport(id, newPassportNumber));
+    }
+    @PatchMapping("/{id}/role")
+    public ResponseEntity<ApplicantDto> updateApplicantRole(
+        @PathVariable final Long id,
+        @RequestParam final UserRole role) {
+        return ResponseEntity.ok(applicantService.updateApplicantRole(id, role));
     }
 }

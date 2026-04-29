@@ -60,6 +60,9 @@ public class Application {
     @Column(length = 500)
     private String notes;
 
+    @Column(name = "admin_comment", length = 500)
+    private String adminComment;
+
     @Column(name = "vehicle_vin", length = 50)
     private String vehicleVin;
 

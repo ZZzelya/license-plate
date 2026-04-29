@@ -8,12 +8,14 @@ spring:
     driver-class-name: org.postgresql.Driver
   jpa:
     hibernate:
-      ddl-auto: validate
+      ddl-auto: update
     show-sql: false
     properties:
       hibernate:
         format_sql: true
         dialect: org.hibernate.dialect.PostgreSQLDialect
+  cache:
+    type: simple
 
 
   task:
@@ -56,8 +58,24 @@ management:
 
 logging:
   level:
+    root: INFO
     com.example.licenseplate: DEBUG
-    org.springframework.scheduling: DEBUG
-    org.springframework.web: DEBUG
-  pattern:
-    console: "%d{yyyy-MM-dd HH:mm:ss.SSS} [%thread] %-5level %logger{36} - %msg%n"
+    com.example.licenseplate.aspect.LoggingAspect: DEBUG
+    com.example.licenseplate.service: DEBUG
+    org.springframework: INFO
+    org.springframework.web: INFO
+    org.springframework.scheduling: INFO
+    org.hibernate: WARN
+    org.hibernate.SQL: WARN
+    org.hibernate.orm.jdbc.bind: WARN
+
+app:
+  jwt:
+    secret: "license-plate-local-secret-key-for-jwt-signing-2026"
+    expiration-ms: 86400000
+  logging:
+    path: logs
+    max-file-size: 10MB
+    max-history: 30
+    total-size-cap: 1GB
+    slow-method-threshold-ms: 500

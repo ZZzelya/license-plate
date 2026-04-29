@@ -5,6 +5,7 @@ import org.aspectj.lang.ProceedingJoinPoint;
 import org.aspectj.lang.annotation.Around;
 import org.aspectj.lang.annotation.Aspect;
 import org.aspectj.lang.annotation.Pointcut;
+import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Component;
 import org.springframework.util.StopWatch;
 
@@ -13,11 +14,12 @@ import org.springframework.util.StopWatch;
 @Component
 public class LoggingAspect {
 
-    @SuppressWarnings("checkstyle:WhitespaceAround")
     @Pointcut("execution(* com.example.licenseplate.service..*(..))")
     public void serviceMethods() {
-
     }
+
+    @Value("${app.logging.slow-method-threshold-ms:500}")
+    private long slowMethodThresholdMs;
 
     @Around("serviceMethods()")
     public Object logExecutionTime(ProceedingJoinPoint joinPoint) throws Throwable {
@@ -26,18 +28,34 @@ public class LoggingAspect {
 
         String className = joinPoint.getTarget().getClass().getSimpleName();
         String methodName = joinPoint.getSignature().getName();
-        Object[] args = joinPoint.getArgs();
+        String method = className + "." + methodName;
 
-        log.debug("Executing {}.{} with args: {}", className, methodName, args);
+        log.debug("Starting service method: {} with {} argument(s)", method, joinPoint.getArgs().length);
 
         try {
             Object result = joinPoint.proceed();
             stopWatch.stop();
-            log.info("{}.{} executed in {} ms", className, methodName, stopWatch.getTotalTimeMillis());
+
+            long executionTime = stopWatch.getTotalTimeMillis();
+            if (executionTime >= slowMethodThresholdMs) {
+                log.warn("Slow service method detected: {} executed in {} ms", method, executionTime);
+            } else {
+                log.info("Service method completed: {} executed in {} ms", method, executionTime);
+            }
+
             return result;
-        } catch (Exception e) {
-            log.error("Error in {}.{}: {}", className, methodName, e.getMessage(), e);
-            throw e;
+        } catch (Throwable throwable) {
+            if (stopWatch.isRunning()) {
+                stopWatch.stop();
+            }
+            log.error(
+                "Service method failed: {} after {} ms with message: {}",
+                method,
+                stopWatch.getTotalTimeMillis(),
+                throwable.getMessage(),
+                throwable
+            );
+            throw throwable;
         }
     }
 }

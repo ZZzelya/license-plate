@@ -34,65 +34,32 @@ public class LicensePlateController {
 
     private final LicensePlateService licensePlateService;
 
-    @Operation(
-        summary = "Создать номерной знак",
-        description = "Регистрирует новый номерной знак в системе"
-    )
+    @Operation(summary = "Создать номерной знак", description = "Регистрирует новый номерной знак в системе")
     @ApiResponses(value = {
         @ApiResponse(
             responseCode = "201",
             description = "Номерной знак успешно создан",
             content = @Content(schema = @Schema(implementation = LicensePlateDto.class))
         ),
-        @ApiResponse(
-            responseCode = "400",
-            description = "Неверные данные запроса",
-            content = @Content
-        ),
-        @ApiResponse(
-            responseCode = "404",
-            description = "Отдел ГАИ не найден",
-            content = @Content
-        ),
-        @ApiResponse(
-            responseCode = "409",
-            description = "Номерной знак уже существует",
-            content = @Content
-        )
+        @ApiResponse(responseCode = "400", description = "Неверные данные запроса", content = @Content),
+        @ApiResponse(responseCode = "404", description = "Отделение не найдено", content = @Content),
+        @ApiResponse(responseCode = "409", description = "Номерной знак уже существует", content = @Content)
     })
     @PostMapping
     public ResponseEntity<LicensePlateDto> createLicensePlate(
         @Parameter(description = "Данные для создания номерного знака", required = true)
         @Valid @RequestBody final LicensePlateCreateDto createDto) {
-        LicensePlateDto created = licensePlateService.createLicensePlate(createDto);
-        return ResponseEntity.status(HttpStatus.CREATED).body(created);
+        return ResponseEntity.status(HttpStatus.CREATED).body(licensePlateService.createLicensePlate(createDto));
     }
 
-    @Operation(
-        summary = "Получить все номерные знаки",
-        description = "Возвращает список всех номерных знаков"
-    )
+    @Operation(summary = "Получить все номерные знаки", description = "Возвращает список всех номерных знаков")
     @GetMapping
     public ResponseEntity<List<LicensePlateDto>> getAllLicensePlates() {
         return ResponseEntity.ok(licensePlateService.getAllLicensePlates());
     }
 
-    @Operation(
-        summary = "Получить номерной знак по ID",
-        description = "Возвращает информацию о номерном знаке по его идентификатору"
-    )
-    @ApiResponses(value = {
-        @ApiResponse(
-            responseCode = "200",
-            description = "Номерной знак найден",
-            content = @Content(schema = @Schema(implementation = LicensePlateDto.class))
-        ),
-        @ApiResponse(
-            responseCode = "404",
-            description = "Номерной знак не найден",
-            content = @Content
-        )
-    })
+    @Operation(summary = "Получить номерной знак по ID", description = "Возвращает информацию о " +
+        "номерном знаке по идентификатору")
     @GetMapping("/{id}")
     public ResponseEntity<LicensePlateDto> getLicensePlateById(
         @Parameter(description = "ID номерного знака", required = true, example = "1")
@@ -100,10 +67,8 @@ public class LicensePlateController {
         return ResponseEntity.ok(licensePlateService.getLicensePlateById(id));
     }
 
-    @Operation(
-        summary = "Получить номерной знак по номеру",
-        description = "Возвращает информацию о номерном знаке по его номеру"
-    )
+    @Operation(summary = "Получить номерной знак по номеру", description = "Возвращает информацию о " +
+        "номерном знаке по полному номеру")
     @GetMapping("/by-number")
     public ResponseEntity<LicensePlateDto> getLicensePlateByNumber(
         @Parameter(description = "Номер знака в формате 1234 AB-7", required = true, example = "1234 AB-7")
@@ -111,73 +76,35 @@ public class LicensePlateController {
         return ResponseEntity.ok(licensePlateService.getLicensePlateByNumber(plateNumber));
     }
 
-    @Operation(
-        summary = "Получить доступные знаки по региону",
-        description = "Возвращает список доступных номерных знаков в указанном регионе"
-    )
+    @Operation(summary = "Получить доступные знаки по региону", description = "Возвращает список свободных " +
+        "номерных знаков в указанном регионе")
     @GetMapping("/available")
     public ResponseEntity<List<LicensePlateDto>> getAvailablePlatesByRegion(
-        @Parameter(description = "Регион", required = true, example = "MINSK")
+        @Parameter(description = "Регион", required = true, example = "Минская область")
         @RequestParam final String region) {
         return ResponseEntity.ok(licensePlateService.getAvailablePlatesByRegion(region));
     }
 
-    @Operation(
-        summary = "Обновить номерной знак",
-        description = "Обновляет информацию о существующем номерном знаке"
-    )
-    @ApiResponses(value = {
-        @ApiResponse(
-            responseCode = "200",
-            description = "Номерной знак успешно обновлен",
-            content = @Content(schema = @Schema(implementation = LicensePlateDto.class))
-        ),
-        @ApiResponse(
-            responseCode = "400",
-            description = "Неверные данные запроса",
-            content = @Content
-        ),
-        @ApiResponse(
-            responseCode = "404",
-            description = "Номерной знак не найден",
-            content = @Content
-        ),
-        @ApiResponse(
-            responseCode = "409",
-            description = "Номерной знак уже существует",
-            content = @Content
-        )
-    })
+    @Operation(summary = "Получить доступные знаки по отделению", description = "Возвращает список " +
+        "свободных номерных знаков в указанном отделении")
+    @GetMapping("/available/by-department")
+    public ResponseEntity<List<LicensePlateDto>> getAvailablePlatesByDepartment(
+        @Parameter(description = "ID отделения", required = true, example = "1")
+        @RequestParam final Long departmentId) {
+        return ResponseEntity.ok(licensePlateService.getAvailablePlatesByDepartment(departmentId));
+    }
+
+    @Operation(summary = "Обновить номерной знак", description = "Обновляет информацию о существующем номерном знаке")
     @PutMapping("/{id}")
     public ResponseEntity<LicensePlateDto> updateLicensePlate(
         @Parameter(description = "ID номерного знака", required = true, example = "1")
         @PathVariable final Long id,
-        @Parameter(description = "Обновленные данные номерного знака", required = true)
+        @Parameter(description = "Обновлённые данные номерного знака", required = true)
         @Valid @RequestBody final LicensePlateCreateDto updateDto) {
         return ResponseEntity.ok(licensePlateService.updateLicensePlate(id, updateDto));
     }
 
-    @Operation(
-        summary = "Удалить номерной знак",
-        description = "Удаляет номерной знак из системы. Невозможно удалить знак с существующими заявлениями."
-    )
-    @ApiResponses(value = {
-        @ApiResponse(
-            responseCode = "204",
-            description = "Номерной знак успешно удален",
-            content = @Content
-        ),
-        @ApiResponse(
-            responseCode = "404",
-            description = "Номерной знак не найден",
-            content = @Content
-        ),
-        @ApiResponse(
-            responseCode = "409",
-            description = "Невозможно удалить знак с существующими заявлениями",
-            content = @Content
-        )
-    })
+    @Operation(summary = "Удалить номерной знак", description = "Удаляет номерной знак из системы")
     @DeleteMapping("/{id}")
     public ResponseEntity<Void> deleteLicensePlate(
         @Parameter(description = "ID номерного знака", required = true, example = "1")

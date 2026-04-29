@@ -1,0 +1,13 @@
+2026-04-15 08:48:01.726 [http-nio-8080-exec-2] ERROR o.h.e.jdbc.spi.SqlExceptionHelper - ОШИБКА: update or delete on table "applicants" violates foreign key constraint "fkfjp0cyxbd3ggaeg3nd6ps9nob" on table "user_accounts"
+  Подробности: Key (id)=(9) is still referenced from table "user_accounts".
+2026-04-15 08:48:31.383 [http-nio-8080-exec-19] ERROR o.h.e.jdbc.spi.SqlExceptionHelper - ОШИБКА: update or delete on table "applicants" violates foreign key constraint "fkfjp0cyxbd3ggaeg3nd6ps9nob" on table "user_accounts"
+  Подробности: Key (id)=(9) is still referenced from table "user_accounts".
+2026-04-15 08:50:28.323 [http-nio-8080-Acceptor] ERROR org.apache.tomcat.util.net.Acceptor - Socket accept failed
+java.nio.channels.AsynchronousCloseException: null
+	at java.base/java.nio.channels.spi.AbstractInterruptibleChannel.end(AbstractInterruptibleChannel.java:203)
+	at java.base/sun.nio.ch.ServerSocketChannelImpl.end(ServerSocketChannelImpl.java:383)
+	at java.base/sun.nio.ch.ServerSocketChannelImpl.accept(ServerSocketChannelImpl.java:407)
+	at org.apache.tomcat.util.net.NioEndpoint.serverSocketAccept(NioEndpoint.java:518)
+	at org.apache.tomcat.util.net.NioEndpoint.serverSocketAccept(NioEndpoint.java:71)
+	at org.apache.tomcat.util.net.Acceptor.run(Acceptor.java:128)
+	at java.base/java.lang.Thread.run(Thread.java:1583)

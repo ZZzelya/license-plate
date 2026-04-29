@@ -19,7 +19,7 @@ public class ApplicationScheduler {
 
     private final ApplicationRepository applicationRepository;
 
-    @Scheduled(fixedDelay = 600000)
+    @Scheduled(fixedDelay = 604800000)
     @Transactional
     public void releaseExpiredReservations() {
         LocalDateTime now = LocalDateTime.now();

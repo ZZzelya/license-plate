@@ -1,8 +1,8 @@
 package com.example.licenseplate.mapper;
 
-import com.example.licenseplate.dto.request.LicensePlateCreateDto;
 import com.example.licenseplate.dto.response.LicensePlateDto;
 import com.example.licenseplate.model.entity.LicensePlate;
+import com.example.licenseplate.service.PlateFormatSupport;
 import org.springframework.stereotype.Component;
 
 import java.util.Collections;
@@ -19,40 +19,21 @@ public class LicensePlateMapper {
         LicensePlateDto dto = new LicensePlateDto();
         dto.setId(plate.getId());
         dto.setPlateNumber(plate.getPlateNumber());
-        dto.setPrice(plate.getPrice());
-        dto.setSeries(plate.getSeries());
         dto.setIssueDate(plate.getIssueDate());
         dto.setExpiryDate(plate.getExpiryDate());
+
+        PlateFormatSupport.PlateParts parts = PlateFormatSupport.parse(plate.getPlateNumber());
+        dto.setNumberPart(parts != null ? parts.numberPart() : null);
+        dto.setSeries(parts != null ? parts.series() : plate.getSeries());
+        dto.setRegionCode(parts != null ? parts.regionCode() : null);
 
         if (plate.getDepartment() != null) {
             dto.setDepartmentId(plate.getDepartment().getId());
             dto.setDepartmentName(plate.getDepartment().getName());
+            dto.setRegion(plate.getDepartment().getRegion());
         }
 
         return dto;
-    }
-
-    public LicensePlate toEntity(LicensePlateCreateDto dto) {
-        if (dto == null) {
-            return null;
-        }
-
-        LicensePlate plate = new LicensePlate();
-        plate.setPlateNumber(dto.getPlateNumber());
-        plate.setPrice(dto.getPrice());
-        plate.setSeries(dto.getSeries());
-
-        return plate;
-    }
-
-    public void updateEntity(LicensePlate plate, LicensePlateCreateDto dto) {
-        if (dto == null || plate == null) {
-            return;
-        }
-
-        plate.setPlateNumber(dto.getPlateNumber());
-        plate.setPrice(dto.getPrice());
-        plate.setSeries(dto.getSeries());
     }
 
     public List<LicensePlateDto> toDtoList(List<LicensePlate> plates) {

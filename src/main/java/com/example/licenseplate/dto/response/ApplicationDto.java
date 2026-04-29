@@ -29,6 +29,7 @@ public class ApplicationDto {
 
     private BigDecimal paymentAmount;
     private String notes;
+    private String adminComment;
     private String vehicleVin;
     private String vehicleModel;
     private Integer vehicleYear;
