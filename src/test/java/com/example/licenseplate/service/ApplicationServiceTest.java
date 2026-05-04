@@ -701,7 +701,7 @@ class ApplicationServiceTest {
     }
 
     @Test
-    void createApplicationReusesExistingPersonalizedPlateAndReassignsDepartment() {
+    void createApplicationReusesExistingPersonalizedPlateWithoutChangingItsDepartment() {
         AdditionalService personalized = AdditionalService.builder().id(1L).name("personaliz nomer").price(BigDecimal.ONE).build();
         RegistrationDept otherDepartment = RegistrationDept.builder().id(2L).region("Minsk").build();
         LicensePlate existing = LicensePlate.builder()
@@ -725,16 +725,15 @@ class ApplicationServiceTest {
         when(serviceRepository.findAllById(List.of(1L))).thenReturn(List.of(personalized));
         when(departmentRepository.findById(1L)).thenReturn(Optional.of(department));
         when(licensePlateRepository.findByPlateNumber("1234 AB-7")).thenReturn(Optional.of(existing));
-        when(licensePlateRepository.save(existing)).thenReturn(existing);
         when(applicationRepository.save(any(Application.class))).thenAnswer(invocation -> invocation.getArgument(0));
         when(applicationMapper.toDto(any(Application.class))).thenReturn(applicationDto);
 
         assertThat(applicationService.createApplication(dto)).isEqualTo(applicationDto);
-        assertThat(existing.getDepartment()).isEqualTo(department);
+        assertThat(existing.getDepartment()).isEqualTo(otherDepartment);
     }
 
     @Test
-    void createApplicationReusesExistingPersonalizedPlateWhenDepartmentMissingOnPlate() {
+    void createApplicationReusesExistingPersonalizedPlateWhenDepartmentMissingOnPlateWithoutMutatingPlate() {
         AdditionalService personalized = AdditionalService.builder().id(1L).name("personaliz nomer").price(BigDecimal.ONE).build();
         LicensePlate existing = LicensePlate.builder()
             .id(8L)
@@ -757,12 +756,11 @@ class ApplicationServiceTest {
         when(serviceRepository.findAllById(List.of(1L))).thenReturn(List.of(personalized));
         when(departmentRepository.findById(1L)).thenReturn(Optional.of(department));
         when(licensePlateRepository.findByPlateNumber("1234 AB-7")).thenReturn(Optional.of(existing));
-        when(licensePlateRepository.save(existing)).thenReturn(existing);
         when(applicationRepository.save(any(Application.class))).thenAnswer(invocation -> invocation.getArgument(0));
         when(applicationMapper.toDto(any(Application.class))).thenReturn(applicationDto);
 
         assertThat(applicationService.createApplication(dto)).isEqualTo(applicationDto);
-        assertThat(existing.getDepartment()).isEqualTo(department);
+        assertThat(existing.getDepartment()).isNull();
     }
 
     @Test
