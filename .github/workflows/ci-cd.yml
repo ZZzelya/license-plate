@@ -64,13 +64,8 @@ jobs:
       - name: Install Railway CLI
         run: npm install -g @railway/cli
 
-      - name: Link backend Railway service
-        run: railway link --project "${{ secrets.RAILWAY_PROJECT_ID }}" --environment production --service "${{ secrets.RAILWAY_BACKEND_SERVICE_NAME }}"
-        env:
-          RAILWAY_TOKEN: ${{ secrets.RAILWAY_TOKEN }}
-
       - name: Deploy backend to Railway
-        run: railway up --ci
+        run: railway up --ci --service "${{ secrets.RAILWAY_BACKEND_SERVICE_NAME }}"
         env:
           RAILWAY_TOKEN: ${{ secrets.RAILWAY_TOKEN }}
 
@@ -90,14 +85,9 @@ jobs:
       - name: Install Railway CLI
         run: npm install -g @railway/cli
 
-      - name: Link frontend Railway service
-        run: railway link --project "${{ secrets.RAILWAY_PROJECT_ID }}" --environment production --service "${{ secrets.RAILWAY_FRONTEND_SERVICE_NAME }}"
-        env:
-          RAILWAY_TOKEN: ${{ secrets.RAILWAY_TOKEN }}
-
       - name: Deploy frontend to Railway
         working-directory: license-plate-frontend
-        run: railway up --ci
+        run: railway up --ci --service "${{ secrets.RAILWAY_FRONTEND_SERVICE_NAME }}"
         env:
           RAILWAY_TOKEN: ${{ secrets.RAILWAY_TOKEN }}
 
