@@ -117,9 +117,25 @@ class LicensePlateServiceTest {
 
     @Test
     void getAvailableMethodsReturnMappedLists() {
+        LicensePlate electricPlate = LicensePlate.builder()
+            .id(2L)
+            .plateNumber("E123 AB-7")
+            .series("AB")
+            .price(BigDecimal.ONE)
+            .department(department)
+            .applications(new ArrayList<>())
+            .build();
+        List<LicensePlate> departmentPlates = new ArrayList<>();
+        for (int i = 0; i < 10; i++) {
+            departmentPlates.add(plate);
+            departmentPlates.add(electricPlate);
+        }
+
         when(licensePlateRepository.findAvailableByRegion("Minsk")).thenReturn(List.of(plate));
-        when(licensePlateRepository.findAvailableByDepartmentId(1L)).thenReturn(List.of(plate));
+        when(departmentRepository.findById(1L)).thenReturn(Optional.of(department));
+        when(licensePlateRepository.findAvailableByDepartmentId(1L)).thenReturn(departmentPlates);
         when(licensePlateMapper.toDtoList(List.of(plate))).thenReturn(List.of(plateDto));
+        when(licensePlateMapper.toDtoList(departmentPlates)).thenReturn(List.of(plateDto));
 
         assertThat(licensePlateService.getAvailablePlatesByRegion("Minsk")).containsExactly(plateDto);
         assertThat(licensePlateService.getAvailablePlatesByDepartment(1L)).containsExactly(plateDto);

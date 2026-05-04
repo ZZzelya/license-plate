@@ -55,14 +55,15 @@ class PlateFormatSupportTest {
 
     @Test
     void transliterateToAsciiConvertsCyrillicAndPassesAsciiThrough() {
-        assertThat(PlateFormatSupport.transliterateToAscii("РњРёРЅСЃРє")).isEqualTo("MINSK");
+        assertThat(PlateFormatSupport.transliterateToAscii("\u041c\u0438\u043d\u0441\u043a")).isEqualTo("MINSK");
         assertThat(PlateFormatSupport.transliterateToAscii("Minsk")).isEqualTo("MINSK");
         assertThat(PlateFormatSupport.transliterateToAscii("   ")).isEmpty();
     }
 
     @Test
     void transliterateToAsciiCoversAllMappedLettersAndDefaultBranch() {
-        String input = "Р°Р±РІРіРґРµС‘Р¶Р·РёР№РєР»РјРЅРѕРїСЂСЃС‚СѓС„С…С†С‡С€С‰С‹СЌСЋСЏСЊСЉ-19";
+        String input = "\u0430\u0431\u0432\u0433\u0434\u0435\u0451\u0436\u0437\u0438\u0439\u043a\u043b\u043c\u043d"
+            + "\u043e\u043f\u0440\u0441\u0442\u0443\u0444\u0445\u0446\u0447\u0448\u0449\u044b\u044d\u044e\u044f-19";
         assertThat(PlateFormatSupport.transliterateToAscii(input))
             .isEqualTo("ABVGDEEZHZIIKLMNOPRSTUFHCCHSHSCHYEYUYA-19");
     }

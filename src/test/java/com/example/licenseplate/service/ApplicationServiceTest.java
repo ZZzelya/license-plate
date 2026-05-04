@@ -145,6 +145,7 @@ class ApplicationServiceTest {
             .passportNumber("MP1234567")
             .vehicleVin("bad")
             .region("Minsk")
+            .vehicleType("STANDARD")
             .build();
         when(applicantRepository.findByPassportNumber("MP1234567")).thenReturn(Optional.of(applicant));
 
@@ -172,6 +173,7 @@ class ApplicationServiceTest {
             .passportNumber("MP1234567")
             .plateNumber("1234 AB-7")
             .vehicleVin("WDB1240661C123456")
+            .vehicleType("STANDARD")
             .build();
 
         when(applicantRepository.findByPassportNumber("MP1234567")).thenReturn(Optional.of(applicant));
@@ -188,6 +190,7 @@ class ApplicationServiceTest {
             .passportNumber("MP1234567")
             .plateNumber("1234 AB-7")
             .vehicleVin("WDB1240661C123456")
+            .vehicleType("STANDARD")
             .build();
 
         when(applicantRepository.findByPassportNumber("MP1234567")).thenReturn(Optional.of(applicant));
@@ -202,6 +205,7 @@ class ApplicationServiceTest {
         ApplicationCreateDto dto = ApplicationCreateDto.builder()
             .passportNumber("MP1234567")
             .vehicleVin("WDB1240661C123456")
+            .vehicleType("STANDARD")
             .build();
 
         when(applicantRepository.findByPassportNumber("MP1234567")).thenReturn(Optional.of(applicant));
@@ -216,6 +220,7 @@ class ApplicationServiceTest {
             .passportNumber("MP1234567")
             .region("Minsk")
             .vehicleVin("WDB1240661C123456")
+            .vehicleType("STANDARD")
             .build();
 
         when(applicantRepository.findByPassportNumber("MP1234567")).thenReturn(Optional.of(applicant));
@@ -232,6 +237,7 @@ class ApplicationServiceTest {
             .passportNumber("MP1234567")
             .region("Minsk")
             .vehicleVin("WDB1240661C123456")
+            .vehicleType("STANDARD")
             .build();
 
         when(applicantRepository.findByPassportNumber("MP1234567")).thenReturn(Optional.of(applicant));
@@ -247,6 +253,7 @@ class ApplicationServiceTest {
             .passportNumber("MP1234567")
             .departmentId(1L)
             .vehicleVin("WDB1240661C123456")
+            .vehicleType("STANDARD")
             .build();
 
         when(applicantRepository.findByPassportNumber("MP1234567")).thenReturn(Optional.of(applicant));
@@ -264,6 +271,7 @@ class ApplicationServiceTest {
             .passportNumber("MP1234567")
             .departmentId(1L)
             .vehicleVin("WDB1240661C123456")
+            .vehicleType("STANDARD")
             .build();
 
         when(applicantRepository.findByPassportNumber("MP1234567")).thenReturn(Optional.of(applicant));
@@ -282,6 +290,7 @@ class ApplicationServiceTest {
             .passportNumber("MP1234567")
             .serviceIds(List.of(1L, 2L))
             .vehicleVin("WDB1240661C123456")
+            .vehicleType("STANDARD")
             .departmentId(1L)
             .plateNumber("1234 AB-7")
             .build();
@@ -301,6 +310,7 @@ class ApplicationServiceTest {
             .serviceIds(List.of(1L))
             .departmentId(1L)
             .vehicleVin("WDB1240661C123456")
+            .vehicleType("STANDARD")
             .build();
 
         when(applicantRepository.findByPassportNumber("MP1234567")).thenReturn(Optional.of(applicant));
@@ -319,6 +329,7 @@ class ApplicationServiceTest {
             .serviceIds(List.of(1L))
             .plateNumber("1234 AB-7")
             .vehicleVin("WDB1240661C123456")
+            .vehicleType("STANDARD")
             .build();
 
         when(applicantRepository.findByPassportNumber("MP1234567")).thenReturn(Optional.of(applicant));
@@ -337,6 +348,7 @@ class ApplicationServiceTest {
             .departmentId(1L)
             .plateNumber("1234 AB-7")
             .vehicleVin("WDB1240661C123456")
+            .vehicleType("STANDARD")
             .build();
 
         when(applicantRepository.findByPassportNumber("MP1234567")).thenReturn(Optional.of(applicant));
@@ -356,6 +368,7 @@ class ApplicationServiceTest {
             .departmentId(1L)
             .plateNumber("1234 AB-7")
             .vehicleVin("WDB1240661C123456")
+            .vehicleType("STANDARD")
             .build();
 
         when(applicantRepository.findByPassportNumber("MP1234567")).thenReturn(Optional.of(applicant));
@@ -378,6 +391,7 @@ class ApplicationServiceTest {
             .departmentId(1L)
             .plateNumber("1234 AB-7")
             .vehicleVin("WDB1240661C123456")
+            .vehicleType("STANDARD")
             .build();
 
         when(applicantRepository.findByPassportNumber("MP1234567")).thenReturn(Optional.of(applicant));
@@ -399,6 +413,7 @@ class ApplicationServiceTest {
             .departmentId(1L)
             .plateNumber("1234 AB-7")
             .vehicleVin("WDB1240661C123456")
+            .vehicleType("STANDARD")
             .build();
 
         when(applicantRepository.findByPassportNumber("MP1234567")).thenReturn(Optional.of(applicant));
@@ -420,6 +435,7 @@ class ApplicationServiceTest {
             .region("Minsk")
             .plateNumber("1234 AB-7")
             .vehicleVin("WDB1240661C123456")
+            .vehicleType("STANDARD")
             .build();
 
         when(applicantRepository.findByPassportNumber("MP1234567")).thenReturn(Optional.of(applicant));
@@ -441,6 +457,7 @@ class ApplicationServiceTest {
             .region("Minsk")
             .plateNumber("1234 AB-7")
             .vehicleVin("WDB1240661C123456")
+            .vehicleType("STANDARD")
             .build();
 
         when(applicantRepository.findByPassportNumber("MP1234567")).thenReturn(Optional.of(applicant));
@@ -472,6 +489,7 @@ class ApplicationServiceTest {
             .region("Minsk")
             .plateNumber("1234 AB-7")
             .vehicleVin("WDB1240661C123456")
+            .vehicleType("STANDARD")
             .build();
 
         when(applicantRepository.findByPassportNumber("MP1234567")).thenReturn(Optional.of(applicant));
@@ -492,6 +510,7 @@ class ApplicationServiceTest {
             .region("Minsk")
             .plateNumber("bad")
             .vehicleVin("WDB1240661C123456")
+            .vehicleType("STANDARD")
             .build();
 
         when(applicantRepository.findByPassportNumber("MP1234567")).thenReturn(Optional.of(applicant));
@@ -510,6 +529,7 @@ class ApplicationServiceTest {
             .departmentId(1L)
             .plateNumber("1234 AB-7")
             .vehicleVin("WDB1240661C123456")
+            .vehicleType("STANDARD")
             .build();
 
         when(applicantRepository.findByPassportNumber("MP1234567")).thenReturn(Optional.of(applicant));
@@ -541,6 +561,7 @@ class ApplicationServiceTest {
             .departmentId(1L)
             .plateNumber("1234 AB-7")
             .vehicleVin("WDB1240661C123456")
+            .vehicleType("STANDARD")
             .build();
 
         when(applicantRepository.findByPassportNumber("MP1234567")).thenReturn(Optional.of(applicant));
@@ -560,6 +581,7 @@ class ApplicationServiceTest {
             .serviceIds(List.of(1L))
             .plateNumber("1234 AB-7")
             .vehicleVin("WDB1240661C123456")
+            .vehicleType("STANDARD")
             .build();
 
         when(applicantRepository.findByPassportNumber("MP1234567")).thenReturn(Optional.of(applicant));
@@ -578,6 +600,7 @@ class ApplicationServiceTest {
             .departmentId(1L)
             .plateNumber("bad")
             .vehicleVin("WDB1240661C123456")
+            .vehicleType("STANDARD")
             .build();
 
         when(applicantRepository.findByPassportNumber("MP1234567")).thenReturn(Optional.of(applicant));
@@ -597,6 +620,7 @@ class ApplicationServiceTest {
             .departmentId(1L)
             .plateNumber("1234 AB-1")
             .vehicleVin("WDB1240661C123456")
+            .vehicleType("STANDARD")
             .build();
 
         when(applicantRepository.findByPassportNumber("MP1234567")).thenReturn(Optional.of(applicant));
@@ -616,6 +640,7 @@ class ApplicationServiceTest {
             .departmentId(1L)
             .plateNumber("1234 AB-7")
             .vehicleVin("WDB1240661C123456")
+            .vehicleType("STANDARD")
             .build();
 
         when(applicantRepository.findByPassportNumber("MP1234567")).thenReturn(Optional.of(applicant));
@@ -638,6 +663,7 @@ class ApplicationServiceTest {
             .departmentId(1L)
             .plateNumber("1234 AB-7")
             .vehicleVin("WDB1240661C123456")
+            .vehicleType("STANDARD")
             .build();
 
         when(applicantRepository.findByPassportNumber("MP1234567")).thenReturn(Optional.of(applicant));
@@ -660,6 +686,7 @@ class ApplicationServiceTest {
             .departmentId(1L)
             .plateNumber("1234 AB-7")
             .vehicleVin("WDB1240661C123456")
+            .vehicleType("STANDARD")
             .build();
 
         when(applicantRepository.findByPassportNumber("MP1234567")).thenReturn(Optional.of(applicant));
@@ -691,6 +718,7 @@ class ApplicationServiceTest {
             .departmentId(1L)
             .plateNumber("1234 AB-7")
             .vehicleVin("WDB1240661C123456")
+            .vehicleType("STANDARD")
             .build();
 
         when(applicantRepository.findByPassportNumber("MP1234567")).thenReturn(Optional.of(applicant));
@@ -722,6 +750,7 @@ class ApplicationServiceTest {
             .departmentId(1L)
             .plateNumber("1234 AB-7")
             .vehicleVin("WDB1240661C123456")
+            .vehicleType("STANDARD")
             .build();
 
         when(applicantRepository.findByPassportNumber("MP1234567")).thenReturn(Optional.of(applicant));
@@ -753,6 +782,7 @@ class ApplicationServiceTest {
             .departmentId(1L)
             .plateNumber("1234 AB-7")
             .vehicleVin("WDB1240661C123456")
+            .vehicleType("STANDARD")
             .build();
 
         when(applicantRepository.findByPassportNumber("MP1234567")).thenReturn(Optional.of(applicant));
@@ -786,6 +816,7 @@ class ApplicationServiceTest {
             .departmentId(1L)
             .plateNumber("1234 AB-7")
             .vehicleVin("WDB1240661C123456")
+            .vehicleType("STANDARD")
             .build();
 
         when(applicantRepository.findByPassportNumber("MP1234567")).thenReturn(Optional.of(applicant));
@@ -814,6 +845,7 @@ class ApplicationServiceTest {
             .passportNumber("MP1234567")
             .plateNumber("1234 AB-7")
             .vehicleVin("WDB1240661C123456")
+            .vehicleType("STANDARD")
             .build();
 
         when(applicantRepository.findByPassportNumber("MP1234567")).thenReturn(Optional.of(applicant));
@@ -832,6 +864,7 @@ class ApplicationServiceTest {
             .departmentId(1L)
             .plateNumber("1234 AB-7")
             .vehicleVin("WDB1240661C123456")
+            .vehicleType("STANDARD")
             .notes("note")
             .vehicleModel("Tesla")
             .vehicleYear(2024)
@@ -867,6 +900,7 @@ class ApplicationServiceTest {
             .departmentId(1L)
             .plateNumber("1234 AB-7")
             .vehicleVin("WDB1240661C123456")
+            .vehicleType("STANDARD")
             .build();
         ArgumentCaptor<Application> captor = ArgumentCaptor.forClass(Application.class);
 

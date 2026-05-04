@@ -109,36 +109,36 @@ public final class PlateFormatSupport {
         StringBuilder builder = new StringBuilder(value.length());
         for (char ch : value.toCharArray()) {
             switch (Character.toLowerCase(ch)) {
-                case 'а' -> builder.append('a');
-                case 'б' -> builder.append('b');
-                case 'в' -> builder.append('v');
-                case 'г' -> builder.append('g');
-                case 'д' -> builder.append('d');
-                case 'е', 'ё' -> builder.append('e');
-                case 'ж' -> builder.append("zh");
-                case 'з' -> builder.append('z');
-                case 'и', 'й' -> builder.append('i');
-                case 'к' -> builder.append('k');
-                case 'л' -> builder.append('l');
-                case 'м' -> builder.append('m');
-                case 'н' -> builder.append('n');
-                case 'о' -> builder.append('o');
-                case 'п' -> builder.append('p');
-                case 'р' -> builder.append('r');
-                case 'с' -> builder.append('s');
-                case 'т' -> builder.append('t');
-                case 'у' -> builder.append('u');
-                case 'ф' -> builder.append('f');
-                case 'х' -> builder.append('h');
-                case 'ц' -> builder.append('c');
-                case 'ч' -> builder.append("ch");
-                case 'ш' -> builder.append("sh");
-                case 'щ' -> builder.append("sch");
-                case 'ы' -> builder.append('y');
-                case 'э' -> builder.append('e');
-                case 'ю' -> builder.append("yu");
-                case 'я' -> builder.append("ya");
-                case 'ь', 'ъ' -> {
+                case '\u0430' -> builder.append('a');
+                case '\u0431' -> builder.append('b');
+                case '\u0432' -> builder.append('v');
+                case '\u0433' -> builder.append('g');
+                case '\u0434' -> builder.append('d');
+                case '\u0435', '\u0451' -> builder.append('e');
+                case '\u0436' -> builder.append("zh");
+                case '\u0437' -> builder.append('z');
+                case '\u0438', '\u0439' -> builder.append('i');
+                case '\u043a' -> builder.append('k');
+                case '\u043b' -> builder.append('l');
+                case '\u043c' -> builder.append('m');
+                case '\u043d' -> builder.append('n');
+                case '\u043e' -> builder.append('o');
+                case '\u043f' -> builder.append('p');
+                case '\u0440' -> builder.append('r');
+                case '\u0441' -> builder.append('s');
+                case '\u0442' -> builder.append('t');
+                case '\u0443' -> builder.append('u');
+                case '\u0444' -> builder.append('f');
+                case '\u0445' -> builder.append('h');
+                case '\u0446' -> builder.append('c');
+                case '\u0447' -> builder.append("ch");
+                case '\u0448' -> builder.append("sh");
+                case '\u0449' -> builder.append("sch");
+                case '\u044b' -> builder.append('y');
+                case '\u044d' -> builder.append('e');
+                case '\u044e' -> builder.append("yu");
+                case '\u044f' -> builder.append("ya");
+                case '\u044c', '\u044a' -> {
                 }
                 default -> {
                     if (Character.isLetterOrDigit(ch)) {

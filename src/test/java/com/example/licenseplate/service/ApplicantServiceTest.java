@@ -9,6 +9,7 @@ import com.example.licenseplate.model.entity.Applicant;
 import com.example.licenseplate.model.entity.Application;
 import com.example.licenseplate.model.entity.UserAccount;
 import com.example.licenseplate.model.enums.ApplicationStatus;
+import com.example.licenseplate.model.enums.UserRole;
 import com.example.licenseplate.repository.ApplicantRepository;
 import com.example.licenseplate.repository.UserAccountRepository;
 import org.junit.jupiter.api.BeforeEach;
@@ -187,6 +188,7 @@ class ApplicantServiceTest {
         UserAccount account = UserAccount.builder()
             .id(4L)
             .username("MP1234567")
+            .role(UserRole.USER)
             .applicant(applicant)
             .build();
 
@@ -208,6 +210,7 @@ class ApplicantServiceTest {
         UserAccount account = UserAccount.builder()
             .id(4L)
             .username("ivan@example.com")
+            .role(UserRole.USER)
             .applicant(applicant)
             .build();
 
