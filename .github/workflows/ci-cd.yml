@@ -67,7 +67,7 @@ jobs:
       - name: Deploy backend to Railway
         run: railway up --service "${{ secrets.RAILWAY_BACKEND_SERVICE_NAME }}" -p "${{ secrets.RAILWAY_PROJECT_ID }}" --environment production
         env:
-          RAILWAY_TOKEN: ${{ secrets.RAILWAY_TOKEN }}
+          RAILWAY_API_TOKEN: ${{ secrets.RAILWAY_TOKEN }}
 
   deploy-frontend:
     needs: deploy-backend
@@ -89,7 +89,7 @@ jobs:
         working-directory: license-plate-frontend
         run: railway up --service "${{ secrets.RAILWAY_FRONTEND_SERVICE_NAME }}" -p "${{ secrets.RAILWAY_PROJECT_ID }}" --environment production
         env:
-          RAILWAY_TOKEN: ${{ secrets.RAILWAY_TOKEN }}
+          RAILWAY_API_TOKEN: ${{ secrets.RAILWAY_TOKEN }}
 
   healthcheck:
     needs: deploy-frontend
