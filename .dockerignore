@@ -1,0 +1,7 @@
+.git
+.idea
+target
+logs
+exports
+license-plate-frontend/node_modules
+license-plate-frontend/dist

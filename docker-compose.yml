@@ -1,0 +1,52 @@
+services:
+  db:
+    image: postgres:16
+    container_name: license-plate-db
+    environment:
+      POSTGRES_DB: license_plate_db
+      POSTGRES_USER: postgres
+      POSTGRES_PASSWORD: password
+    ports:
+      - "5432:5432"
+    volumes:
+      - postgres_data:/var/lib/postgresql/data
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U postgres -d license_plate_db"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+      start_period: 10s
+
+  backend:
+    build:
+      context: .
+      dockerfile: Dockerfile
+    container_name: license-plate-backend
+    depends_on:
+      db:
+        condition: service_healthy
+    environment:
+      SPRING_DATASOURCE_URL: jdbc:postgresql://db:5432/license_plate_db
+      DB_USER: postgres
+      DB_PASSWORD: password
+      APP_LOGGING_PATH: /app/logs
+    ports:
+      - "8080:8080"
+    volumes:
+      - backend_logs:/app/logs
+
+  frontend:
+    build:
+      context: ./license-plate-frontend
+      dockerfile: Dockerfile
+      args:
+        VITE_API_URL: http://localhost:8080/api
+    container_name: license-plate-frontend
+    depends_on:
+      - backend
+    ports:
+      - "3000:3000"
+
+volumes:
+  postgres_data:
+  backend_logs:
