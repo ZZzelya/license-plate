@@ -1,0 +1,100 @@
+name: CI/CD License Plate
+
+on:
+  push:
+    branches: ["main"]
+  workflow_dispatch:
+
+env:
+  JAVA_VERSION: "21"
+  NODE_VERSION: "22"
+  FRONTEND_URL: "https://impartial-joy-production-1a7f.up.railway.app/"
+
+jobs:
+  build-and-test:
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v5
+
+      - name: Set up JDK
+        uses: actions/setup-java@v5
+        with:
+          java-version: ${{ env.JAVA_VERSION }}
+          distribution: temurin
+          cache: maven
+
+      - name: Set up Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: ${{ env.NODE_VERSION }}
+          cache: npm
+          cache-dependency-path: license-plate-frontend/package-lock.json
+
+      - name: Run backend tests
+        run: ./mvnw -B test
+
+      - name: Install frontend dependencies
+        working-directory: license-plate-frontend
+        run: npm ci
+
+      - name: Build frontend
+        working-directory: license-plate-frontend
+        run: npm run build
+        env:
+          VITE_API_URL: https://example.com/api
+
+  deploy-backend:
+    needs: build-and-test
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v5
+
+      - name: Set up Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: ${{ env.NODE_VERSION }}
+
+      - name: Install Railway CLI
+        run: npm install -g @railway/cli
+
+      - name: Deploy backend to Railway
+        run: railway up --service "${{ secrets.RAILWAY_BACKEND_SERVICE_NAME }}" -p "${{ secrets.RAILWAY_PROJECT_ID }}" --environment production
+        env:
+          RAILWAY_TOKEN: ${{ secrets.RAILWAY_TOKEN }}
+
+  deploy-frontend:
+    needs: deploy-backend
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v5
+
+      - name: Set up Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: ${{ env.NODE_VERSION }}
+
+      - name: Install Railway CLI
+        run: npm install -g @railway/cli
+
+      - name: Deploy frontend to Railway
+        working-directory: license-plate-frontend
+        run: railway up --service "${{ secrets.RAILWAY_FRONTEND_SERVICE_NAME }}" -p "${{ secrets.RAILWAY_PROJECT_ID }}" --environment production
+        env:
+          RAILWAY_TOKEN: ${{ secrets.RAILWAY_TOKEN }}
+
+  healthcheck:
+    needs: deploy-frontend
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Wait for deployment
+        run: sleep 45
+
+      - name: Check frontend
+        run: curl --fail --silent --show-error "${{ env.FRONTEND_URL }}"

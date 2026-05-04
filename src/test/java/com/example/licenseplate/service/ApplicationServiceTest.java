@@ -53,6 +53,8 @@ class ApplicationServiceTest {
     private ApplicationMapper applicationMapper;
     @Mock
     private DepartmentRepository departmentRepository;
+    @Mock
+    private LicensePlateService licensePlateService;
 
     @InjectMocks
     private ApplicationService applicationService;
@@ -249,7 +251,7 @@ class ApplicationServiceTest {
 
         when(applicantRepository.findByPassportNumber("MP1234567")).thenReturn(Optional.of(applicant));
         when(departmentRepository.findById(1L)).thenReturn(Optional.of(department));
-        when(licensePlateRepository.findAvailableByDepartmentId(1L)).thenReturn(List.of(availablePlate));
+        when(licensePlateService.getOrCreateAvailablePlatesByDepartment(1L)).thenReturn(List.of(availablePlate));
         when(applicationRepository.save(any(Application.class))).thenAnswer(invocation -> invocation.getArgument(0));
         when(applicationMapper.toDto(any(Application.class))).thenReturn(applicationDto);
 
@@ -266,7 +268,7 @@ class ApplicationServiceTest {
 
         when(applicantRepository.findByPassportNumber("MP1234567")).thenReturn(Optional.of(applicant));
         when(departmentRepository.findById(1L)).thenReturn(Optional.of(department));
-        when(licensePlateRepository.findAvailableByDepartmentId(1L)).thenReturn(List.of());
+        when(licensePlateService.getOrCreateAvailablePlatesByDepartment(1L)).thenReturn(List.of());
 
         assertThatThrownBy(() -> applicationService.createApplication(dto))
             .isInstanceOf(ResourceNotFoundException.class);
@@ -359,7 +361,7 @@ class ApplicationServiceTest {
         when(applicantRepository.findByPassportNumber("MP1234567")).thenReturn(Optional.of(applicant));
         when(serviceRepository.findAllById(List.of(1L))).thenReturn(List.of(available));
         when(departmentRepository.findById(1L)).thenReturn(Optional.of(department));
-        when(licensePlateRepository.findAvailableByDepartmentId(1L)).thenReturn(List.of(availablePlate));
+        when(licensePlateService.getOrCreateAvailablePlatesByDepartment(1L)).thenReturn(List.of(availablePlate));
         when(applicationRepository.save(any(Application.class))).thenAnswer(invocation -> invocation.getArgument(0));
         when(applicationMapper.toDto(any(Application.class))).thenReturn(applicationDto);
 
@@ -381,7 +383,7 @@ class ApplicationServiceTest {
         when(applicantRepository.findByPassportNumber("MP1234567")).thenReturn(Optional.of(applicant));
         when(serviceRepository.findAllById(List.of(1L))).thenReturn(List.of(available));
         when(departmentRepository.findById(1L)).thenReturn(Optional.of(department));
-        when(licensePlateRepository.findAvailableByDepartmentId(1L)).thenReturn(List.of(availablePlate));
+        when(licensePlateService.getOrCreateAvailablePlatesByDepartment(1L)).thenReturn(List.of(availablePlate));
         when(applicationRepository.save(any(Application.class))).thenAnswer(invocation -> invocation.getArgument(0));
         when(applicationMapper.toDto(any(Application.class))).thenReturn(applicationDto);
 
@@ -402,7 +404,7 @@ class ApplicationServiceTest {
         when(applicantRepository.findByPassportNumber("MP1234567")).thenReturn(Optional.of(applicant));
         when(serviceRepository.findAllById(List.of(1L))).thenReturn(List.of(available));
         when(departmentRepository.findById(1L)).thenReturn(Optional.of(department));
-        when(licensePlateRepository.findAvailableByDepartmentId(1L)).thenReturn(List.of(availablePlate));
+        when(licensePlateService.getOrCreateAvailablePlatesByDepartment(1L)).thenReturn(List.of(availablePlate));
         when(applicationRepository.save(any(Application.class))).thenAnswer(invocation -> invocation.getArgument(0));
         when(applicationMapper.toDto(any(Application.class))).thenReturn(applicationDto);
 
@@ -513,7 +515,7 @@ class ApplicationServiceTest {
         when(applicantRepository.findByPassportNumber("MP1234567")).thenReturn(Optional.of(applicant));
         when(serviceRepository.findAllById(List.of(1L))).thenReturn(List.of(available));
         when(departmentRepository.findById(1L)).thenReturn(Optional.of(department));
-        when(licensePlateRepository.findAvailableByDepartmentId(1L)).thenReturn(List.of());
+        when(licensePlateService.getOrCreateAvailablePlatesByDepartment(1L)).thenReturn(List.of());
 
         assertThatThrownBy(() -> applicationService.createApplication(dto))
             .isInstanceOf(ResourceNotFoundException.class);
@@ -544,7 +546,7 @@ class ApplicationServiceTest {
         when(applicantRepository.findByPassportNumber("MP1234567")).thenReturn(Optional.of(applicant));
         when(serviceRepository.findAllById(List.of(1L))).thenReturn(List.of(available));
         when(departmentRepository.findById(1L)).thenReturn(Optional.of(department));
-        when(licensePlateRepository.findAvailableByDepartmentId(1L)).thenReturn(List.of(reservedPlate));
+        when(licensePlateService.getOrCreateAvailablePlatesByDepartment(1L)).thenReturn(List.of(reservedPlate));
 
         assertThatThrownBy(() -> applicationService.createApplication(dto))
             .isInstanceOf(BusinessException.class);
@@ -871,7 +873,7 @@ class ApplicationServiceTest {
         when(applicantRepository.findByPassportNumber("MP1234567")).thenReturn(Optional.of(applicant));
         when(serviceRepository.findAllById(List.of(1L))).thenReturn(List.of(available));
         when(departmentRepository.findById(1L)).thenReturn(Optional.of(department));
-        when(licensePlateRepository.findAvailableByDepartmentId(1L)).thenReturn(List.of(noPricePlate));
+        when(licensePlateService.getOrCreateAvailablePlatesByDepartment(1L)).thenReturn(List.of(noPricePlate));
         when(applicationRepository.save(captor.capture())).thenAnswer(invocation -> invocation.getArgument(0));
         when(applicationMapper.toDto(any(Application.class))).thenReturn(applicationDto);
 
@@ -885,7 +887,7 @@ class ApplicationServiceTest {
         application.setStatus(ApplicationStatus.CANCELLED);
         when(applicationRepository.findById(5L)).thenReturn(Optional.of(application));
 
-        assertThatThrownBy(() -> applicationService.confirmApplication(5L))
+        assertThatThrownBy(() -> applicationService.confirmApplication(5L, null))
             .isInstanceOf(BusinessException.class);
     }
 
@@ -895,7 +897,7 @@ class ApplicationServiceTest {
         when(applicationRepository.findById(5L)).thenReturn(Optional.of(application));
         when(applicationRepository.save(application)).thenReturn(application);
 
-        assertThatThrownBy(() -> applicationService.confirmApplication(5L))
+        assertThatThrownBy(() -> applicationService.confirmApplication(5L, null))
             .isInstanceOf(BusinessException.class);
         assertThat(application.getStatus()).isEqualTo(ApplicationStatus.EXPIRED);
     }
@@ -906,7 +908,7 @@ class ApplicationServiceTest {
         when(applicationRepository.save(application)).thenReturn(application);
         when(applicationMapper.toDto(application)).thenReturn(applicationDto);
 
-        assertThat(applicationService.confirmApplication(5L)).isEqualTo(applicationDto);
+        assertThat(applicationService.confirmApplication(5L, null)).isEqualTo(applicationDto);
         assertThat(application.getStatus()).isEqualTo(ApplicationStatus.CONFIRMED);
         assertThat(application.getConfirmationDate()).isNotNull();
     }
@@ -915,7 +917,7 @@ class ApplicationServiceTest {
     void confirmApplicationThrowsWhenMissing() {
         when(applicationRepository.findById(5L)).thenReturn(Optional.empty());
 
-        assertThatThrownBy(() -> applicationService.confirmApplication(5L))
+        assertThatThrownBy(() -> applicationService.confirmApplication(5L, null))
             .isInstanceOf(ResourceNotFoundException.class);
     }
 
@@ -924,7 +926,7 @@ class ApplicationServiceTest {
         application.setStatus(ApplicationStatus.PENDING);
         when(applicationRepository.findById(5L)).thenReturn(Optional.of(application));
 
-        assertThatThrownBy(() -> applicationService.completeApplication(5L))
+        assertThatThrownBy(() -> applicationService.completeApplication(5L, null))
             .isInstanceOf(BusinessException.class);
     }
 
@@ -936,7 +938,7 @@ class ApplicationServiceTest {
         when(applicationRepository.save(application)).thenReturn(application);
         when(applicationMapper.toDto(application)).thenReturn(applicationDto);
 
-        assertThat(applicationService.completeApplication(5L)).isEqualTo(applicationDto);
+        assertThat(applicationService.completeApplication(5L, null)).isEqualTo(applicationDto);
         assertThat(application.getStatus()).isEqualTo(ApplicationStatus.COMPLETED);
         assertThat(availablePlate.getIssueDate()).isNotNull();
         assertThat(availablePlate.getExpiryDate()).isNotNull();
@@ -946,7 +948,7 @@ class ApplicationServiceTest {
     void completeApplicationThrowsWhenMissing() {
         when(applicationRepository.findById(5L)).thenReturn(Optional.empty());
 
-        assertThatThrownBy(() -> applicationService.completeApplication(5L))
+        assertThatThrownBy(() -> applicationService.completeApplication(5L, null))
             .isInstanceOf(ResourceNotFoundException.class);
     }
 
@@ -954,11 +956,11 @@ class ApplicationServiceTest {
     void cancelApplicationThrowsForCompletedOrCancelled() {
         application.setStatus(ApplicationStatus.COMPLETED);
         when(applicationRepository.findById(5L)).thenReturn(Optional.of(application));
-        assertThatThrownBy(() -> applicationService.cancelApplication(5L))
+        assertThatThrownBy(() -> applicationService.cancelApplication(5L, null))
             .isInstanceOf(BusinessException.class);
 
         application.setStatus(ApplicationStatus.CANCELLED);
-        assertThatThrownBy(() -> applicationService.cancelApplication(5L))
+        assertThatThrownBy(() -> applicationService.cancelApplication(5L, null))
             .isInstanceOf(BusinessException.class);
     }
 
@@ -969,7 +971,7 @@ class ApplicationServiceTest {
         when(applicationRepository.save(application)).thenReturn(application);
         when(applicationMapper.toDto(application)).thenReturn(applicationDto);
 
-        assertThat(applicationService.cancelApplication(5L)).isEqualTo(applicationDto);
+        assertThat(applicationService.cancelApplication(5L, null)).isEqualTo(applicationDto);
         assertThat(application.getStatus()).isEqualTo(ApplicationStatus.CANCELLED);
     }
 
@@ -977,7 +979,7 @@ class ApplicationServiceTest {
     void cancelApplicationThrowsWhenMissing() {
         when(applicationRepository.findById(5L)).thenReturn(Optional.empty());
 
-        assertThatThrownBy(() -> applicationService.cancelApplication(5L))
+        assertThatThrownBy(() -> applicationService.cancelApplication(5L, null))
             .isInstanceOf(ResourceNotFoundException.class);
     }
 
