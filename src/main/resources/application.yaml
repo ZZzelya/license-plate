@@ -2,9 +2,9 @@ spring:
   application:
     name: license-plate-service
   datasource:
-    url: jdbc:postgresql://localhost:5432/license_plate_db
-    username: ${DB_USER:postgres}
-    password: ${DB_PASSWORD:password}
+    url: ${SPRING_DATASOURCE_URL:jdbc:postgresql://localhost:5432/license_plate_db}
+    username: ${SPRING_DATASOURCE_USERNAME:${DB_USER:postgres}}
+    password: ${SPRING_DATASOURCE_PASSWORD:${DB_PASSWORD:password}}
     driver-class-name: org.postgresql.Driver
   jpa:
     hibernate:
@@ -74,7 +74,7 @@ app:
     secret: "license-plate-local-secret-key-for-jwt-signing-2026"
     expiration-ms: 86400000
   logging:
-    path: logs
+    path: ${APP_LOGGING_PATH:logs}
     max-file-size: 10MB
     max-history: 30
     total-size-cap: 1GB

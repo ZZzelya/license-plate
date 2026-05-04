@@ -27,8 +27,8 @@ services:
         condition: service_healthy
     environment:
       SPRING_DATASOURCE_URL: jdbc:postgresql://db:5432/license_plate_db
-      DB_USER: postgres
-      DB_PASSWORD: password
+      SPRING_DATASOURCE_USERNAME: postgres
+      SPRING_DATASOURCE_PASSWORD: password
       APP_LOGGING_PATH: /app/logs
     ports:
       - "8080:8080"
