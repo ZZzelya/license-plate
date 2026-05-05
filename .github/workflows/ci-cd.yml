@@ -8,7 +8,7 @@ on:
 env:
   JAVA_VERSION: "21"
   NODE_VERSION: "22"
-  FRONTEND_URL: "https://impartial-joy-production-1a7f.up.railway.app/"
+  FRONTEND_URL: "https://licencse-plate-control.up.railway.app//"
 
 jobs:
   build-and-test:
